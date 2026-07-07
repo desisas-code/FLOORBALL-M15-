@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentra Performa Atlet Floorball</title>
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --color-primary: #004B8D;
+            --color-white: #FFFFFF;
+            --color-bg: #F8F9FA;
+        }
+        body {
+            background-color: var(--color-bg);
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .sidebar-link.active {
+            background-color: var(--color-primary);
+            color: var(--color-white);
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800">
+
+    <!-- SIDEBAR UTAMA -->
+    <aside class="w-80 bg-white border-r border-slate-200 flex flex-col justify-between h-full z-10 shadow-sm">
+        <div>
+            <!-- Header Identitas Aplikasi -->
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xl" style="background-color: var(--color-primary);">
+                        SF
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-sm leading-tight text-slate-900">Sentra Performa Floorball</h1>
+                        <p class="text-xs text-slate-400 mt-0.5">Sistem Manajemen Berbasis AI</p>
+                    </div>
+                </div>
+
+                <!-- Kontrol Pengganti Peran (Role Switcher) -->
+                <div class="mt-4 p-1.5 bg-slate-100 rounded-xl flex gap-1">
+                    <button id="btn-role-pelatih" onclick="switchRole('Pelatih Kepala')" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white shadow-xs text-blue-900">
+                        Pelatih Kepala
+                    </button>
+                    <button id="btn-role-atlet" onclick="switchRole('Atlet')" class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-500 hover:text-slate-800">
+                        Atlet
+                    </button>
+                </div>
+            </div>
+            
+            <!-- MENU NAVIGASI PELATIH KEPALA -->
+            <nav id="nav-pelatih" class="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-240px)]">
+                <a href="#" onclick="switchMenu('dashboard', this)" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-chart-line w-5"></i> Dasbor Utama & ACWR
+                </a>
+                <a href="#" onclick="switchMenu('periodisasi', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-business-time w-5 text-blue-600"></i> Periodisasi Latihan (Siklus)
+                </a>
+                <a href="#" onclick="switchMenu('ai-program', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-wand-magic-sparkles w-5"></i> Program Otomatis AI
+                </a>
+                <a href="#" onclick="switchMenu('komponen-fisik', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-heart-pulse w-5"></i> Evaluasi 10 Komponen Fisik
+                </a>
+                <a href="#" onclick="switchMenu('absensi-harian', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-calendar-check w-5"></i> Absensi Latihan Harian
+                </a>
+                <a href="#" onclick="switchMenu('kalkulator-mas', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-gauge-high w-5"></i> Kalkulator MAS Otomatis
+                </a>
+                <a href="#" onclick="switchMenu('analisis-live', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-gamepad w-5 text-red-600"></i> Analisis Pertandingan (Live)
+                </a>
+                <a href="#" onclick="switchMenu('statistik-rapor', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-chart-bar w-5 text-emerald-600"></i> Statistik & Rapor Laga
+                </a>
+                <a href="#" onclick="switchMenu('input-atlet', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-user-plus w-5"></i> Input Data Atlet
+                </a>
+            </nav>
+
+            <!-- MENU NAVIGASI ATLET -->
+            <nav id="nav-atlet" class="p-4 space-y-1 hidden">
+                <a href="#" onclick="switchMenu('atlet-jadwal', this)" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-calendar-day w-5"></i> Jadwal Latihan Harian
+                </a>
+                <a href="#" onclick="switchMenu('atlet-rpe', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-file-medical w-5"></i> Input RPE & Detak Jantung
+                </a>
+                <a href="#" onclick="switchMenu('atlet-riwayat', this)" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-clock-rotate-left w-5"></i> Riwayat Hasil Tes Fisik
+                </a>
+            </nav>
+        </div>
+
+        <!-- PANEL STATUS ASISTEN AI -->
+        <div id="ai-toggle-box" class="p-4 border-t border-slate-100 bg-slate-50">
+            <button onclick="toggleAIPanel()" class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-700 to-cyan-800 text-white rounded-xl font-medium text-xs shadow-md hover:opacity-95 transition-all">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-robot animate-bounce"></i>
+                    <span>Asisten AI Analisis Performa</span>
+                </div>
+                <span class="bg-emerald-400 text-[10px] text-slate-900 font-bold px-1.5 py-0.5 rounded-md">AKTIF</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- AREA KONTEN UTAMA -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Top Bar Header -->
+        <header class="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
+            <div>
+                <h2 id="menu-title" class="font-bold text-lg text-slate-800">Dasbor Utama & ACWR</h2>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <p id="user-display-name" class="text-xs font-bold text-slate-900">Coach Desi Sasmita</p>
+                    <p id="user-display-role" class="text-[10px] text-blue-700 font-semibold uppercase tracking-wider">Pelatih Kepala</p>
+                </div>
+                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-800 font-bold text-sm flex items-center justify-center border border-blue-200">
+                    DS
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTAINER WORKSPACE UTAMA -->
+        <div class="flex-1 overflow-y-auto p-8" id="workspace">
+
+            <!-- VIEW 1: DASBOR PELATIH -->
+            <div id="view-dashboard" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Skuad Terdaftar</p>
+                            <h3 id="dash-total-atlet" class="text-3xl font-black mt-2 text-slate-900">3</h3>
+                        </div>
+                        <span class="p-3 rounded-xl bg-blue-50 text-blue-600"><i class="fa-solid fa-users text-lg"></i></span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4"><span id="dash-atlet-pct" class="text-emerald-600 font-bold">100%</span> Profil Fisik Terdata</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Presensi Bulan Ini</p>
+                            <h3 class="text-3xl font-black mt-2 text-slate-900">94.8%</h3>
+                        </div>
+                        <span class="p-3 rounded-xl bg-purple-50 text-purple-600"><i class="fa-solid fa-clipboard-user text-lg"></i></span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4">Siklus Latihan: Makro Pra-Kompetisi</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between md:col-span-1 lg:col-span-2">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Rasio ACWR Skuad (Rata-rata)</p>
+                            <h3 class="text-3xl font-black mt-2 text-emerald-600">1.12 <span class="text-xs font-medium text-slate-500">(Zona Aman)</span></h3>
+                        </div>
+                        <span class="p-3 rounded-xl bg-emerald-50 text-emerald-600"><i class="fa-solid fa-shield-heart text-lg"></i></span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 block"></span> Risiko cedera tergolong rendah.
+                    </p>
+                </div>
+
+                <!-- TIMELINE GRAFIK MACROCYCLE TIM -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs col-span-1 md:col-span-2 lg:col-span-3 h-96 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800">Analisis Periodisasi Makrosiklus & Fluktuasi Beban Kerja Tim</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Pemantauan distribusi volume beban (jam) dan tingkat intensitas (% HRmax) berkala selama 27 minggu sirklus makro.</p>
+                        </div>
+                        <span class="text-[10px] bg-blue-50 text-blue-800 font-mono font-bold px-2 py-1 rounded">27-Weeks Timeline Matrix</span>
+                    </div>
+                    <div class="flex-1 relative">
+                        <canvas id="chartACWR"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs col-span-1 h-96 flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-bold text-xs text-slate-400 uppercase tracking-wider mb-3">Peringatan Risiko</h4>
+                        <div id="dashboard-risk-box" class="space-y-3">
+                            <!-- Diisi dinamis via renderDashboardRisk() -->
+                        </div>
+                    </div>
+                    <button onclick="switchMenu('komponen-fisik', document.querySelector('[onclick*=\'komponen-fisik\']'))" class="w-full text-center text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 py-2.5 rounded-xl transition-all">
+                        Tinjau Data 10 Komponen Fisik
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW: PERIODISASI LATIHAN (SIKLUS MAKRO & MIKRO INTERKONEKSI) -->
+            <div id="view-periodisasi" class="hidden max-w-5xl space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-sliders text-blue-700"></i>
+                        <h3 class="font-bold text-base text-slate-900">Konfigurasi Pembagian Siklus Periodisasi</h3>
+                    </div>
+                    <form onsubmit="hitungPembagianPeriodisasi(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Total Durasi Program (Minggu)</label>
+                            <input type="number" id="input-periodisasi-durasi" required min="4" max="52" class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold bg-white" value="27">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tanggal Mulai Program</label>
+                            <input type="date" id="input-periodisasi-mulai" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs bg-white text-slate-700 font-medium" value="2026-07-06">
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full py-2.5 bg-blue-900 text-white font-bold rounded-xl text-xs shadow-2xs hover:opacity-95 transition-all">
+                                <i class="fa-solid fa-calculator mr-1"></i> Kalkulasi Distribusi Pekan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="box-output-periodisasi" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+                    <div>
+                        <h4 class="font-bold text-sm text-slate-800">Matriks Distribusi Beban & Fase Penjadwalan Skuad</h4>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Metode pembagian menggunakan kalkulasi rasio beban periodisasi berdasarkan profil 10 komponen fisik tim.</p>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800 text-white font-bold uppercase tracking-wider text-[10px]">
+                                    <th class="p-3 rounded-l-lg">Fase Latihan Makro</th>
+                                    <th class="p-3">Alokasi Durasi</th>
+                                    <th class="p-3">Intensitas Mingguan</th>
+                                    <th class="p-3">Volume Mingguan</th>
+                                    <th class="p-3">Rentang Tanggal Pelaksanaan</th>
+                                    <th class="p-3 rounded-r-lg">Fokus Karakteristik Latihan Floorball</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-periodisasi" class="divide-y divide-slate-100 text-slate-700 font-semibold">
+                                <!-- Terisi dinamis oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SEKSI URAIAN TARGET MIKROSIKLUS -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800">Uraian Target Pekanan (Breakdown Mikrosiklus)</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Pilih nomor pekan dari total durasi program Anda untuk melihat fokus beban taktis harian.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Minggu Ke-</label>
+                            <select id="select-mikro-pekan" onchange="renderMikrosiklusTaktis()" class="border border-slate-200 px-3 py-1.5 rounded-xl text-xs bg-white font-bold text-blue-900 focus:outline-none focus:border-blue-600">
+                                <!-- Terisi otomatis lewat JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50/40 p-4 rounded-xl border border-blue-100">
+                            <span class="text-[9px] uppercase font-bold tracking-wider text-blue-500 block mb-1">Fase Latihan Utama</span>
+                            <p id="mikro-fase-nama" class="font-bold text-xs text-slate-900">--</p>
+                        </div>
+                        <div class="bg-emerald-50/40 p-4 rounded-xl border border-emerald-100">
+                            <span class="text-[9px] uppercase font-bold tracking-wider text-emerald-500 block mb-1">Target Sifat Beban</span>
+                            <p id="mikro-beban-sifat" class="font-bold text-xs text-slate-900">--</p>
+                        </div>
+                        <div class="bg-purple-50/40 p-4 rounded-xl border border-purple-100">
+                            <span class="text-[9px] uppercase font-bold tracking-wider text-purple-500 block mb-1">Estimasi Volume Mingguan</span>
+                            <p id="mikro-volume-jam" class="font-bold text-xs text-slate-900">--</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto pt-2">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                                    <th class="py-2 px-3 w-24">Hari</th>
+                                    <th class="py-2 px-3 w-36">Fokus Sesi Latihan</th>
+                                    <th class="py-2 px-3 w-32">Intensitas Harian</th>
+                                    <th class="py-2 px-3 w-28">Volume Harian</th>
+                                    <th class="py-2 px-3">Deskripsi Strategi & Distribusi Drills Lapangan Floorball</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-mikrosiklus" class="divide-y divide-slate-100 font-semibold text-slate-700">
+                                <!-- Terisi otomatis melalui renderMikrosiklusTaktis() -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: PROGRAM OTOMATIS AI (VERTIKASI STRUKTUR DETAIl) -->
+            <div id="view-ai-program" class="hidden max-w-7xl space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-base text-slate-900">Resep Resep Menu Harian & Beban Atlet Otomatis</h3>
+                        <p class="text-xs text-slate-500 mt-1">Sistem menyusun menu gerakan spesifik harian terurut lengkap berdasarkan peta zonasi fase periodisasi latihan dan status indeks kebugaran (10 Komponen Fisik) atlet secara mandiri.</p>
+                    </div>
+                    <button onclick="generateAIProgram()" class="px-5 py-2.5 bg-blue-900 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-xs hover:opacity-90 shrink-0">
+                        <i class="fa-solid fa-microchip"></i> Jalankan Komputasi Resep Beban
+                    </button>
+                </div>
+                <div id="output-program-ai" class="hidden space-y-6">
+                    <!-- Target penempatan sebaran menu gerakan otomatis detil -->
+                </div>
+            </div>
+
+            <!-- VIEW 3: DASBOR EVALUASI KONDISI FISIK -->
+            <div id="view-komponen-fisik" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-file-signature text-blue-700"></i>
+                        <h3 class="font-bold text-base text-slate-900">Entri Hasil Tes Komponen Fisik Atlet</h3>
+                    </div>
+                    <form id="form-tes-fisik" onsubmit="handleSaveTesFisik(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pilih Atlet</label>
+                                <select id="input-tes-atlet" class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs bg-white focus:outline-none focus:border-blue-600"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">1. V-Sit Reach (cm)</label>
+                                <input type="number" id="input-tes-vsit" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Contoh: 14">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">2. Vertical Jump (cm)</label>
+                                <input type="number" id="input-tes-vjump" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Contoh: 55">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">3. Pliometrik Push Up (Rep)</label>
+                                <input type="number" id="input-tes-pliometrik" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Repetisi">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">4. Push Up (Rep)</label>
+                                <input type="number" id="input-tes-pushup" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Repetisi">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">5. Squat (Rep)</label>
+                                <input type="number" id="input-tes-squat" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Repetisi">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">6. Plank (Detik)</label>
+                                <input type="number" id="input-tes-plank" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Durasi">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">7. Sprint 20 Meter (Detik)</label>
+                                <input type="number" step="0.01" id="input-tes-sprint" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Contoh: 3.15">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">8. T-Test Agility (Detik)</label>
+                                <input type="number" step="0.01" id="input-tes-ttest" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Contoh: 10.82">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">9. RSA Rerata (Detik)</label>
+                                <input type="number" step="0.01" id="input-tes-rsa" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Contoh: 6.25">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">10. VO2Max Score</label>
+                                <input type="number" step="0.1" id="input-mas-vo2max-direct" required class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs bg-white" placeholder="Contoh: 52.4">
+                            </div>
+                        </div>
+                        <div class="flex justify-end border-t border-slate-100 pt-3">
+                            <button type="submit" class="px-5 py-2 text-white text-xs font-bold rounded-xl shadow-xs" style="background-color: var(--color-primary);">Simpan Rekor Fisik (Optimistic)</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="flex items-center gap-2 mb-3 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-bookmark text-blue-700"></i>
+                        <h3 class="font-bold text-base text-slate-900">Acuan Parameter Standar Norma Fisik Senior (Kategori: Baik)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800 text-white font-bold uppercase tracking-wider">
+                                    <th class="p-2.5 rounded-l-lg">Item Instrumen Evaluasi</th>
+                                    <th class="p-2.5">Standar Skuad Putra (Laki-laki)</th>
+                                    <th class="p-2.5 rounded-r-lg">Standar Skuad Putri (Perempuan)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
+                                <tr><td class="p-3 font-bold">1. V-Sit Reach (Kelenturan)</td><td class="p-3 text-blue-700">&gt; +12 cm</td><td class="p-3 text-pink-700">&gt; +15 cm</td></tr>
+                                <tr><td class="p-3 font-bold">2. Vertical Jump (Power Tungkai)</td><td class="p-3 text-blue-700">&gt; 55 cm</td><td class="p-3 text-pink-700">&gt; 40 cm</td></tr>
+                                <tr><td class="p-3 font-bold">3. Pliometrik Push Up (Power Lengan)</td><td class="p-3 text-blue-700">&gt; 25 Repetisi / 30 dtk</td><td class="p-3 text-pink-700">&gt; 15 Repetisi / 30 dtk</td></tr>
+                                <tr><td class="p-3 font-bold">4. Push Up (Daya Tahan Otot Lengan)</td><td class="p-3 text-blue-700">&gt; 40 Repetisi / 1 mnt</td><td class="p-3 text-pink-700">&gt; 30 Repetisi / 1 mnt</td></tr>
+                                <tr><td class="p-3 font-bold">5. Squat (Daya Tahan Otot Tungkai)</td><td class="p-3 text-blue-700">&gt; 50 Repetisi / 1 mnt</td><td class="p-3 text-pink-700">&gt; 40 Repetisi / 1 mnt</td></tr>
+                                <tr><td class="p-3 font-bold">6. Plank (Kekuatan Inti / Core)</td><td class="p-3 text-blue-700">&gt; 120 Detik</td><td class="p-3 text-pink-700">&gt; 90 Detik</td></tr>
+                                <tr><td class="p-3 font-bold">7. Sprint 20 Meter (Kecepatan)</td><td class="p-3 text-blue-700">&lt; 3.2 Detik</td><td class="p-3 text-pink-700">&lt; 3.6 Detik</td></tr>
+                                <tr><td class="p-3 font-bold">8. T-Test (Kelincahan / Agility)</td><td class="p-3 text-blue-700">&lt; 11.0 Detik</td><td class="p-3 text-pink-700">&lt; 12.2 Detik</td></tr>
+                                <tr><td class="p-3 font-bold">9. RSA / Repeated Sprint Ability (Anaerobik)</td><td class="p-3 text-blue-700">Rerata Rentang &lt; 6.4 dtk</td><td class="p-3 text-pink-700">Rerata Rentang &lt; 7.1 dtk</td></tr>
+                                <tr><td class="p-3 font-bold">10. VO2max (Kapasitas Aerobik Maksimal)</td><td class="p-3 text-blue-700">&gt; 52 ml/kg/min</td><td class="p-3 text-pink-700">&gt; 42 ml/kg/min</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <h3 class="font-bold text-base text-slate-900 mb-4">Hasil Evaluasi 10 Komponen Fisik Atlet</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse min-w-[1000px]">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider bg-slate-50">
+                                    <th class="p-3">Nama Atlet</th><th class="p-3">V-Sit Reach</th><th class="p-3">Vertical Jump</th><th class="p-3">Pliometrik Push Up</th><th class="p-3">Push Up</th><th class="p-3">Squat</th><th class="p-3">Plank</th><th class="p-3">Sprint 20M</th><th class="p-3">T-Test</th><th class="p-3">RSA</th><th class="p-3">VO2Max</th><th class="p-3 text-center">Status VO2Max</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-tes-fisik" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 4: ABSENSI LATIHAN HARIAN -->
+            <div id="view-absensi-harian" class="hidden max-w-4xl space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-calendar-week text-blue-700"></i>
+                        <h3 class="font-bold text-base text-slate-900">Konfigurasi Log Sesi Presensi</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tanggal Latihan</label>
+                            <input type="date" id="absensi-tanggal" class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs font-medium bg-slate-50" value="2026-07-06">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Hari Latihan</label>
+                            <select id="absensi-hari" class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs bg-white font-medium">
+                                <option value="Senin">Senin</option><option value="Selasa">Selasa</option><option value="Rabu">Rabu</option><option value="Kamis">Kamis</option><option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option><option value="Minggu">Minggu</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Fokus Jenis Kategori Sesi</label>
+                            <select id="absensi-kategori" class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs bg-white font-medium">
+                                <option value="Latihan Fisik">Latihan Fisik (Kondisioning/MAS)</option><option value="Latihan Teknik">Latihan Teknik (Stick Handling/Tactical Drill)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <h3 class="font-bold text-base text-slate-900 mb-2">Lembar Presensi Atlet Skuad</h3>
+                    <div id="container-absensi-rows" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- VIEW 5: KALKULATOR MAS OTOMATIS -->
+            <div id="view-kalkulator-mas" class="hidden max-w-4xl space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="flex items-center gap-2 mb-3 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-bolt text-blue-700"></i>
+                        <h3 class="font-bold text-base text-slate-900">Kalkulator MAS Otomatis Berbasis Skor VO2max</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-6">Pilih nama atlet pada menu dropdown di bawah ini. Sistem akan secara **otomatis memuat nilai VO2max** hasil evaluasi fisik terakhir milik atlet tersebut dan mendistribusikan sebaran zona lari taktisnya.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pilih Nama Atlet Skuad</label>
+                            <select id="input-mas-atlet-select" onchange="syncVO2maxFromState()" class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs bg-white font-semibold focus:outline-none focus:border-blue-600 shadow-2xs">
+                                <!-- Diisi dinamis via populateMASAtletDropdown() -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nilai VO2max Atlet Terdeteksi</label>
+                            <input type="number" step="0.1" id="input-mas-vo2max" readonly class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-black text-slate-900 bg-slate-100 shadow-2xs" value="0.0">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pilih Parameter Komputasi Lapangan</label>
+                            <select id="input-mas-metode" onchange="kalkulasiMASOtomatis()" class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs bg-white font-medium focus:outline-none focus:border-blue-600 shadow-2xs">
+                                <option value="waktu">Mode Waktu: Durasi Tetap &rArr; Hitung Target Jarak</option>
+                                <option value="jarak">Mode Jarak: Jarak Sirkuit Tetap &rArr; Hitung Target Waktu</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hasil Komputasi Otomatis Distribusi Lapangan -->
+                <div id="box-hasil-komputasi-mas" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hasil Nilai MAS Pokok Terkalkulasi</p>
+                            <h3 id="txt-display-mas-score" class="text-2xl font-black text-blue-900 mt-0.5">0.00 m/s</h3>
+                        </div>
+                        <button onclick="recordMASHistoryLog()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-2xs transition-colors">
+                            <i class="fa-solid fa-square-plus"></i> Rekam Histori Lari Skuad
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800 text-white font-bold uppercase tracking-wider"><th class="p-3 rounded-l-lg">Kategori Intensitas</th><th class="p-3">Persentase Target MAS</th><th class="p-3">Kecepatan Konversi (m/s)</th><th class="p-3">Target Durasi Waktu</th><th class="p-3 rounded-r-lg">Target Capaian Jarak</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-700 font-semibold">
+                                <tr class="bg-blue-50/30"><td class="p-3 text-slate-900">Roadmap (Pemulihan Aktif)</td><td class="p-3">40% Intensitas MAS</td><td id="td-speed-jalan" class="p-3 font-mono text-slate-600">0.00 m/s</td><td id="td-waktu-jalan" class="p-3 font-bold text-slate-800">--</td><td id="td-jarak-jalan" class="p-3 text-blue-900 font-bold">--</td></tr>
+                                <tr class="bg-emerald-50/30"><td class="p-3 text-slate-900">Jogging (Aerobik Steady)</td><td class="p-3">75% Intensitas MAS</td><td id="td-speed-jogging" class="p-3 font-mono text-slate-600">--</td><td id="td-waktu-jogging" class="p-3 font-bold text-slate-800">--</td><td id="td-jarak-jogging" class="p-3 text-blue-900 font-bold">--</td></tr>
+                                <tr class="bg-rose-50/30"><td class="p-3 text-slate-900">Sprint (Kapasitas Anaerobik)</td><td class="p-3">120% Intensitas MAS</td><td id="td-speed-sprint" class="p-3 font-mono text-slate-600">--</td><td id="td-waktu-sprint" class="p-3 font-bold text-slate-800">--</td><td id="td-jarak-sprint" class="p-3 text-blue-900 font-bold">--</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabel Rekap Histori Perhitungan MAS Atlet Skuad -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider"><i class="fa-solid fa-clock-rotate-left"></i> Tabel Rekap Histori Distribusi Porsi MAS Skuad</h4>
+                        <span id="badge-count-mas-history" class="text-xs bg-blue-100 text-blue-900 font-bold px-2.5 py-0.5 rounded-md">0 Rekor</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                                    <th class="p-3">Nama Atlet</th>
+                                    <th class="p-3">VO2max (MAS)</th>
+                                    <th class="p-3">Target Jalan</th>
+                                    <th class="p-3">Target Jogging</th>
+                                    <th class="p-3">Target Sprint</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-rekap-mas" class="divide-y divide-slate-100 font-semibold text-slate-700">
+                                <!-- Baris log histori terisi dinamis via renderMASHistoryTable() -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 6: ANALISIS PERTANDINGAN (LIVE) -->
+            <div id="view-analisis-live" class="hidden space-y-6">
+                <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-lg border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="text-center md:text-left">
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-red-600 animate-pulse text-white">Live Match Tracker</span>
+                        <h3 class="text-lg font-bold mt-1 text-slate-100">Uji Coba Internal Skuad Floorball</h3>
+                    </div>
+                    <div class="flex items-center gap-6 font-mono">
+                        <div class="text-center"><span class="text-xs text-slate-400 block font-sans font-bold">TIM UTAMA</span><span id="live-score-home" class="text-4xl font-black text-blue-400">0</span></div>
+                        <span class="text-2xl text-slate-600 font-black">:</span>
+                        <div class="text-center"><span class="text-xs text-slate-400 block font-sans font-bold">TIM SPARRING</span><span id="live-score-away" class="text-4xl font-black text-red-400">0</span></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs lg:col-span-2 space-y-6">
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">1. Pilih Atlet yang Beraksi</label><select id="live-atlet-select" class="w-full md:w-1/2 border border-slate-200 px-3 py-2 rounded-xl text-xs bg-white font-medium"></select></div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">2. Klik untuk Catat Kejadian Lapangan (Event)</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <button onclick="logMatchEvent('Shot', 'text-amber-600 bg-amber-50')" class="p-4 border border-amber-100 bg-amber-50/20 rounded-xl text-center hover:bg-amber-50 text-xs font-bold"><i class="fa-solid fa-bullseye text-amber-600 text-lg block mb-2"></i> Shot On Goal</button>
+                                <button onclick="logMatchEvent('Goal', 'text-emerald-700 bg-emerald-50')" class="p-4 border border-emerald-100 bg-emerald-50/20 rounded-xl text-center hover:bg-emerald-50 text-xs font-bold"><i class="fa-solid fa-soccer-ball text-emerald-600 text-lg block mb-2"></i> Goal Score</button>
+                                <button onclick="logMatchEvent('Assist', 'text-blue-700 bg-blue-50')" class="p-4 border border-blue-100 bg-blue-50/20 rounded-xl text-center hover:bg-blue-50 text-xs font-bold"><i class="fa-solid fa-hands-holding-circle text-blue-600 text-lg block mb-2"></i> Assist Pass</button>
+                                <button onclick="logMatchEvent('Block', 'text-purple-700 bg-purple-50')" class="p-4 border border-purple-100 bg-purple-50/20 rounded-xl text-center hover:bg-purple-50 text-xs font-bold"><i class="fa-solid fa-shield text-purple-600 text-lg block mb-2"></i> Defensive Block</button>
+                                <button onclick="logMatchEvent('Saves', 'text-cyan-700 bg-cyan-50')" class="p-4 border border-cyan-100 bg-cyan-50/20 rounded-xl text-center hover:bg-cyan-50 text-xs font-bold"><i class="fa-solid fa-hand-holding-hand text-cyan-600 text-lg block mb-2"></i> Keeper Saves</button>
+                                <button onclick="logMatchEvent('Fault', 'text-red-700 bg-rose-50')" class="p-4 border border-rose-100 bg-rose-50/20 rounded-xl text-center hover:bg-rose-50 text-xs font-bold"><i class="fa-solid fa-triangle-exclamation text-rose-600 text-lg block mb-2"></i> Pelanggaran / Fault</button>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-4 flex gap-2"><button onclick="modifyAwayScore(1)" class="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50">+ Skor Sparring</button><button onclick="modifyAwayScore(-1)" class="px-4 py-2 border border-slate-200 text-slate-400 text-xs font-medium rounded-xl hover:bg-slate-50">- Skor Sparring</button></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-[420px] flex flex-col justify-between">
+                        <div class="flex-1 flex flex-col overflow-hidden">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-3"><h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider">Log Kronologi Kejadian</h4><button onclick="clearLiveMatchLogs()" class="text-[10px] text-slate-400 hover:text-rose-600 font-bold">Reset Log</button></div>
+                            <div id="live-match-log-box" class="flex-1 overflow-y-auto space-y-2.5 pr-1 text-xs"><div class="p-2.5 bg-slate-50 text-slate-400 text-center rounded-xl border border-dashed border-slate-200 font-medium">Belum ada kejadian tercatat.</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 7: STATISTIK & RAPOR LAGA -->
+            <div id="view-statistik-rapor" class="hidden space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Shot Efficiency (Rasio Gol)</p><h4 class="text-2xl font-black text-blue-900 mt-1">28.5%</h4></div>
+                        <div class="p-3.5 bg-blue-50 text-blue-700 rounded-xl"><i class="fa-solid fa-chart-pie text-lg"></i></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Save Percentage (Kiper)</p><h4 class="text-2xl font-black text-emerald-700 mt-1">84.2%</h4></div>
+                        <div class="p-3.5 bg-emerald-50 text-emerald-700 rounded-xl"><i class="fa-solid fa-shield-halved text-lg"></i></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fault Rate (Pelanggaran)</p><h4 class="text-2xl font-black text-rose-700 mt-1">1.2</h4></div>
+                        <div class="p-3.5 bg-rose-50 text-rose-700 rounded-xl"><i class="fa-solid fa-triangle-exclamation text-lg"></i></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-96 flex flex-col">
+                        <div class="border-b border-slate-100 pb-2 mb-4 flex justify-between items-center"><h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider">Grafik Pemetaan Dimensi Efisiensi Taktis Tim</h4></div>
+                        <div class="flex-1 relative"><canvas id="chartRadarEfisiensi"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-96 flex flex-col justify-between">
+                        <div class="border-b border-slate-100 pb-2"><h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider">Heatmap Distribusi Aliran Bola (Peta Lapangan Floorball IFF)</h4></div>
+                        <div class="flex-1 flex items-center justify-center py-4">
+                            <div class="relative w-full max-w-[420px] h-48 bg-sky-700 rounded-3xl border-3 border-white/80 overflow-hidden shadow-xl cursor-crosshair">
+                                <canvas id="heatmapCanvas" width="420" height="192" onclick="drawHeatPoint(event)" class="absolute left-0 top-0 z-20 w-full h-full"></canvas>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px] text-slate-400 font-medium"><p>* Layout rink berskala proporsional 40m x 20m.</p><button onclick="clearHeatmapCanvasWithConfirm()" class="text-blue-700 hover:text-blue-900 font-bold"><i class="fa-solid fa-eraser"></i> Bersihkan Canvas</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 8: INPUT ATLET -->
+            <div id="view-input-atlet" class="hidden max-w-4xl space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <h3 class="font-bold text-base text-slate-900 mb-4">Input Data Profil Skuad Baru</h3>
+                    <form id="form-input-atlet" onsubmit="handleCreateAtlet(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <input type="text" id="inp-nama-atlet" required class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs" placeholder="Nama Lengkap">
+                            <select id="inp-gender-atlet" class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs bg-white"><option value="Laki-laki">Laki-laki (Putra)</option><option value="Perempuan">Perempuan (Putri)</option></select>
+                            <select id="inp-posisi-atlet" class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs bg-white"><option value="Forward">Forward / Penyerang</option><option value="Center">Center / Gelandang Tengah</option><option value="Defender">Defender / Bertahan</option><option value="Goalkeeper">Goalkeeper / Kiper</option></select>
+                            <input type="number" id="inp-usia-atlet" required class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs" placeholder="Usia">
+                        </div>
+                        <textarea id="inp-catatan-atlet" rows="2" class="w-full border border-slate-200 px-4 py-2.5 rounded-xl text-xs" placeholder="Catatan Khusus..."></textarea>
+                        <div class="flex justify-between items-center border-t border-slate-100 pt-3">
+                            <button type="button" onclick="handleClearAllDatabase()" class="px-4 py-2 text-rose-700 bg-rose-50 border border-rose-200 font-bold rounded-xl text-xs hover:bg-rose-100 transition-colors"><i class="fa-solid fa-dumpster-fire"></i> Reset Semua Database Lokal</button>
+                            <button type="submit" class="px-5 py-2.5 text-white text-xs font-bold rounded-xl" style="background-color: var(--color-primary);">Tambahkan Atlet Skuad</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center"><h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider">Daftar Skuad Pemain Terdaftar Aktif</h4><span id="badge-total-atlet" class="text-xs bg-blue-100 text-blue-900 font-bold px-2.5 py-0.5 rounded-md">3 Atlet</span></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
+                                    <th class="p-3">Nama Pemain</th><th class="p-3">Jenis Kelamin</th><th class="p-3">Posisi Bermain</th><th class="p-3">Usia</th><th class="p-3">Catatan Khusus Tim</th><th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="container-atlet-list" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 9: JADWAL ATLET -->
+            <div id="view-atlet-jadwal" class="hidden">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs max-w-xl">
+                    <h3 class="font-bold text-base text-slate-900 mb-3"><i class="fa-solid fa-calendar-day text-blue-700"></i> Jadwal Makrosiklus Skuad</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed mb-4">Minggu ini (Fase Pra-Kompetisi), tim dijadwalkan melakukan program penguatan kondisi fisik terfokus.</p>
+                    <div class="p-4 rounded-xl bg-blue-50 border border-blue-100 text-xs">
+                        <p class="font-bold text-blue-900 mb-1">Agenda Terdekat:</p>
+                        <ul class="list-disc list-inside space-y-1 text-blue-800 font-medium">
+                            <li>Latihan Lapangan Taktis (MAS Lari Sirkuit)</li>
+                            <li>Sesi Evaluasi Kekuatan Inti Otot (Sasana Gym)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- VIEW 10: INPUT RPE -->
+            <div id="view-atlet-rpe" class="hidden max-w-xl space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <h3 class="font-bold text-base text-slate-900 mb-4">Form Kendali Laporan Beban Latihan (RPE)</h3>
+                    <form id="form-rpe-atlet" onsubmit="handleSaveRPEAtlet(event)" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tingkat RPE (Skala Borg 1-10)</label>
+                                <select id="inp-atlet-rpe" class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs bg-white font-bold">
+                                    <option value="1">1 - Sangat Ringan</option>
+                                    <option value="3">3 - Moderat</option>
+                                    <option value="5">5 - Cukup Berat</option>
+                                    <option value="7" selected>7 - Berat</option>
+                                    <option value="9">9 - Sangat Berat</option>
+                                    <option value="10">10 - Maksimal Maksimum</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Denyut Nadi Pasca-Latihan (BPM)</label>
+                                <input type="number" id="inp-atlet-hr" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs" placeholder="Contoh: 165">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-2.5 bg-blue-900 text-white font-bold rounded-xl text-xs shadow-2xs">Kirim Laporan RPE Sesi</button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="p-3 bg-slate-50 border-b border-slate-100 font-bold text-xs text-slate-400 uppercase">Histori Log Laporan Internal Anda</div>
+                    <div id="container-rpe-list" class="divide-y divide-slate-100 text-xs"></div>
+                </div>
+            </div>
+            
+            <!-- VIEW 11: RIWAYAT FISIK ATLET -->
+            <div id="view-atlet-riwayat" class="hidden">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <h3 class="font-bold text-base text-slate-900 mb-4"><i class="fa-solid fa-clock-rotate-left text-blue-700"></i> Portal Riwayat Hasil Evaluasi Fisik Pemain</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800 text-white font-bold uppercase tracking-wider text-[11px]">
+                                    <th class="p-3">Nama Pemain</th>
+                                    <th class="p-3">V-Sit Reach</th>
+                                    <th class="p-3">Vertical Jump</th>
+                                    <th class="p-3">Pliometrik</th>
+                                    <th class="p-3">Push Up</th>
+                                    <th class="p-3">Squat</th>
+                                    <th class="p-3">Plank</th>
+                                    <th class="p-3">Sprint 20M</th>
+                                    <th class="p-3">T-Test</th>
+                                    <th class="p-3">RSA</th>
+                                    <th class="p-3">VO2Max</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-riwayat-atlet-view" class="divide-y divide-slate-100 font-medium text-slate-700">
+                                <!-- Terisi otomatis melalui renderTesFisikTable() -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- SLIDEOUT INTERAKTIF ASISTEN AI PANEL -->
+    <div id="ai-panel" class="w-96 bg-slate-900 text-slate-100 h-full border-l border-slate-800 flex flex-col justify-between shadow-2xl transition-all duration-300 transform translate-x-full fixed right-0 top-0 z-50">
+        <div class="p-5 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
+            <div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm"><i class="fa-solid fa-robot"></i></div><div><h3 class="font-bold text-xs text-white">Konsol Pintar AI Floorball</h3><p class="text-[9px] text-emerald-400 font-semibold">Online</p></div></div>
+            <button onclick="toggleAIPanel()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="ai-chat-log" class="flex-1 overflow-y-auto p-5 space-y-4 text-xs leading-relaxed"></div>
+        <div class="p-4 border-t border-slate-800 bg-slate-950 flex gap-2"><input type="text" id="ai-input-text" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white" placeholder="Ketik analisis..."><button onclick="handleAISend()" class="px-3 py-2 bg-blue-600 rounded-xl text-white text-xs font-bold"><i class="fa-solid fa-paper-plane"></i></button></div>
+    </div>
+
+    <!-- SCRIPT UTAMA UTUH -->
+    <script>
+        let homeScore = 0;
+        let awayScore = 0;
+        let liveLogs = [];
+        let radarChartInstance = null;
+        let currentRole = "Pelatih Kepala";
+         
+        let atletState = JSON.parse(localStorage.getItem('sf_atletState')) || [
+            { id: 1, nama: 'Rian Hidayat', gender: 'Laki-laki', posisi: 'Forward', usia: 21, catatan: 'Kondisi ankle stabil post-recovery.' },
+            { id: 2, nama: 'Dimas Pratama', gender: 'Laki-laki', posisi: 'Defender', usia: 22, catatan: 'Kelelahan hamstring berkala.' },
+            { id: 3, nama: 'Siti Rahma', gender: 'Perempuan', posisi: 'Defender', usia: 20, catatan: 'Siap menempuh peningkatan volume sirkuit.' }
+        ];
+
+        let tesFisikState = JSON.parse(localStorage.getItem('sf_tesFisikState')) || [
+            { id: 1, atletId: 1, vsit: '14', vjump: '58', pliometrik: '28', pushup: '45', squat: '52', plank: '180', sprint: '3.10', ttest: '10.80', rsa: '6.20', vo2max: '54.2' },
+            { id: 2, atletId: 3, vsit: '18', vjump: '42', pliometrik: '18', pushup: '32', squat: '44', plank: '150', sprint: '3.50', ttest: '11.90', rsa: '6.90', vo2max: '44.5' }
+        ];
+
+        let rpeState = JSON.parse(localStorage.getItem('sf_rpeState')) || [{ id: 1, timestamp: '10:15 WIB', rpe: '7', hr: '162' }];
+         
+        let absensiLogsState = JSON.parse(localStorage.getItem('sf_absensiLogsState')) || [
+            { id: 1, nama: 'Rian Hidayat', tanggal: '2026-07-06', hari: 'Senin', kategori: 'Latihan Fisik', status: 'LATIHAN' },
+            { id: 2, nama: 'Dimas Pratama', tanggal: '2026-07-06', hari: 'Senin', kategori: 'Latihan Fisik', status: 'TELAT' }
+        ];
+
+        let masHistoryState = JSON.parse(localStorage.getItem('sf_masHistoryState')) || [
+            { id: 1, nama: 'Rian Hidayat', vo2max: '54.2', jalan: '111.5m / 60s', jogging: '418.1m / 120s', sprint: '83.6m / 15s' }
+        ];
+
+        const kamusLatihanFloorball = {
+            flexibility: [
+                { id_komp: 'vsit', nama: 'Dynamic Stretching & Hip Mobility Drills', porsi: '10 Menit', deskripsi: 'Peregangan dinamis aktif untuk mempersiapkan sendi pinggul menghadapi pergerakan lateral eksplosif.' },
+                { id_komp: 'vsit', nama: 'V-Sit Static Hold & Foam Rolling Circuit', porsi: '3 Set x 30 Detik', deskripsi: 'Pemanjangan rantai otot posterior (hamstring dan punggung bawah) guna mengurangi ketegangan.' },
+                { id_komp: 'vsit', nama: 'Cossack Squats & Ankle Mobilization', porsi: '3 Set x 10 Rep', deskripsi: 'Fokus pada mobilitas pergelangan kaki dan fleksibilitas adduktor untuk mendukung posisi rendah saat bertanding.' }
+            ],
+            power_tungkai: [
+                { id_komp: 'vjump', nama: 'Explosive Box Jumps', porsi: '4 Set x 6 Rep', deskripsi: 'Fokus pada akselerasi vertikal dan reduksi waktu kontak tanah untuk meningkatkan daya ledak tungkai.' },
+                { id_komp: 'vjump', nama: 'Weighted Bulgarian Split Squats', porsi: '3 Set x 8 Rep/kaki', deskripsi: 'Membangun kekuatan unilateral yang seimbang serta stabilitas lutut saat melakukan akselerasi satu kaki.' },
+                { id_komp: 'vjump', nama: 'Depth Jumps to Lateral Bound', porsi: '3 Set x 5 Rep', deskripsi: 'Latihan pliometrik tingkat lanjut untuk mentransfer kekuatan vertikal menjadi daya dorong lateral taktis.' }
+            ],
+            power_lengan: [
+                { id_komp: 'pliometrik', nama: 'Plyometric Clapping Push-Up', porsi: '3 Set x 8 Rep', deskripsi: 'Mengembangkan power otot dada dan trisep secara cepat untuk meningkatkan stabilitas stick.' },
+                { id_komp: 'pliometrik', nama: 'Medicine Ball Overhead Slam Drills', porsi: '4 Set x 10 Rep', deskripsi: 'Melatih transfer tenaga kinetik dari seluruh tubuh bagian atas secara eksplosif ke arah bawah.' },
+                { id_komp: 'pliometrik', nama: 'Stick-Resisted Quick Wrist Snaps', porsi: '3 Set x 15 Detik', deskripsi: 'Latihan spesifik pergelangan tangan menggunakan beban karet untuk meningkatkan akselerasi tembakan.' }
+            ],
+            endurance_otot: [
+                { id_komp: 'pushup', nama: 'Bodyweight Squats Circuit', porsi: '3 Siklus x 45 Detik', deskripsi: 'Meningkatkan kapasitas daya tahan anaerobik lokal otot tungkai terhadap asam laktat.' },
+                { id_komp: 'squat', nama: 'Walking Lunges Terintegrasi Stick Handling', porsi: '3 Set x 20 Langkah', deskripsi: 'Membangun ketahanan isometrik paha depan dibarengi dengan kontrol konsentrasi handling.' },
+                { id_komp: 'pushup', nama: 'Standard Push-Up (AMRAP Mode)', porsi: '3 Set x Maksimal Rep', deskripsi: 'Melatih ketahanan performa otot dada bagian atas agar konstan sepanjang pertandingan.' }
+            ],
+            core_strength: [
+                { id_komp: 'plank', nama: 'Three-Way Plank Matrix', porsi: '3 Set x 45 Detik/Sisi', deskripsi: 'Penguatan dinding core secara menyeluruh untuk melindungi tubuh dari risiko benturan badan.' },
+                { id_komp: 'plank', nama: 'Weighted Russian Twists Rotasional', porsi: '3 Set x 20 Rep', deskripsi: 'Menguatan otot oblikue yang bertanggung jawab penuh atas kekuatan rotasi badan saat menembak.' },
+                { id_komp: 'plank', nama: 'Pallof Press Anti-Rotational Hold', porsi: '3 Set x 12 Rep/sisi', deskripsi: 'Latihan krusial untuk melatih core menahan gaya dorong dari samping saat perebutan bola.' }
+            ],
+            agility_speed: [
+                { id_komp: 'sprint', nama: '20-Meter Pure Acceleration Sprints', porsi: '6 Repetisi (Rest 2 Menit)', deskripsi: 'Fokus pada kekuatan dorongan awal untuk mencapai kecepatan puncak secepat mungkin.' },
+                { id_komp: 'ttest', nama: 'Pro Agility 5-10-5 Taktis Drill', porsi: '4 Repetisi (Rest 60s)', deskripsi: 'Menguji dan melatih kecepatan reaksi deselerasi serta re-akselerasi lateral dalam ruang sempit.' },
+                { id_komp: 'rsa', nama: 'Shuttle Run 4x10M Sirkuit', porsi: '5 Repetisi (Rest 90s)', deskripsi: 'Simulasi sprint bolak-balik jarak pendek dengan perubahan arah tajam 180 derajat.' }
+            ]
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem('sf_atletState', JSON.stringify(atletState));
+            localStorage.setItem('sf_tesFisikState', JSON.stringify(tesFisikState));
+            localStorage.setItem('sf_rpeState', JSON.stringify(rpeState));
+            localStorage.setItem('sf_absensiLogsState', JSON.stringify(absensiLogsState));
+            localStorage.setItem('sf_masHistoryState', JSON.stringify(masHistoryState));
+        }
+
+        function handleClearAllDatabase() {
+            Swal.fire({
+                title: 'Reset Seluruh Database?',
+                text: "Tindakan ini akan menghapus semua data atlet, hasil tes, dan riwayat secara permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus Semua!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.clear();
+                    atletState = []; tesFisikState = []; rpeState = []; absensiLogsState = []; masHistoryState = [];
+                    saveToLocalStorage();
+                    renderAtletList(); renderTesFisikTable(); populateAtletDropdowns(); renderRPEList(); renderAbsensiRows(); renderDashboardRisk();
+                    Toast.fire({ icon: 'success', title: 'Database lokal berhasil dibersihkan.' });
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            renderAtletList(); renderTesFisikTable(); populateAtletDropdowns(); renderRPEList(); renderAbsensiRows(); populateMASAtletDropdown(); kalkulasiMASOtomatis(); initACWRChart(); renderDashboardRisk();
+        });
+
+        function renderDashboardRisk() {
+            const riskBox = document.getElementById('dashboard-risk-box');
+            if(!riskBox) return;
+            riskBox.innerHTML = '';
+            
+            const dimasExist = atletState.some(a => a.nama === 'Dimas Pratama');
+            if(dimasExist) {
+                riskBox.innerHTML = `
+                    <div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                        <div class="flex justify-between text-xs font-bold text-slate-700">
+                            <span>Dimas Pratama</span>
+                            <span class="text-amber-700 font-mono">ACWR 1.42</span>
+                        </div>
+                    </div>`;
+            } else if (atletState.length > 0) {
+                riskBox.innerHTML = `
+                    <div class="p-3 rounded-xl bg-blue-50 border border-blue-100 text-xs text-blue-800 text-center font-medium">
+                        Semua kondisi beban lari taktis skuad terpantau aman.
+                    </div>`;
+            } else {
+                riskBox.innerHTML = `<div class="text-xs text-slate-400 italic text-center py-4">Database skuad kosong.</div>`;
+            }
+        }
+
+        function drawFloorballRinkMarkings() {
+            const canvas = document.getElementById('heatmapCanvas'); if (!canvas) return;
+            const ctx = canvas.getContext('2d'); const w = canvas.width; const h = canvas.height;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)"; ctx.lineWidth = 1.5;
+
+            ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke();
+            ctx.beginPath(); ctx.arc(w / 2, h / 2, 30, 0, 2 * Math.PI); ctx.stroke();
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)"; ctx.beginPath(); ctx.arc(w / 2, h / 2, 3.5, 0, 2 * Math.PI); ctx.fill();
+
+            ctx.moveTo(36, 24); ctx.lineTo(36, h - 24); ctx.stroke();
+            ctx.strokeRect(12, h / 2 - 42, 48, 84); ctx.strokeRect(36, h / 2 - 21, 12, 42);
+            ctx.strokeStyle = "rgba(239, 68, 68, 0.8)"; ctx.lineWidth = 2; ctx.strokeRect(26, h / 2 - 16, 10, 32); 
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.6)"; ctx.lineWidth = 1.5;
+            const dotLeftX = 72, dotLeftYTop = h / 2 - 54, dotLeftYBottom = h / 2 + 54;
+            ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
+            ctx.beginPath(); ctx.arc(dotLeftX, dotLeftYTop, 3, 0, 2 * Math.PI); ctx.fill(); ctx.beginPath(); ctx.moveTo(dotLeftX - 8, dotLeftYTop); ctx.lineTo(dotLeftX + 8, dotLeftYTop); ctx.stroke();
+            ctx.beginPath(); ctx.arc(dotLeftX, dotLeftYBottom, 3, 0, 2 * Math.PI); ctx.fill(); ctx.beginPath(); ctx.moveTo(dotLeftX - 8, dotLeftYBottom); ctx.lineTo(dotLeftX + 8, dotLeftYBottom); ctx.stroke();
+
+            ctx.moveTo(w - 36, 24); ctx.lineTo(w - 36, h - 24); ctx.stroke();
+            ctx.strokeRect(w - 60, h / 2 - 42, 48, 84); ctx.strokeRect(w - 48, h / 2 - 21, 12, 42);
+            ctx.strokeStyle = "rgba(239, 68, 68, 0.8)"; ctx.lineWidth = 2; ctx.strokeRect(w - 36, h / 2 - 16, 10, 32);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.6)"; ctx.lineWidth = 1.5;
+            const dotRightX = w - 72, dotRightYTop = h / 2 - 54, dotRightYBottom = h / 2 + 54;
+            ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
+            ctx.beginPath(); ctx.arc(dotRightX, dotRightYTop, 3, 0, 2 * Math.PI); ctx.fill(); ctx.beginPath(); ctx.moveTo(dotRightX - 8, dotRightYTop); ctx.lineTo(dotRightX + 8, dotRightYTop); ctx.stroke();
+            ctx.beginPath(); ctx.arc(dotRightX, dotRightYBottom, 3, 0, 2 * Math.PI); ctx.fill(); ctx.beginPath(); ctx.moveTo(dotRightX - 8, dotRightYBottom); ctx.lineTo(dotRightX + 8, dotRightYBottom); ctx.stroke();
+        }
+
+        function drawHeatPoint(event) {
+            const canvas = document.getElementById('heatmapCanvas'); if (!canvas) return;
+            const ctx = canvas.getContext('2d'); const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left; const y = event.clientY - rect.top;
+            const gradient = ctx.createRadialGradient(x, y, 2, x, y, 16);
+            gradient.addColorStop(0, 'rgba(244, 63, 94, 0.75)'); gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.35)'); gradient.addColorStop(1, 'rgba(245, 158, 11, 0)');
+            ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(x, y, 16, 0, 2 * Math.PI); ctx.fill();
+            drawFloorballRinkMarkings();
+        }
+
+        function clearHeatmapCanvas() {
+            const canvas = document.getElementById('heatmapCanvas'); if (!canvas) return;
+            const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawFloorballRinkMarkings();
+        }
+        function clearHeatmapCanvasWithConfirm() { clearHeatmapCanvas(); Toast.fire({ icon: 'success', title: 'Kanvas rink dibersihkan.' }); }
+
+        function initRadarEfisiensiChart() {
+            const ctx = document.getElementById('chartRadarEfisiensi'); if (!ctx) return;
+            if (radarChartInstance) radarChartInstance.destroy();
+            radarChartInstance = new Chart(ctx.getContext('2d'), { type: 'radar', data: { labels: ['Possession', 'Passing', 'Conversion', 'Pressing', 'Saves'], datasets: [{ label: 'Tim Utama', data: [78, 82, 65, 70, 84], borderColor: '#004B8D', fill: false }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { ticks: { display: false } } } } });
+        }
+
+        function logMatchEvent(eventType, visualStyleClass) {
+            const atletSelect = document.getElementById('live-atlet-select');
+            if (!atletSelect || atletSelect.value === '') { Swal.fire({ icon: 'warning', title: 'Pilih Atlet Terlebih Dahulu!' }); return; }
+            const atletId = parseInt(atletSelect.value); const atletObj = atletState.find(a => a.id === atletId);
+            const now = new Date(); const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            Swal.fire({ title: 'Konfirmasi Aksi Live?', text: `Catat kejadian "${eventType}" untuk atlet ${atletObj.nama}?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#004B8D' }).then((result) => {
+                if (result.isConfirmed) { if (eventType === 'Goal') { homeScore += 1; document.getElementById('live-score-home').innerText = homeScore; } liveLogs.unshift({ time: timeString, nama: atletObj.nama, event: eventType, style: visualStyleClass }); renderLiveMatchLogs(); Toast.fire({ icon: 'success', title: `Terekam Live: ${eventType}` }); }
+            });
+        }
+
+        function renderLiveMatchLogs() {
+            const logBox = document.getElementById('live-match-log-box'); if (!logBox) return;
+            if (liveLogs.length === 0) { logBox.innerHTML = `<div class="p-2.5 bg-slate-50 text-slate-400 text-center rounded-xl border border-dashed border-slate-200 font-medium">Belum ada kejadian tercatat.</div>`; return; }
+            logBox.innerHTML = ''; liveLogs.forEach(log => { logBox.innerHTML += `<div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50 flex justify-between items-center"><div class="space-y-0.5"><span class="text-[9px] font-bold font-mono text-slate-400 bg-slate-200/60 px-1 rounded">${log.time}</span><p class="font-bold text-slate-800">${log.nama}</p></div><span class="text-[10px] font-black px-2 py-0.5 rounded uppercase ${log.style}">${log.event}</span></div>`; });
+        }
+
+        function modifyAwayScore(amount) { awayScore += amount; if (awayScore < 0) awayScore = 0; document.getElementById('live-score-away').innerText = awayScore; }
+        function clearLiveMatchLogs() { Swal.fire({ title: 'Reset Lembar Laga?', icon: 'warning', showCancelButton: true }).then((result) => { if (result.isConfirmed) { homeScore = 0; awayScore = 0; liveLogs = []; document.getElementById('live-score-home').innerText = 0; document.getElementById('live-score-away').innerText = 0; renderLiveMatchLogs(); } }); }
+
+        function renderAbsensiRows() {
+            const container = document.getElementById('container-absensi-rows'); if (!container) return; container.innerHTML = '';
+            container.innerHTML = `<form id="form-submit-absensi" onsubmit="handleSaveAbsensiLog(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 border border-slate-200 rounded-xl bg-slate-50/40 items-end"><div><label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pilih Atlet Skuad</label><select id="absensi-atlet-select" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs bg-white font-medium"></select></div><div><label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Status Kehadiran Resmi</label><select id="absensi-status-select" required class="w-full border border-slate-200 px-3 py-2 rounded-xl text-xs bg-white font-bold"><option value="Latihan">Latihan</option><option value="Telat">Telat</option><option value="Izin">Izin</option><option value="Alpa">Alpa</option></select></div><div><button type="submit" class="w-full py-2 bg-blue-900 text-white font-bold rounded-xl text-xs shadow-2xs">Rekam Absensi (Optimistic)</button></div></form><div class="mt-4 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-3xs"><div class="p-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center"><span class="text-[10px] font-black tracking-wider text-slate-400 uppercase">Tabel Rekap Histori Absensi Pemain</span><span id="badge-count-absensi" class="text-[10px] bg-purple-100 text-purple-900 font-mono font-bold px-2 py-0.5 rounded">0 Log</span></div><div class="overflow-x-auto"><table class="w-full text-left text-xs border-collapse"><thead><tr class="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100 text-[10px]"><th class="p-2.5">Nama Atlet</th><th class="p-2.5">Hari / Tanggal</th><th class="p-2.5">Kategori Latihan</th><th class="p-2.5">Status Presensi</th><th class="p-2.5 text-center">Hapus</th></tr></thead><tbody id="table-body-rekap-absensi" class="divide-y divide-slate-100 font-semibold text-slate-700"></tbody></table></div></div>`;
+            populateAbsensiDropdown(); renderAbsensiTableLogs();
+        }
+        function populateAbsensiDropdown() { const select = document.getElementById('absensi-atlet-select'); if(!select) return; select.innerHTML = ''; if(atletState.length === 0) { select.innerHTML = `<option value="">-- Skuad Kosong --</option>`; return; } atletState.forEach(a => { select.innerHTML += `<option value="${a.nama}">${a.nama}</option>`; }); }
+        function renderAbsensiTableLogs() { const tbody = document.getElementById('table-body-rekap-absensi'); const badge = document.getElementById('badge-count-absensi'); if(!tbody) return; badge.innerText = `${absensiLogsState.length} Log`; tbody.innerHTML = ''; if(absensiLogsState.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-xs text-slate-400 italic text-center">Belum ada rekap histori presensi latihan harian.</td></tr>`; return; } absensiLogsState.forEach(log => { let c = "bg-blue-50 text-blue-800 border-blue-200"; if(log.status === 'TELAT') c = "bg-amber-50 text-amber-800 border-amber-200"; if(log.status === 'IZIN') c = "bg-purple-50 text-purple-800 border-purple-200"; if(log.status === 'ALPA') c = "bg-rose-50 text-rose-800 border-rose-200"; tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors"><td class="p-2.5 text-slate-900 font-bold">${log.nama}</td><td class="p-2.5 text-slate-500">${log.hari}, ${log.tanggal}</td><td class="p-2.5 text-slate-500 font-normal">${log.kategori}</td><td class="p-2.5"><span class="px-2 py-0.5 border rounded-md text-[10px] font-black uppercase ${c}">${log.status}</span></td><td class="p-2.5 text-center"><button onclick="handleDeleteAbsensiLog(${log.id})" class="text-slate-300 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button></td></tr>`; }); }
+        function handleSaveAbsensiLog(event) { event.preventDefault(); const athleteName = document.getElementById('absensi-atlet-select').value; const statusValue = document.getElementById('absensi-status-select').value; const tgl = document.getElementById('absensi-tanggal').value; const hari = document.getElementById('absensi-hari').value; const kategori = document.getElementById('absensi-kategori').value; if(!athleteName) return; Swal.fire({ title: 'Rekam Absensi Latihan?', text: `Catat status "${statusValue}" untuk atlet ${athleteName}?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#004B8D' }).then((result) => { if (result.isConfirmed) { absensiLogsState.push({ id: Date.now(), nama: athleteName, tanggal: tgl, hari: hari, kategori: kategori, status: statusValue.toUpperCase() }); saveToLocalStorage(); renderAbsensiTableLogs(); Toast.fire({ icon: 'success', title: 'Regristrasi absensi dicatat.' }); } }); }
+        function handleDeleteAbsensiLog(id) { Swal.fire({ title: 'Hapus Rekap?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((result) => { if (result.isConfirmed) { absensiLogsState = absensiLogsState.filter(log => log.id !== id); saveToLocalStorage(); renderAbsensiTableLogs(); } }); }
+
+        function populateMASAtletDropdown() {
+            const select = document.getElementById('input-mas-atlet-select');
+            if(!select) return;
+            select.innerHTML = '<option value="" disabled selected>-- Pilih Atlet Skuad --</option>';
+            atletState.forEach(a => {
+                select.innerHTML += `<option value="${a.id}">${a.nama} (${a.posisi})</option>';`;
+            });
+        }
+
+        function syncVO2maxFromState() {
+            const atletId = parseInt(document.getElementById('input-mas-atlet-select').value);
+            const inputVO2max = document.getElementById('input-mas-vo2max');
+            if(!atletId) return;
+            const recordFisik = tesFisikState.find(t => t.atletId === atletId);
+            if(recordFisik) inputVO2max.value = recordFisik.vo2max;
+            else inputVO2max.value = "45.0";
+            kalkulasiMASOtomatis();
+        }
+
+        function kalkulasiMASOtomatis() {
+            const vo2max = parseFloat(document.getElementById('input-mas-vo2max').value);
+            const metode = document.getElementById('input-mas-metode').value;
+            if (!vo2max || vo2max <= 0) { document.getElementById('txt-display-mas-score').innerText = "0.00 m/s"; return; }
+            const masScore = (vo2max / 3.5).toFixed(2);
+            document.getElementById('txt-display-mas-score').innerText = `${masScore} m/s`;
+            const speedJalan = (masScore * 0.40).toFixed(2), speedJogging = (masScore * 0.75).toFixed(2), speedSprint = (masScore * 1.20).toFixed(2);
+            document.getElementById('td-speed-jalan').innerText = `${speedJalan} m/s`;
+            document.getElementById('td-speed-jogging').innerText = `${speedJogging} m/s`;
+            document.getElementById('td-speed-sprint').innerText = `${speedSprint} m/s`;
+            if (metode === 'waktu') {
+                const autoWaktuJalan = 60, autoWaktuJogging = 120, autoWaktuSprint = 15;
+                document.getElementById('td-waktu-jalan').innerText = `${autoWaktuJalan} Detik`;
+                document.getElementById('td-waktu-jogging').innerText = `${autoWaktuJogging} Detik`;
+                document.getElementById('td-waktu-sprint').innerText = `${autoWaktuSprint} Detik`;
+                document.getElementById('td-jarak-jalan').innerText = `${(speedJalan * autoWaktuJalan).toFixed(1)} Meter`;
+                document.getElementById('td-jarak-jogging').innerText = `${(speedJogging * autoWaktuJogging).toFixed(1)} Meter`;
+                document.getElementById('td-jarak-sprint').innerText = `${(speedSprint * autoWaktuSprint).toFixed(1)} Meter`;
+            } else {
+                const autoJarakJalan = 50, autoJarakJogging = 300, autoJarakSprint = 60;
+                document.getElementById('td-waktu-jalan').innerText = `${speedJalan > 0 ? (autoJarakJalan / speedJalan).toFixed(1) : 0} Detik`;
+                document.getElementById('td-waktu-jogging').innerText = `${speedJogging > 0 ? (autoJarakJogging / speedJogging).toFixed(1) : 0} Detik`;
+                document.getElementById('td-waktu-sprint').innerText = `${speedSprint > 0 ? (autoJarakSprint / speedSprint).toFixed(1) : 0} Detik`;
+                document.getElementById('td-jarak-jalan').innerText = `${autoJarakJalan} Meter`;
+                document.getElementById('td-jarak-jogging').innerText = `${autoJarakJogging} Meter`;
+                document.getElementById('td-jarak-sprint').innerText = `${autoJarakSprint} Meter`;
+            }
+        }
+
+        function recordMASHistoryLog() {
+            const selectAtlet = document.getElementById('input-mas-atlet-select');
+            if(!selectAtlet || selectAtlet.value === '') {
+                Swal.fire({ icon: 'warning', title: 'Gagal Rekam', text: 'Pilih profil nama atlet skuad terlebih dahulu.', confirmButtonColor: '#004B8D' });
+                return;
+            }
+            const atletId = parseInt(selectAtlet.value); const atletObj = atletState.find(a => a.id === atletId);
+            const vo2maxVal = document.getElementById('input-mas-vo2max').value; const masTxt = document.getElementById('txt-display-mas-score').innerText;
+            const textJalan = document.getElementById('td-jarak-jalan').innerText + ' / ' + document.getElementById('td-waktu-jalan').innerText;
+            const textJogging = document.getElementById('td-jarak-jogging').innerText + ' / ' + document.getElementById('td-waktu-jogging').innerText;
+            const textSprint = document.getElementById('td-jarak-sprint').innerText + ' / ' + document.getElementById('td-waktu-sprint').innerText;
+            Swal.fire({ title: 'Simpan Histori Lari Skuad?', text: `Dokumentasikan parameter hitung zona lari untuk atlet ${atletObj.nama} ke rekap histori?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#004B8D' }).then((result) => {
+                if(result.isConfirmed) {
+                    masHistoryState.unshift({ id: Date.now(), nama: atletObj.nama, vo2max: `${vo2maxVal} (${masTxt})`, jalan: textJalan, jogging: textJogging, sprint: textSprint });
+                    saveToLocalStorage(); renderMASHistoryTable(); Toast.fire({ icon: 'success', title: 'State Diperbarui: Rekor zona lari taktis terekam.' });
+                }
+            });
+        }
+
+        function renderMASHistoryTable() {
+            const tbody = document.getElementById('table-body-rekap-mas'); const badge = document.getElementById('badge-count-mas-history'); if(!tbody) return;
+            badge.innerText = `${masHistoryState.length} Rekor`; tbody.innerHTML = '';
+            if(masHistoryState.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-xs text-slate-400 italic text-center bg-white">Belum ada histori sebaran nilai MAS terekam.</td></tr>`; return; }
+            masHistoryState.forEach(row => { tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors"><td class="p-3 text-slate-900 font-bold">${row.nama}</td><td class="p-3 font-mono text-blue-800 text-[11px]">${row.vo2max}</td><td class="p-3 font-medium text-slate-600">${row.jalan}</td><td class="p-3 font-medium text-slate-600">${row.jogging}</td><td class="p-3 font-medium text-slate-600">${row.sprint}</td><td class="p-3 text-center"><button onclick="deleteMASHistoryLog(${row.id})" class="text-slate-300 hover:text-rose-600 transition-colors p-1"><i class="fa-solid fa-trash-can"></i></button></td></tr>`; });
+        }
+
+        function deleteMASHistoryLog(id) {
+            Swal.fire({ title: 'Hapus Rekor Histori?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((result) => {
+                if(result.isConfirmed) { masHistoryState = masHistoryState.filter(m => m.id !== id); saveToLocalStorage(); renderMASHistoryTable(); Toast.fire({ icon: 'success', title: 'Rekor dikeluarkan dari histori.' }); }
+            });
+        }
+
+        function switchRole(role) {
+            currentRole = role; const btnPelatih = document.getElementById('btn-role-pelatih'); const btnAtlet = document.getElementById('btn-role-atlet'); const navPelatih = document.getElementById('nav-pelatih'); const navAtlet = document.getElementById('nav-atlet'); const aiToggleBox = document.getElementById('ai-toggle-box');
+            document.getElementById('user-display-name').innerText = role === "Pelatih Kepala" ? "Coach Desi Sasmita" : "Atlet Skuad"; document.getElementById('user-display-role').innerText = role;
+            if (role === "Pelatih Kepala") {
+                btnPelatih.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white shadow-xs text-blue-900"; btnAtlet.className = "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                navPelatih.classList.remove('hidden'); navAtlet.classList.add('hidden'); aiToggleBox.classList.remove('hidden'); switchMenu('dashboard', navPelatih.querySelector('a'));
+            } else {
+                btnAtlet.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white shadow-xs text-blue-900"; btnPelatih.className = "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                navPelatih.className = "hidden"; navPelatih.classList.add('hidden'); navAtlet.classList.remove('hidden'); aiToggleBox.classList.add('hidden'); document.getElementById('ai-panel').classList.add('translate-x-full'); switchMenu('atlet-jadwal', navAtlet.querySelector('a'));
+            }
+        }
+
+        function switchMenu(viewId, element) {
+            const views = ['dashboard', 'periodisasi', 'ai-program', 'komponen-fisik', 'absensi-harian', 'kalkulator-mas', 'analisis-live', 'statistik-rapor', 'input-atlet', 'atlet-jadwal', 'atlet-rpe', 'atlet-riwayat'];
+            views.forEach(v => { const el = document.getElementById(`view-${v}`); if(el) el.classList.add('hidden'); });
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            document.getElementById('menu-title').innerText = element.innerText.trim();
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+            element.classList.add('active');
+            
+            if (viewId === 'dashboard') { setTimeout(initACWRChart, 100); renderDashboardRisk(); }
+            if (viewId === 'periodisasi') { JalankanKalkulasiDefaultPeriodisasi(); }
+            if (viewId === 'kalkulator-mas') { populateMASAtletDropdown(); renderMASHistoryTable(); kalkulasiMASOtomatis(); }
+            if (viewId === 'statistik-rapor') { setTimeout(() => { initRadarEfisiensiChart(); clearHeatmapCanvas(); }, 100); }
+        }
+
+        function populateAtletDropdowns() {
+            const dropdown = document.getElementById('input-tes-atlet'); const liveMatchDropdown = document.getElementById('live-atlet-select');
+            dropdown.innerHTML = ''; liveMatchDropdown.innerHTML = '<option value="" disabled selected>-- Pilih Nama Atlet --</option>';
+            if (atletState.length === 0) { dropdown.innerHTML = '<option disabled>Belum ada atlet terdaftar</option>'; return; }
+            atletState.forEach(a => { dropdown.innerHTML += `<option value="${a.id}">${a.nama}</option>`; });
+            atletState.forEach(a => { liveMatchDropdown.innerHTML += `<option value="${a.id}">${a.nama} (${a.posisi})</option>`; });
+        }
+
+        function renderTesFisikTable() {
+            const tbody = document.getElementById('table-body-tes-fisik');
+            const tbodyAtletView = document.getElementById('table-body-riwayat-atlet-view');
+            if (!tbody) return; 
+            tbody.innerHTML = ''; 
+            if(tbodyAtletView) tbodyAtletView.innerHTML = '';
+            
+            if (atletState.length === 0) { 
+                const emptyRow = `<tr><td colspan="12" class="p-4 text-xs text-slate-400 italic text-center">Belum ada data evaluasi fisik skuad terdaftar.</td></tr>`;
+                tbody.innerHTML = emptyRow; 
+                if(tbodyAtletView) tbodyAtletView.innerHTML = emptyRow;
+                return; 
+            }
+            
+            atletState.forEach(atlet => { 
+                const dataTes = tesFisikState.find(t => t.atletId === atlet.id); 
+                
+                let statusVO2Max = "-";
+                let badgeClass = "bg-slate-100 text-slate-600";
+                
+                if (dataTes && dataTes.vo2max) {
+                    const score = parseFloat(dataTes.vo2max);
+                    if (atlet.gender === 'Laki-laki') {
+                        if (score >= 52.0) { statusVO2Max = "Lolos (Baik)"; badgeClass = "bg-emerald-100 text-emerald-800 font-bold"; }
+                        else { statusVO2Max = "Kurang"; badgeClass = "bg-rose-100 text-rose-800 font-bold"; }
+                    } else {
+                        if (score >= 42.0) { statusVO2Max = "Lolos (Baik)"; badgeClass = "bg-emerald-100 text-emerald-800 font-bold"; }
+                        else { statusVO2Max = "Kurang"; badgeClass = "bg-rose-100 text-rose-800 font-bold"; }
+                    }
+                }
+
+                const rowContent = `
+                    <td class="p-3 font-bold text-slate-900">${atlet.nama}</td>
+                    <td class="p-3">${dataTes ? dataTes.vsit + ' cm' : '-'}</td>
+                    <td class="p-3">${dataTes ? dataTes.vjump + ' cm' : '-'}</td>
+                    <td class="p-3">${dataTes ? dataTes.pliometrik + ' Rep' : '-'}</td>
+                    <td class="p-3">${dataTes ? dataTes.pushup + ' Rep' : '-'}</td>
+                    <td class="p-3">${dataTes ? dataTes.squat + ' Rep' : '-'}</td>
+                    <td class="p-3">${dataTes ? dataTes.plank + ' dtk' : '-'}</td>
+                    <td class="p-3">${dataTes ? dataTes.sprint + ' dtk' : '-'}</td>
+                    <td class="p-3">${dataTes ? dataTes.ttest + ' dtk' : '-'}</td>
+                    <td class="p-3">${dataTes ? dataTes.rsa + ' dtk' : '-'}</td>
+                    <td class="p-3 font-bold text-blue-800">${dataTes ? dataTes.vo2max : '-'}</td>
+                    <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-md text-[10px] ${badgeClass}">${statusVO2Max}</span></td>`;
+                
+                tbody.innerHTML += `<tr class="hover:bg-slate-50/30 transition-colors">${rowContent}</tr>`;
+                if(tbodyAtletView) tbodyAtletView.innerHTML += `<tr class="hover:bg-slate-50/30 transition-colors">${rowContent}</tr>`;
+            });
+        }
+        
+        function renderRPEList() { const container = document.getElementById('container-rpe-list'); if (!container) return; container.innerHTML = ''; rpeState.forEach(item => { container.innerHTML += `<div class="p-3 flex justify-between items-center bg-slate-50"><div><p class="font-bold">RPE Skala: ${item.rpe}</p></div><span class="font-bold text-emerald-800">${item.hr} BPM</span></div>`; }); }
+        function handleSaveRPEAtlet(event) { event.preventDefault(); const rpe = document.getElementById('inp-atlet-rpe').value; const hr = document.getElementById('inp-atlet-hr').value; Swal.fire({ title: 'Kirim Laporan Sesi?', icon: 'question', showCancelButton: true }).then((result) => { if (result.isConfirmed) { rpeState.unshift({ id: Date.now(), timestamp: 'Sekarang', rpe, hr }); saveToLocalStorage(); renderRPEList(); document.getElementById('inp-atlet-hr').value = ''; } }); }
+        
+        function handleSaveTesFisik(event) { 
+            event.preventDefault(); 
+            const atletId = parseInt(document.getElementById('input-tes-atlet').value); 
+            if(!atletId) { Swal.fire({ icon: 'warning', title: 'Gagal', text: 'Profil atlet kosong.' }); return; }
+            const vsit = document.getElementById('input-tes-vsit').value; const vjump = document.getElementById('input-tes-vjump').value; const pliometrik = document.getElementById('input-tes-pliometrik').value; const pushup = document.getElementById('input-tes-pushup').value; const squat = document.getElementById('input-tes-squat').value; const plank = document.getElementById('input-tes-plank').value; const sprint = document.getElementById('input-tes-sprint').value; const ttest = document.getElementById('input-tes-ttest').value; const rsa = document.getElementById('input-tes-rsa').value; const vo2max = document.getElementById('input-mas-vo2max-direct').value; 
+            Swal.fire({ title: 'Simpan Hasil Tes?', icon: 'question', showCancelButton: true }).then((result) => { if (result.isConfirmed) { const existingIndex = tesFisikState.findIndex(t => t.atletId === atletId); const payload = { id: Date.now(), atletId, vsit, vjump, pliometrik, pushup, squat, plank, sprint, ttest, rsa, vo2max }; if (existingIndex !== -1) tesFisikState[existingIndex] = payload; else tesFisikState.push(payload); saveToLocalStorage(); renderTesFisikTable(); hitungPembagianPeriodisasi(null); document.getElementById('form-tes-fisik').reset(); } }); 
+        }
+        
+        function renderAtletList() { 
+            const container = document.getElementById('container-atlet-list'); if (!container) return; container.innerHTML = '';
+            const dashCount = document.getElementById('dash-total-atlet'); const dashPct = document.getElementById('dash-atlet-pct'); const badgeTotal = document.getElementById('badge-total-atlet');
+            if(badgeTotal) badgeTotal.innerText = `${atletState.length} Pemain`;
+            if(dashCount) dashCount.innerText = atletState.length;
+            if(dashPct) dashPct.innerText = atletState.length > 0 ? "100%" : "0%";
+            if (atletState.length === 0) { container.innerHTML = `<tr><td colspan="6" class="p-6 text-xs text-slate-400 italic text-center bg-white">Belum ada atlet terdaftar dalam database lokal harian.</td></tr>`; return; }
+            atletState.forEach(atlet => { 
+                const row = document.createElement('tr'); row.className = "hover:bg-slate-50/50 transition-colors text-xs font-semibold text-slate-700";
+                row.innerHTML = `<td class="p-3 font-bold text-slate-900"><div class="flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-blue-50 text-blue-900 border border-blue-100 flex items-center justify-center font-bold text-[10px] uppercase">${atlet.nama.charAt(0)}</div><span>${atlet.nama}</span></div></td><td class="p-3 text-slate-500">${atlet.gender}</td><td class="p-3"><span class="px-2 py-0.5 rounded-md font-bold text-[10px] ${atlet.posisi === 'Center' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-800'}">${atlet.posisi}</span></td><td class="p-3 text-slate-500">${atlet.usia} Tahun</td><td class="p-3 text-slate-500 font-normal italic max-w-xs truncate">${atlet.catatan ? atlet.catatan : '-'}</td><td class="p-3 text-center"><button onclick="handleDeleteAtlet(${atlet.id}, '${atlet.nama}')" class="text-slate-400 hover:text-rose-600 transition-colors p-1"><i class="fa-solid fa-trash-can"></i></button></td>`;
+                container.appendChild(row);
+            }); 
+        }
+        
+        function handleCreateAtlet(event) { 
+            event.preventDefault(); 
+            Swal.fire({ title: 'Tambah Atlet Skuad?', icon: 'question', showCancelButton: true, confirmButtonColor: '#004B8D' }).then((result) => { 
+                if (result.isConfirmed) { 
+                    atletState.push({ id: Date.now(), nama: document.getElementById('inp-nama-atlet').value.trim(), gender: document.getElementById('inp-gender-atlet').value, posisi: document.getElementById('inp-posisi-atlet').value, usia: parseInt(document.getElementById('inp-usia-atlet').value), catatan: document.getElementById('inp-catatan-atlet').value.trim() }); 
+                    saveToLocalStorage(); renderAtletList(); populateAtletDropdowns(); renderTesFisikTable(); renderAbsensiRows(); renderDashboardRisk(); hitungPembagianPeriodisasi(null); document.getElementById('form-input-atlet').reset(); 
+                    Toast.fire({ icon: 'success', title: 'State Diperbarui', text: 'Atlet berhasil ditambahkan secara live.' });
+                } 
+            }); 
+        }
+        function handleDeleteAtlet(id, name) { Swal.fire({ title: 'Hapus Pemain?', text: `Keluarkan ${name} secara permanen?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48' }).then((result) => { if (result.isConfirmed) { atletState = atletState.filter(a => a.id !== id); tesFisikState = tesFisikState.filter(t => t.atletId !== id); saveToLocalStorage(); renderAtletList(); populateAtletDropdowns(); renderTesFisikTable(); renderAbsensiRows(); renderDashboardRisk(); hitungPembagianPeriodisasi(null); } }); }
+
+        // =========================================================================
+        // HUBUNGAN VERTIKAL: 10 KOMPONEN FISIK + PERIODISASI -> RESEP DETIL LATIHAN ATLET
+        // =========================================================================
+        function hitungRerataFitnessIndexSkuad() {
+            if (tesFisikState.length === 0) return 100;
+            let totalPersentaseSkuad = 0;
+            tesFisikState.forEach(tes => {
+                let capaianPemain = 0;
+                const atlet = atletState.find(a => a.id === tes.atletId);
+                if (!atlet) return;
+                const isPutra = (atlet.gender === 'Laki-laki');
+                capaianPemain += parseFloat(tes.vsit) >= (isPutra ? 12 : 15) ? 100 : 50;
+                capaianPemain += parseFloat(tes.vjump) >= (isPutra ? 55 : 40) ? 100 : 50;
+                capaianPemain += parseFloat(tes.pliometrik) >= (isPutra ? 25 : 15) ? 100 : 50;
+                capaianPemain += parseFloat(tes.pushup) >= (isPutra ? 40 : 30) ? 100 : 50;
+                capaianPemain += parseFloat(tes.squat) >= (isPutra ? 50 : 40) ? 100 : 50;
+                capaianPemain += parseFloat(tes.plank) >= (isPutra ? 120 : 90) ? 100 : 50;
+                capaianPemain += parseFloat(tes.sprint) <= (isPutra ? 3.2 : 3.6) ? 100 : 50;
+                capaianPemain += parseFloat(tes.ttest) <= (isPutra ? 11.0 : 12.2) ? 100 : 50;
+                capaianPemain += parseFloat(tes.rsa) <= (isPutra ? 6.4 : 7.1) ? 100 : 50;
+                capaianPemain += parseFloat(tes.vo2max) >= (isPutra ? 52.0 : 42.0) ? 100 : 50;
+                totalPersentaseSkuad += (capaianPemain / 10);
+            });
+            return totalPersentaseSkuad / tesFisikState.length;
+        }
+
+        function JalankanKalkulasiDefaultPeriodisasi() {
+            const mockEvent = { preventDefault: () => {} };
+            hitungPembagianPeriodisasi(mockEvent);
+        }
+
+        function hitungPembagianPeriodisasi(event) {
+            if(event) event.preventDefault();
+            
+            const totalMinggu = parseInt(document.getElementById('input-periodisasi-durasi').value) || 27;
+            const tanggalMulaiInput = document.getElementById('input-periodisasi-mulai').value;
+            const tbody = document.getElementById('table-body-periodisasi');
+            
+            if(!tbody) return;
+            
+            const fitnessIndexTim = hitungRerataFitnessIndexSkuad();
+            let modifikasiRasioTPU = 0.35;
+            let catatanStatusKondisi = "Kondisi Norma Fisik Skuad Standar.";
+            let volumeTPUMingguan = "11 Jam / Minggu";
+
+            if (fitnessIndexTim < 75) {
+                modifikasiRasioTPU = 0.45;
+                catatanStatusKondisi = "⚠️ TPU Diperpanjang: Hasil evaluasi 10 komponen fisik di bawah norma.";
+                volumeTPUMingguan = "14 Jam / Minggu (Beban Ditambah)";
+            } else if (fitnessIndexTim > 90) {
+                modifikasiRasioTPU = 0.30;
+                catatanStatusKondisi = "⚡ TPU Dipercepat: Kondisi fisik sangat prima.";
+                volumeTPUMingguan = "10 Jam / Minggu (Efisiensi Kondisi)";
+            }
+            
+            const sisaRasio = 1.0 - modifikasiRasioTPU;
+            
+            const konfigurasiFase = [
+                { nama: "1. Tahap Persiapan Umum (TPU)", rasio: modifikasiRasioTPU, intensitas: "Rendah - Moderat (60-70% HRmax)", volume: volumeTPUMingguan, warna: "bg-blue-50/50 text-blue-900 border-blue-200", fokus: `Pondasi fisik dasar. Catatan: ${catatanStatusKondisi}` },
+                { nama: "2. Tahap Persiapan Khusus (TPK)", rasio: sisaRasio * 0.46, intensitas: "Tinggi (75-85% HRmax)", volume: "15 Jam / Minggu", warna: "bg-emerald-50/50 text-emerald-900 border-emerald-200", fokus: "Konversi power tungkai, lari taktis sirkuit MAS lapangan, intensifikasi drag shot." },
+                { nama: "3. Tahap Pra-Kompetisi (TPKomp)", rasio: sisaRasio * 0.31, intensitas: "Sangat Tinggi (85-95% HRmax)", volume: "10 Jam / Minggu", warna: "bg-amber-50/50 text-amber-900 border-amber-200", fokus: "Simulasi taktik formasi, uji coba game, pemantapan transisi harian." },
+                { nama: "4. Tahap Transisi (Pemulihan)", rasio: sisaRasio * 0.23, intensitas: "Sangat Rendah (<50% HRmax)", volume: "5 Jam / Minggu", warna: "bg-rose-50/50 text-rose-900 border-rose-200", fokus: "Active recovery, restorasi psikologis, penyembuhan cedera mikro jaringan otot." }
+            ];
+            
+            let sisaMinggu = totalMinggu;
+            let tanggalArus = new Date(tanggalMulaiInput);
+            tbody.innerHTML = "";
+            
+            konfigurasiFase.forEach((fase, indeks) => {
+                let alokasiMinggu = 0;
+                if (indeks === konfigurasiFase.length - 1) {
+                    alokasiMinggu = sisaMinggu;
+                } else {
+                    alokasiMinggu = Math.round(totalMinggu * fase.rasio);
+                    sisaMinggu -= alokasiMinggu;
+                }
+                
+                if (alokasiMinggu <= 0) alokasiMinggu = 1;
+                
+                let opsiFormat = { year: 'numeric', month: 'short', day: 'numeric' };
+                let tanggalMulaiFase = new Date(tanggalArus);
+                let tanggalSelesaiFase = new Date(tanggalArus);
+                tanggalSelesaiFase.setDate(tanggalSelesaiFase.getDate() + (alokasiMinggu * 7) - 1);
+                tanggalArus.setDate(tanggalArus.getDate() + (alokasiMinggu * 7));
+                
+                const stringRentang = `${tanggalMulaiFase.toLocaleDateString('id-ID', opsiFormat)} s/d ${tanggalSelesaiFase.toLocaleDateString('id-ID', opsiFormat)}`;
+                const persenTampilan = (alokasiMinggu / totalMinggu * 100).toFixed(0);
+                
+                tbody.innerHTML += `
+                    <tr class="${fase.warna} border-b border-slate-100 transition-colors">
+                        <td class="p-3 font-bold text-slate-950">${fase.nama}</td>
+                        <td class="p-3 font-black text-blue-900">${alokasiMinggu} Minggu <span class="text-[10px] font-normal text-slate-400 block font-sans mt-0.5">Proporsi: ${persenTampilan}%</span></td>
+                        <td class="p-3 text-slate-700 text-[11px] font-medium">${fase.intensitas}</td>
+                        <td class="p-3 text-slate-700 text-[11px] font-mono font-bold">${fase.volume}</td>
+                        <td class="p-3 text-slate-700 text-[11px] font-mono">${stringRentang}</td>
+                        <td class="p-3 font-normal text-slate-600 leading-relaxed max-w-xs">${fase.fokus}</td>
+                    </tr>
+                `;
+            });
+
+            const selectMikro = document.getElementById('select-mikro-pekan');
+            if (selectMikro) {
+                const nilaiLama = selectMikro.value;
+                selectMikro.innerHTML = "";
+                for (let m = 1; m <= totalMinggu; m++) {
+                    selectMikro.innerHTML += `<option value="${m}">Minggu Ke-${m}</option>`;
+                }
+                selectMikro.value = (nilaiLama && parseInt(nilaiLama) <= totalMinggu) ? nilaiLama : "1";
+                renderMikrosiklusTaktis();
+            }
+            
+            if(event && event.type === 'submit') {
+                Toast.fire({ icon: 'success', title: 'Periodisasi Sinkron Berdasarkan Profil Fisik Tim!' });
+            }
+        }
+
+        function renderMikrosiklusTaktis() {
+            const pekanTerpilih = parseInt(document.getElementById('select-mikro-pekan').value) || 1;
+            const totalMinggu = parseInt(document.getElementById('input-periodisasi-durasi').value) || 27;
+            const tbody = document.getElementById('table-body-mikrosiklus');
+            
+            if(!tbody) return;
+
+            const fitnessIndexTim = hitungRerataFitnessIndexSkuad();
+            const tpuBatas = Math.round(totalMinggu * (fitnessIndexTim < 75 ? 0.45 : (fitnessIndexTim > 90 ? 0.30 : 0.35)));
+            const tpkBatas = tpuBatas + Math.round(totalMinggu * 0.30);
+            const tpKompBatas = tpkBatas + Math.round(totalMinggu * 0.20);
+
+            let dataMikro = { fase: "", sifat: "", volume: "", agenda: [] };
+
+            if (pekanTerpilih <= tpuBatas) {
+                dataMikro.fase = "Persiapan Umum (TPU)";
+                dataMikro.sifat = "Volume Tinggi / Intensitas Rendah";
+                dataMikro.volume = fitnessIndexTim < 75 ? "14 Jam / Minggu (Beban Ditambah)" : "11 Jam / Minggu";
+                dataMikro.agenda = [
+                    { hari: "Senin", fokus: "Kondisining Fisik", intensitas: 65, volume: 120, detail: `Kondisining kardio fundamental. Target Core Score: ${fitnessIndexTim.toFixed(1)}%. Fokus kelenturan adduktor paha.` },
+                    { hari: "Selasa", fokus: "Teknik Dasar", intensitas: 60, volume: 90, detail: "Stick handling fundamental, latihan kelenturan pergelangan tangan agar cengkeraman luwes." },
+                    { hari: "Rabu", fokus: "Rest Aktif", intensitas: 30, volume: 45, detail: "Sesi foam rolling total, pemanjangan isometrik rantai otot hamstring." },
+                    { hari: "Kamis", fokus: "Daya Tahan Otot", intensitas: 70, volume: 120, detail: "Circuit weight training fungsional, tumpuan squat repetisi tinggi menahan beban asam laktat." },
+                    { hari: "Jumat", fokus: "Teknik Terarah", intensitas: 65, volume: 90, detail: "Stance defensif rendah, latihan kekuatan reaksi tumpuan tungkai bawah pemain." },
+                    { hari: "Sabtu", fokus: "Volume Aerobik", intensitas: 60, volume: 150, detail: "Jogging steady state (LSD) mengontrol kestabilan detak jantung pasca-latihan." },
+                    { hari: "Minggu", fokus: "Off Total", intensitas: 0, volume: 0, detail: "Restorasi penuh metabolisme energi seluler pemain." }
+                ];
+            } else if (pekanTerpilih <= tpkBatas) {
+                dataMikro.fase = "Persiapan Khusus (TPK)";
+                dataMikro.sifat = "Volume Moderat / Intensitas Tinggi";
+                dataMikro.volume = "15 Jam / Minggu";
+                dataMikro.agenda = [
+                    { hari: "Senin", fokus: "MAS Sirkuit", intensitas: 85, volume: 150, detail: "Lari taktis interval sirkuit di lapangan menggunakan konversi m/s target MAS 120%." },
+                    { hari: "Selasa", fokus: "Power & Speed", intensitas: 80, volume: 120, detail: "Pliometrik push up dinamis, jump box ledakan tungkai bawah akselerasi sprint 20M." },
+                    { hari: "Rabu", fokus: "Teknik Taktis", intensitas: 75, volume: 120, detail: "Mekanika drag shot akselerasi pergelangan tangan, variasi eksekusi sudut gawang tim." },
+                    { hari: "Kamis", fokus: "Core Rotasional", intensitas: 75, volume: 90, detail: "Cable woodchoppers, weighted abdominal twists melatih kekuatan rotasi punggung menembak." },
+                    { hari: "Jumat", fokus: "Simulasi Transisi", intensitas: 80, volume: 120, detail: "Drill pemotongan rute passing lateral bola lawan, serangan balik cepat (counter-attack)." },
+                    { hari: "Sabtu", fokus: "Endurance Laga", intensitas: 85, volume: 180, detail: "Internal game tempo tinggi berdurasi penuh, pemantauan ketat akumulasi RPE harian." },
+                    { hari: "Minggu", fokus: "Off Total", intensitas: 0, volume: 0, detail: "Pemulihan jaringan dan regenerasi glikogen otot pemain." }
+                ];
+            } else if (pekanTerpilih <= tpKompBatas) {
+                dataMikro.fase = "Pra-Kompetisi (TPKomp)";
+                dataMikro.sifat = "Volume Rendah / Intensitas Sangat Tinggi";
+                dataMikro.volume = "10 Jam / Minggu";
+                dataMikro.agenda = [
+                    { hari: "Senin", fokus: "Taktis Formasi", intensitas: 90, volume: 90, detail: "Eksekusi free-hit ball, strategi lini serang power-play, taktik pressing ketat." },
+                    { hari: "Selasa", fokus: "Match Sparring", intensitas: 95, volume: 150, detail: "Uji coba laga internal/eksternal resmi. Rekam statistik radar efisiensi & density heatmap." },
+                    { hari: "Rabu", fokus: "Analisis & Evaluasi", intensitas: 40, volume: 60, detail: "Review rekaman evaluasi sirkulasi bola menggunakan asisten taktis AI." },
+                    { hari: "Kamis", fokus: "Agility Reaksi", intensitas: 85, volume: 90, detail: "Ladder drills kecepatan kaki tingkat tinggi, akselerasi pengereman lari mendadak." },
+                    { hari: "Jumat", fokus: "Mental Taktis", intensitas: 50, volume: 60, detail: "Visualisasi pergerakan zone-defense lawan, pengkondisian mental penalti kiper." },
+                    { hari: "Sabtu", fokus: "Game Turnamen", intensitas: 90, volume: 120, detail: "Game simulasi penyesuaian atmosfer turnamen asli, pengetatan ambang batas ACWR." },
+                    { hari: "Minggu", fokus: "Off Total", intensitas: 0, volume: 0, detail: "Supercompensation fisiologis tubuh penuh menjelang pekan kompetisi utama." }
+                ];
+            } else {
+                dataMikro.fase = "Transisi (Pemulihan)";
+                dataMikro.sifat = "Volume Sangat Rendah / Intensitas Rendah";
+                dataMikro.volume = "5 Jam / Minggu";
+                dataMikro.agenda = [
+                    { hari: "Senin", fokus: "Active Recovery", intensitas: 40, volume: 60, detail: "Berenang santai atau bersepeda statis intensitas rendah tanpa beban stick harian." },
+                    { hari: "Selasa", fokus: "Fisioterapi", intensitas: 30, volume: 60, detail: "Pengecekan micro-injury sendi lutut, ankle, pergelangan tangan, and massage sport terfokus." },
+                    { hari: "Rabu", fokus: "Off Total", intensitas: 0, volume: 0, detail: "Istirahat tidur teratur total guna merelaksasikan kerja sistem saraf pusat atlet." },
+                    { hari: "Kamis", fokus: "Fun Games", intensitas: 45, volume: 90, detail: "Olahraga rekreasional alternatif (non-floorball) guna merawat kondisi kardio secara rileks." },
+                    { hari: "Jumat", fokus: "Mobilitas Sendi", intensitas: 35, volume: 60, detail: "Peregangan statis durasi panjang seluruh tubuh, mengembalikan fleksibilitas sendi." },
+                    { hari: "Sabtu", fokus: "Medis & Nutrisi", intensitas: 30, volume: 45, detail: "Konseling perbaikan cadangan nutrisi dan timbang berat komposisi lemak tubuh tim." },
+                    { hari: "Minggu", fokus: "Off Total", intensitas: 0, volume: 0, detail: "Istirahat total persiapan memulai siklus periodisasi makro baru." }
+                ];
+            }
+
+            document.getElementById('mikro-fase-nama').innerText = dataMikro.fase;
+            document.getElementById('mikro-beban-sifat').innerText = dataMikro.sifat;
+            document.getElementById('mikro-volume-jam').innerText = dataMikro.volume;
+
+            tbody.innerHTML = "";
+            dataMikro.agenda.forEach(day => {
+                let labelWarna = "text-slate-900 bg-slate-100";
+                if(day.fokus.includes("Fisik") || day.fokus.includes("MAS")) labelWarna = "text-blue-700 bg-blue-50";
+                if(day.fokus.includes("Taktis") || day.fokus.includes("Teknik")) labelWarna = "text-emerald-700 bg-emerald-50";
+                if(day.fokus.includes("Sparring") || day.fokus.includes("Match")) labelWarna = "text-amber-700 bg-amber-50";
+                if(day.fokus.includes("Off") || day.fokus.includes("Rest")) labelWarna = "text-rose-700 bg-rose-50";
+
+                const barIntensitasHTML = day.intensitas > 0 ? `
+                    <div class="space-y-1">
+                        <span class="font-mono text-[11px] text-slate-700 font-bold block">${day.intensitas}% HRmax</span>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-amber-500 h-full rounded-full" style="width: ${day.intensitas}%"></div>
+                        </div>
+                    </div>` : `<span class="text-slate-400 italic font-medium text-[11px]">- Rest -</span>`;
+
+                const barVolumeHTML = day.volume > 0 ? `
+                    <div class="space-y-1">
+                        <span class="font-mono text-[11px] text-blue-900 font-bold block">${day.volume} Menit</span>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-blue-600 h-full rounded-full" style="width: ${(day.volume / 180 * 100).toFixed(0)}%"></div>
+                        </div>
+                    </div>` : `<span class="text-slate-400 italic font-medium text-[11px]">- Rest -</span>`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="py-3 px-3 text-slate-950 font-bold font-mono">${day.hari}</td>
+                        <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-wider ${labelWarna}">${day.fokus}</span></td>
+                        <td class="py-3 px-3">${barIntensitasHTML}</td>
+                        <td class="py-3 px-3">${barVolumeHTML}</td>
+                        <td class="py-3 px-3 font-normal text-slate-600 text-[11px] leading-relaxed">${day.detail}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ==========================================================================================
+        // DEEP INTER-CONNECTION ENGINE: GENERASI PROGRAM HARIAN KOMPLET BESERTA DETAIL PARAMETER BEBAN
+        // ==========================================================================================
+        function generateAIProgram() {
+            const outputBox = document.getElementById('output-program-ai');
+            if (!outputBox) return;
+
+            if (atletState.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'Data Skuad Kosong', text: 'Silakan input data atlet terlebih dahulu.' });
+                return;
+            }
+
+            // Ambil fase saat ini dari dropdown periodisasi
+            const pekanTerpilih = parseInt(document.getElementById('select-mikro-pekan')?.value) || 1;
+            const totalMinggu = parseInt(document.getElementById('input-periodisasi-durasi')?.value) || 27;
+            const fitnessIndexTim = hitungRerataFitnessIndexSkuad();
+
+            const tpuBatas = Math.round(totalMinggu * (fitnessIndexTim < 75 ? 0.45 : (fitnessIndexTim > 90 ? 0.30 : 0.35)));
+            const tpkBatas = tpuBatas + Math.round(totalMinggu * 0.30);
+            const tpKompBatas = tpkBatas + Math.round(totalMinggu * 0.20);
+
+            let faseNama = "Transisi";
+            if (pekanTerpilih <= tpuBatas) faseNama = "Persiapan Umum (TPU)";
+            else if (pekanTerpilih <= tpkBatas) faseNama = "Persiapan Khusus (TPK)";
+            else if (pekanTerpilih <= tpKompBatas) faseNama = "Pra-Kompetisi (TPKomp)";
+
+            let htmlContent = `
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="border-b border-slate-100 pb-3 mb-4 flex justify-between items-center flex-wrap gap-2">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-receipt text-blue-700"></i> 
+                                Manuskrip Resep Resep Beban Latihan Pemain Skuad
+                            </h4>
+                            <p class="text-[11px] text-slate-400 mt-1">Sinkronisasi Dinamis: Minggu Ke-${pekanTerpilih} (${faseNama}) | Fitness Skuad Index: ${fitnessIndexTim.toFixed(1)}%</p>
+                        </div>
+                        <span class="text-[10px] bg-slate-900 text-white font-mono font-bold px-2 py-1 rounded">Prescription Load Matrix</span>
+                    </div>
+                    <div class="space-y-6">
+            `;
+
+            atletState.forEach(atlet => {
+                const dataFisik = tesFisikState.find(t => t.atletId === atlet.id);
+                const isPutra = (atlet.gender === 'Laki-laki');
+                
+                // Indikator Penilaian Personal Komponen Fisik Atlet
+                let statusFlex = dataFisik ? (parseFloat(dataFisik.vsit) >= (isPutra ? 12 : 15)) : false;
+                let statusPowerTungkai = dataFisik ? (parseFloat(dataFisik.vjump) >= (isPutra ? 55 : 40)) : false;
+                let statusPowerLengan = dataFisik ? (parseFloat(dataFisik.pliometrik) >= (isPutra ? 25 : 15)) : false;
+                let statusCore = dataFisik ? (parseFloat(dataFisik.plank) >= (isPutra ? 120 : 90)) : false;
+                let statusSpeed = dataFisik ? (parseFloat(dataFisik.sprint) <= (isPutra ? 3.2 : 3.6)) : false;
+
+                // Pengkondisian Resep Berdasarkan Fase Periodisasi & Kelemahan 10 Komponen Fisik Atlet
+                let resepDrills = [];
+                let targetRPE = "5 - Moderat";
+                let targetHR = "130 - 150 BPM";
+
+                if (faseNama.includes("TPU")) {
+                    targetRPE = "5 - Cukup Ringan";
+                    targetHR = "125 - 145 BPM";
+                    resepDrills.push({ nama: "Dynamic Hip Mobility Opener", load: "Bodyweight", set: "3", rep: "10 Per Sisi", rest: "30 Detik", fungsi: "Membuka ruang mobilitas sendi pinggul dan engkel tumpuan." });
+                    
+                    if (!statusFlex) {
+                        resepDrills.push({ nama: "V-Sit Seated Hamstring Static Stretch", load: "Isometrik", set: "4", rep: "Hold 45 Detik", rest: "15 Detik", fungsi: "Spesifik meregangkan ketegangan otot paha belakang (Hamstring Kurang)." });
+                    }
+                    if (!statusCore) {
+                        resepDrills.push({ nama: "Standard Forearm Iso-Plank", load: "Bodyweight Core", set: "3", rep: "Hold 60 Detik", rest: "45 Detik", fungsi: "Mengondisikan dinding perut depan (Core Core Lemah)." });
+                    }
+                    resepDrills.push({ nama: "Wall-Support Wrist Flexor Rollers", load: "Stick Beban 1kg", set: "3", rep: "15 Rotasi", rest: "30 Detik", fungsi: "Penguatan otot forearm lokal untuk memperkuat grip Handling." });
+
+                } else if (faseNama.includes("TPK")) {
+                    targetRPE = "7 - Berat";
+                    targetHR = "155 - 175 BPM";
+                    
+                    if (!statusPowerTungkai) {
+                        resepDrills.push({ nama: "Explosive Plyo Box Jumps", load: "Tinggi Box 50cm", set: "4", rep: "6 Jump eksplosif", rest: "90 Detik", fungsi: "Meningkatkan rekrutmen motor unit serabut otot cepat tungkai." });
+                    } else {
+                        resepDrills.push({ nama: "Weighted Bulgarian Split Squat", load: "Dumbbell 2x8kg", set: "3", rep: "8 Rep/Kaki", rest: "60 Detik", fungsi: "Membangun kekuatan unilateral penyeimbang langkah lari." });
+                    }
+
+                    if (!statusPowerLengan) {
+                        resepDrills.push({ nama: "Medicine Ball Overhead Slam", load: "MedBall 5kg", set: "4", rep: "10 Slam", rest: "60 Detik", fungsi: "Transfer energi eksplosif tubuh bagian atas meningkatkan akselerasi." });
+                    }
+
+                    resepDrills.push({ 
+                        nama: "Circuit Lari Sirkuit MAS Taktis", 
+                        load: dataFisik ? `${(parseFloat(dataFisik.vo2max)/3.5 * 1.2).toFixed(2)} m/s (120% MAS)` : "4.2 m/s", 
+                        set: "2 Blok (6 Rep)", rep: "15 Detik Sprint", rest: "15 Detik Rest", 
+                        fungsi: "Dongkrak kapasitas daya tahan anaerobik spesifik permainan floorball." 
+                    });
+
+                } else if (faseNama.includes("TPKomp")) {
+                    targetRPE = "8 s/d 9 - Maksimal";
+                    targetHR = "165 - 185 BPM";
+                    
+                    if (!statusSpeed) {
+                        resepDrills.push({ nama: "20-Meter Pure Linear Acceleration", load: "Akselerasi Penuh", set: "5", rep: "1 Sprint Max", rest: "2 Menit", fungsi: "Melatih daya dorong awal mencuri posisi bola di rink." });
+                    }
+                    resepDrills.push({ nama: "Sharp Cutting Zig-Zag Z-Run Drill", load: "Agility Cone", set: "4", rep: "3 Repetisi bolak-balik", rest: "90 Detik", fungsi: "Pemantapan kelincahan manuver memotong taktis tanpa kehilangan bola." });
+                    resepDrills.push({ nama: "Tactical Set-Piece Drag Shot Dragging", load: "Bola Resmi + Target Grid", set: "3", rep: "12 Shoot Tembakan", rest: "45 Detik", fungsi: "Efisiensi konversi tembakan gol ke sudut atas gawang lawan." });
+                } else {
+                    targetRPE = "2 - Sangat Ringan";
+                    targetHR = "< 110 BPM";
+                    resepDrills.push({ nama: "Low Intensity Pool Swimming", load: "Berenang Santai", set: "1 Sesi", rep: "20 Menit", rest: "Konstan", fungsi: "Melancarkan sirkulasi asam laktat tanpa tekanan impak lantai turnamen." });
+                    resepDrills.push({ nama: "Total Body Foam Rolling Massage", load: "Foam Roller", set: "2", rep: "60 Detik Per Otot", rest: "10 Detik", fungsi: "Pelepasan sumbatan fasia otot pasca-kompetisi panjang turnamen." });
+                }
+
+                // Render Komponen Manuskrip Per Atlet Skuad
+                htmlContent += `
+                    <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col md:flex-row gap-6 justify-between">
+                        <div class="w-full md:w-1/4 space-y-2 border-b md:border-b-0 md:border-r border-slate-200 pb-3 md:pb-0 md:pr-4">
+                            <div>
+                                <h5 class="text-sm font-black text-slate-900">${atlet.nama}</h5>
+                                <p class="text-[11px] text-slate-400 font-semibold mt-0.5">${atlet.posisi} | ${atlet.gender}</p>
+                            </div>
+                            <div class="pt-2 space-y-1.5 text-[11px]">
+                                <p class="text-slate-500 font-semibold">Target Intensitas RPE: <span class="text-blue-900 font-black block text-xs">${targetRPE}</span></p>
+                                <p class="text-slate-500 font-semibold">Zona Denyut Nadi (HR): <span class="text-amber-700 font-mono font-bold block text-xs">${targetHR}</span></p>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-x-auto">
+                            <table class="w-full text-left text-[11px] border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="text-slate-400 font-bold border-b border-slate-200">
+                                        <th class="pb-1.5">Nama Drill Gerakan</th>
+                                        <th class="pb-1.5 w-24">Beban / Load</th>
+                                        <th class="pb-1.5 w-14 text-center">Set</th>
+                                        <th class="pb-1.5 w-28 text-center">Repetisi</th>
+                                        <th class="pb-1.5 w-20 text-center">Rest</th>
+                                        <th class="pb-1.5 hidden lg:table-cell">Korelasi Fungsi Fisiologis</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-semibold text-slate-700">
+                `;
+
+                resepDrills.forEach(drill => {
+                    htmlContent += `
+                        <tr>
+                            <td class="py-2 text-slate-900 font-black"><i class="fa-solid fa-circle-dot text-[7px] text-blue-600 mr-1"></i> ${drill.nama}</td>
+                            <td class="py-2 text-slate-500 font-mono">${drill.load}</td>
+                            <td class="py-2 text-center text-blue-900 font-bold bg-blue-50/40">${drill.set}</td>
+                            <td class="py-2 text-center text-slate-800">${drill.rep}</td>
+                            <td class="py-2 text-center text-rose-700 font-mono">${drill.rest}</td>
+                            <td class="py-2 font-normal italic text-slate-400 hidden lg:table-cell text-[10px] leading-tight">${drill.fungsi}</td>
+                        </tr>
+                    `;
+                });
+
+                htmlContent += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            htmlContent += `</div></div>`;
+            outputBox.innerHTML = htmlContent;
+            outputBox.classList.remove('hidden');
+
+            Toast.fire({ icon: 'success', title: 'Manuskrip Beban Skuad Terhitung!' });
+        }
+    </script>
+</body>
+</html>
