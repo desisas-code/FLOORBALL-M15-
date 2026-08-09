@@ -2046,93 +2046,267 @@ function initMenu7AutoFill() {
         'kneeling', 'shuffle', 'boxdrill', 'creade_rsa', 'yoyo'
     ];
 
-    // Jika tes yang diinput tidak sesuai dengan posisi pemain, abaikan evaluasinya
     if (isGK && !gkAllowedTests.includes(keyTes)) return '-';
     if (!isGK && !playerAllowedTests.includes(keyTes)) return '-';
 
+    // =================================----------------============
     // 1. VO2MAX / YO-YO IR1 (ml/kg/min)
+    // =================================----------------============
     if (keyTes === 'yoyo') {
         if (isPutra) {
-            if (val >= 54.0) return 'SB';
-            if (val >= 48.0) return 'B';
-            if (val >= 42.0) return 'S';
-            if (val >= 36.0) return 'K';
+            if (val >= 52.0) return 'SB';
+            if (val <= 51.0) return 'B';
+            if (val <= 46.0) return 'S';
+            if (val <= 41.0) return 'K';
             return 'SK';
         } else {
-            if (val >= 45.0) return 'SB';
-            if (val >= 40.0) return 'B';
-            if (val >= 35.0) return 'S';
-            if (val >= 30.0) return 'K';
+            if (val >= 57.0) return 'SB';
+            if (val <= 56.0) return 'B';
+            if (val <= 46.0) return 'S';
+            if (val <= 41.0) return 'K';
             return 'SK';
         }
     }
 
+    // =================================----------------============
     // 2. PLANK HOLD (Detik)
+    // =================================----------------============
     if (keyTes === 'plank') {
-        let pBase = isPutra ? 120 : 90;
-        if (val >= pBase + 60) return 'SB';
-        if (val >= pBase + 30) return 'B';
-        if (val >= pBase) return 'S';
-        if (val >= pBase - 30) return 'K';
-        return 'SK';
+        if (isPutra) {
+            if (val >= 241) return 'SB';
+            if (val <= 240) return 'B';
+            if (val <= 180) return 'S';
+            if (val <= 1200)  return 'K';
+            return 'SK';
+        } else {
+            if (val >= 211) return 'SB';
+            if (val >= 210) return 'B';
+            if (val >= 150)  return 'S';
+            if (val >= 80)  return 'K';
+            return 'SK';
+        }
     }
 
-    // 3. V-SIT REACH (cm)
+    // =================================----------------============
+    // 3. V-SIT REACH (CM)
+    // =================================----------------============
     if (keyTes === 'vsit') {
-        let vBase = isPutra ? 15 : 18; // Putri lebih tinggi 3cm
-        if (val >= vBase + 8) return 'SB';
-        if (val >= vBase + 3) return 'B';
-        if (val >= vBase - 2) return 'S';
-        if (val >= vBase - 6) return 'K';
-        return 'SK';
+        if (isPutra) {
+            if (val >= 14) return 'SB';
+            if (val <= 13)  return 'B';
+            if (val <= 5)  return 'S';
+            if (val <= -1) return 'K';
+            return 'SK';
+        } else {
+            if (val >= 19) return 'SB';
+            if (val <= 18) return 'B';
+            if (val <= 10)  return 'S';
+            if (val <= 3)  return 'K';
+            return 'SK';
+        }
     }
 
-    // 4. TES WAKTU / SPEED & AGILITY (Sprint 20m, T-Test, RSA 6x20m, Box Drill, Creade RSA)
+    // =================================----------------============
+    // 4. TES WAKTU / SPEED & AGILITY (Semakin Kecil Detik = Semakin Baik)
+    // =================================----------------============
     if (['sprint20', 'ttest', 'rsa6x20', 'boxdrill', 'creade_rsa'].includes(keyTes)) {
-        let target = 0;
-        switch (keyTes) {
-            case 'sprint20': target = isPutra ? 3.10 : 3.50; break;
-            case 'ttest': target = isPutra ? 10.50 : 12.00; break;
-            case 'rsa6x20': target = isPutra ? 18.50 : 21.00; break;
-            case 'boxdrill': target = isPutra ? 8.20 : 9.50; break;
-            case 'creade_rsa': target = isPutra ? 13.50 : 15.50; break;
+        
+        // 4A. SPRINT 20M (Detik)
+        if (keyTes === 'sprint20') {
+            if (isPutra) {
+                if (val <= 2.89) return 'SB';
+                if (val >= 2,90) return 'B';
+                if (val >= 3.11) return 'S';
+                if (val >= 3.31) return 'K';
+                return 'SK';
+            } else {
+                if (val <= 3.19) return 'SB';
+                if (val >= 3.20) return 'B';
+                if (val >= 3.46) return 'S';
+                if (val >= 3,71) return 'K';
+                return 'SK';
+            }
         }
 
-        if (isGK) target += 0.30; // Toleransi waktu khusus Kiper jika ada tes kelincahan overlapping
+        // 4B. T-TEST AGILITY (Detik)
+        if (keyTes === 'ttest') {
+            if (isPutra) {
+                if (val <= 8.89)  return 'SB';
+                if (val >= 8,90) return 'B';
+                if (val >= 9,81) return 'S';
+                if (val >= 10,51) return 'K';
+                return 'SK';
+            } else {
+                if (val <= 9,99) return 'SB';
+                if (val >= 10,00) return 'B';
+                if (val >= 11,01) return 'S';
+                if (val >= 12,01) return 'K';
+                return 'SK';
+            }
+        }
 
-        if (val <= target - 0.40) return 'SB';
-        if (val <= target) return 'B';
-        if (val <= target + 0.40) return 'S';
-        if (val <= target + 0.80) return 'K';
-        return 'SK';
+        // 4C. RSA 6X20M (Detik)
+        if (keyTes === 'rsa6x20') {
+            if (isPutra) {
+                if (val <= 2,99) return 'SB';
+                if (val >= 3,00) return 'B';
+                if (val >= 3,16) return 'S';
+                if (val >= 3,31) return 'K';
+                return 'SK';
+            } else {
+                if (val <= 3,34) return 'SB';
+                if (val >= 3,35) return 'B';
+                if (val >= 3,56) return 'S';
+                if (val >= 3,76) return 'K';
+                return 'SK';
+            }
+        }
+
+        // 4D. BOX DRILL 3X3M (Detik)
+        if (keyTes === 'boxdrill') {
+            if (isPutra) {
+                if (val <= 7.49) return 'SB';
+                if (val >= 7,50) return 'B';
+                if (val >= 8,21) return 'S';
+                if (val >= 9,01) return 'K';
+                return 'SK';
+            } else {
+                if (val <= 8,79) return 'SB';
+                if (val >= 8,80) return 'B';
+                if (val >= 9,61) return 'S';
+                if (val >= 10,51) return 'K';
+                return 'SK';
+            }
+        }
+
+        // 4E. CREADE RSA 6X4M (Detik)
+        if (keyTes === 'creade_rsa') {
+            if (isPutra) {
+                if (val <= 2,29) return 'SB';
+                if (val >= 2,30) return 'B';
+                if (val >= 2,61) return 'S';
+                if (val >= 2,96) return 'K';
+                return 'SK';
+            } else {
+                if (val <= 2,59) return 'SB';
+                if (val >= 2,60) return 'B';
+                if (val >= 2,91) return 'S';
+                if (val >= 3,26) return 'K';
+                return 'SK';
+            }
+        }
     }
 
-    // 5. TES REPETISI & DAYA TAHAN OTOT (Push Up, Plyo Push, Squat, Shuffle)
-    if (['push_up', 'plyo_push', 'squat', 'shuffle'].includes(keyTes)) {
-        let repTarget = isPutra ? 40 : 28;
-        if (keyTes === 'squat') repTarget = isPutra ? 50 : 35;
-        if (keyTes === 'plyo_push') repTarget = isPutra ? 25 : 15;
-        if (keyTes === 'shuffle') repTarget = isPutra ? 30 : 22;
+    // =================================----------------============
+    // 5. TES REPETISI & DAYA TAHAN OTOT (Semakin Besar = Semakin Baik)
+    // =================================----------------============
 
-        if (isGK && ['push_up', 'plyo_push'].includes(keyTes)) repTarget += 5;
-
-        if (val >= repTarget + 10) return 'SB';
-        if (val >= repTarget) return 'B';
-        if (val >= repTarget - 8) return 'S';
-        if (val >= repTarget - 15) return 'K';
-        return 'SK';
+    // 5A. PUSH UP (1 MNT)
+    if (keyTes === 'push_up') {
+        let bonus = (isGK) ? 5 : 0; // Tambahan target untuk Kiper jika ada
+        if (isPutra) {
+            if (val >= 56) return 'SB';
+            if (val <= 55) return 'B';
+            if (val <= 45) return 'S';
+            if (val <= 45) return 'K';
+            return 'SK';
+        } else {
+            if (val >= 55) return 'SB';
+            if (val <= 54) return 'B';
+            if (val <= 44) return 'S';
+            if (val <= 34) return 'K';
+            return 'SK';
+        }
     }
 
-    // 6. TES POWER LONCATAN (Vertical Jump & Kneeling Jump)
-    if (['vjump', 'kneeling'].includes(keyTes)) {
-        let jumpTarget = isPutra ? 55 : 42;
-        if (keyTes === 'kneeling') jumpTarget = isPutra ? 45 : 32;
+    // 5B. PLIOMETRIK PUSH UP
+    if (keyTes === 'plyo_push') {
+        let bonus = (isGK) ? 5 : 0;
+        if (isPutra) {
+            if (val >= 36) return 'SB';
+            if (val <= 35) return 'B';
+            if (val <= 25) return 'S';
+            if (val <= 15) return 'K';
+            return 'SK';
+        } else {
+            if (val >= 26) return 'SB';
+            if (val <= 25) return 'B';
+            if (val <= 17) return 'S';
+            if (val <= 9)  return 'K';
+            return 'SK';
+        }
+    }
 
-        if (val >= jumpTarget + 10) return 'SB';
-        if (val >= jumpTarget) return 'B';
-        if (val >= jumpTarget - 8) return 'S';
-        if (val >= jumpTarget - 15) return 'K';
-        return 'SK';
+    // 5C. SQUAT (1 MNT)
+    if (keyTes === 'squat') {
+        if (isPutra) {
+            if (val >= 55) return 'SB';
+            if (val <= 54) return 'B';
+            if (val <= 44) return 'S';
+            if (val <= 34) return 'K';
+            return 'SK';
+        } else {
+            if (val >= 51) return 'SB';
+            if (val <= 50) return 'B';
+            if (val <= 40) return 'S';
+            if (val <= 30) return 'K';
+            return 'SK';
+        }
+    }
+
+    // 5D. LATERAL SHUFFLE 30S (REPS)
+    if (keyTes === 'shuffle') {
+        if (isPutra) {
+            if (val >= 29) return 'SB';
+            if (val <= 28) return 'B';
+            if (val <= 23) return 'S';
+            if (val <= 18) return 'K';
+            return 'SK';
+        } else {
+            if (val >= 25) return 'SB';
+            if (val <= 24) return 'B';
+            if (val <= 19) return 'S';
+            if (val <= 15) return 'K';
+            return 'SK';
+        }
+    }
+
+    // =================================----------------============
+    // 6. TES POWER LONCATAN (CM)
+    // =================================----------------============
+
+    // 6A. VERTICAL JUMP (CM)
+    if (keyTes === 'vjump') {
+        if (isPutra) {
+            if (val >= 71) return 'SB';
+            if (val <= 70) return 'B';
+            if (val <= 60) return 'S';
+            if (val <= 50) return 'K';
+            return 'SK';
+        } else {
+            if (val >= 61) return 'SB';
+            if (val <= 60) return 'B';
+            if (val <= 50) return 'S';
+            if (val <= 40) return 'K';
+            return 'SK';
+        }
+    }
+
+    // 6B. KNEELING JUMP (CM)
+    if (keyTes === 'kneeling') {
+        if (isPutra) {
+            if (val >= 55) return 'SB';
+            if (val <= 45) return 'B';
+            if (val <= 35) return 'S';
+            if (val <= 25) return 'K';
+            return 'SK';
+        } else {
+            if (val >= 42) return 'SB';
+            if (val <= 32) return 'B';
+            if (val <= 24) return 'S';
+            if (val <= 16) return 'K';
+            return 'SK';
+        }
     }
 
     return 'S';
