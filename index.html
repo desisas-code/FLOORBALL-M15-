@@ -5962,37 +5962,50 @@ function initMenu7AutoFill() {
 
         }
     </script>
-	<!-- SINKRONISASI OTOMATIS REALTIME -->
+	<!-- SINKRONISASI OTOMATIS REALTIME FIX -->
     <script>
       const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2ScqnDdgzEe24wsQR0SCfMc7-3a8atBr9tB87VTDP4pYz8kSfy-KN7pmuJ--_Ayj5/exec";
 
       async function autoFetchFromSpreadsheet() {
-  try {
-    const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
-    const data = await res.json();
-    if (data && data.status === "success") {
-      if (data.atlet) {
-        localStorage.setItem("cf_atlet", JSON.stringify(data.atlet));
-        state.atlet = data.atlet;
+        try {
+          const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
+          const data = await res.json();
+          if (data && data.status === "success") {
+            if (data.atlet) {
+              state.atlet = data.atlet;
+              localStorage.setItem("cf_atlet", JSON.stringify(data.atlet));
+            }
+            if (data.programLatihan) {
+              // Simpan data program pelatih langsung ke joggingLogs agar terbaca oleh layar atlet
+              state.joggingLogs = data.programLatihan;
+              localStorage.setItem("cf_joggingLogs", JSON.stringify(data.programLatihan));
+            }
+            if (data.laporanValidasi) {
+              state.laporanValidasi = data.laporanValidasi;
+              localStorage.setItem("cf_laporanValidasi", JSON.stringify(data.laporanValidasi));
+            }
+            
+            // Re-render tampilan & hitung ulang target durasi/pace di HP atlet
+            if (typeof updateAtletJoggingCalculations === "function") {
+              updateAtletJoggingCalculations();
+            }
+            if (typeof renderContent === "function" && state.currentMenu === 'menu-atlet-4') {
+              renderContent();
+            }
+          }
+        } catch (e) {
+          console.log("Sync otomatis pending connection...");
+        }
       }
-      if (data.programLatihan) {
-        localStorage.setItem("cf_joggingLogs", JSON.stringify(data.programLatihan));
-        state.joggingLogs = data.programLatihan;
-      }
-      if (data.laporanValidasi) {
-        localStorage.setItem("cf_laporanValidasi", JSON.stringify(data.laporanValidasi));
-        state.laporanValidasi = data.laporanValidasi;
-      }
-      
-      // Paksa pembacaan ulang kalkulasi target lari di layar atlet
-      if (typeof updateAtletJoggingCalculations === "function") {
-        updateAtletJoggingCalculations();
-      }
-    }
-  } catch (e) {
-    console.log("Sync otomatis pending...");
-  }
-}
+
+      window.addEventListener("DOMContentLoaded", () => {
+        autoFetchFromSpreadsheet();
+        setInterval(autoFetchFromSpreadsheet, 10000); // Tarik data setiap 10 detik
+      });
+
+      window.addEventListener("focus", () => {
+        autoFetchFromSpreadsheet();
+      });
     </script>
 </body>
 </html> 
