@@ -2060,10 +2060,10 @@ function initMenu7AutoFill() {
             if (val >= 39) return 'K';
             return 'SK';
         } else {
-            if (val >= 57.0) return 'SB';
-            if (val <= 56.0) return 'B';
-            if (val <= 46.0) return 'S';
-            if (val <= 41.0) return 'K';
+            if (val >= 56) return 'SB';
+            if (val >= 46) return 'B';
+            if (val >= 41) return 'S';
+            if (val >= 37) return 'K';
             return 'SK';
         }
     }
@@ -2073,16 +2073,16 @@ function initMenu7AutoFill() {
     // =================================----------------============
     if (keyTes === 'plank') {
         if (isPutra) {
-            if (val >= 241) return 'SB';
-            if (val <= 240) return 'B';
-            if (val <= 180) return 'S';
-            if (val <= 1200)  return 'K';
+            if (val >= 240) return 'SB';
+            if (val >= 180) return 'B';
+            if (val >= 120) return 'S';
+            if (val >= 60)  return 'K';
             return 'SK';
         } else {
-            if (val >= 211) return 'SB';
-            if (val >= 210) return 'B';
-            if (val >= 150)  return 'S';
-            if (val >= 80)  return 'K';
+            if (val >= 210) return 'SB';
+            if (val >= 150) return 'B';
+            if (val >= 80)  return 'S';
+            if (val >= 45)  return 'K';
             return 'SK';
         }
     }
@@ -2092,16 +2092,16 @@ function initMenu7AutoFill() {
     // =================================----------------============
     if (keyTes === 'vsit') {
         if (isPutra) {
-            if (val >= 14) return 'SB';
-            if (val <= 13)  return 'B';
-            if (val <= 5)  return 'S';
-            if (val <= -1) return 'K';
+            if (val >= 13) return 'SB';
+            if (val >= 5)  return 'B';
+            if (val >= 1)  return 'S';
+            if (val >= -5) return 'K';
             return 'SK';
         } else {
-            if (val >= 19) return 'SB';
-            if (val <= 18) return 'B';
-            if (val <= 10)  return 'S';
-            if (val <= 3)  return 'K';
+            if (val >= 18) return 'SB';
+            if (val >= 10) return 'B';
+            if (val >= 3)  return 'S';
+            if (val >= -1)  return 'K';
             return 'SK';
         }
     }
@@ -2114,16 +2114,16 @@ function initMenu7AutoFill() {
         // 4A. SPRINT 20M (Detik)
         if (keyTes === 'sprint20') {
             if (isPutra) {
-                if (val <= 2.89) return 'SB';
-                if (val >= 2,90) return 'B';
-                if (val >= 3.11) return 'S';
-                if (val >= 3.31) return 'K';
+                if (val <= 2.90) return 'SB';
+                if (val <= 3,11) return 'B';
+                if (val <= 3.31) return 'S';
+                if (val <= 3.51) return 'K';
                 return 'SK';
             } else {
-                if (val <= 3.19) return 'SB';
-                if (val >= 3.20) return 'B';
-                if (val >= 3.46) return 'S';
-                if (val >= 3,71) return 'K';
+                if (val <= 3.2) return 'SB';
+                if (val <= 3.46) return 'B';
+                if (val <= 3.71) return 'S';
+                if (val <= 3,96) return 'K';
                 return 'SK';
             }
         }
@@ -2131,16 +2131,16 @@ function initMenu7AutoFill() {
         // 4B. T-TEST AGILITY (Detik)
         if (keyTes === 'ttest') {
             if (isPutra) {
-                if (val <= 8.89)  return 'SB';
-                if (val >= 8,90) return 'B';
-                if (val >= 9,81) return 'S';
-                if (val >= 10,51) return 'K';
+                if (val <= 8.90)  return 'SB';
+                if (val <= 9,81) return 'B';
+                if (val <= 10,51) return 'S';
+                if (val <= 11,21) return 'K';
                 return 'SK';
             } else {
-                if (val <= 9,99) return 'SB';
-                if (val >= 10,00) return 'B';
-                if (val >= 11,01) return 'S';
-                if (val >= 12,01) return 'K';
+                if (val <= 10,00) return 'SB';
+                if (val <= 11,01) return 'B';
+                if (val <= 12,01) return 'S';
+                if (val <= 13,01) return 'K';
                 return 'SK';
             }
         }
@@ -2148,16 +2148,16 @@ function initMenu7AutoFill() {
         // 4C. RSA 6X20M (Detik)
         if (keyTes === 'rsa6x20') {
             if (isPutra) {
-                if (val <= 2,99) return 'SB';
-                if (val >= 3,00) return 'B';
-                if (val >= 3,16) return 'S';
-                if (val >= 3,31) return 'K';
+                if (val <= 3,00) return 'SB';
+                if (val <= 3,16) return 'B';
+                if (val <= 3,31) return 'S';
+                if (val <= 3,46) return 'K';
                 return 'SK';
             } else {
-                if (val <= 3,34) return 'SB';
-                if (val >= 3,35) return 'B';
-                if (val >= 3,56) return 'S';
-                if (val >= 3,76) return 'K';
+                if (val <= 3,35) return 'SB';
+                if (val <= 3,56) return 'B';
+                if (val <= 3,76) return 'S';
+                if (val <= 3,96) return 'K';
                 return 'SK';
             }
         }
@@ -2165,16 +2165,16 @@ function initMenu7AutoFill() {
         // 4D. BOX DRILL 3X3M (Detik)
         if (keyTes === 'boxdrill') {
             if (isPutra) {
-                if (val <= 7.49) return 'SB';
-                if (val >= 7,50) return 'B';
-                if (val >= 8,21) return 'S';
-                if (val >= 9,01) return 'K';
+                if (val <= 7.50) return 'SB';
+                if (val <= 8,21) return 'B';
+                if (val <= 9,01) return 'S';
+                if (val <= 10,01) return 'K';
                 return 'SK';
             } else {
-                if (val <= 8,79) return 'SB';
-                if (val >= 8,80) return 'B';
-                if (val >= 9,61) return 'S';
-                if (val >= 10,51) return 'K';
+                if (val <= 8,80) return 'SB';
+                if (val <= 9,61) return 'B';
+                if (val <= 10,51) return 'S';
+                if (val <= 11,51) return 'K';
                 return 'SK';
             }
         }
@@ -2182,16 +2182,16 @@ function initMenu7AutoFill() {
         // 4E. CREADE RSA 6X4M (Detik)
         if (keyTes === 'creade_rsa') {
             if (isPutra) {
-                if (val <= 2,29) return 'SB';
-                if (val >= 2,30) return 'B';
-                if (val >= 2,61) return 'S';
-                if (val >= 2,96) return 'K';
+                if (val <= 2,30) return 'SB';
+                if (val <= 2,61) return 'B';
+                if (val <= 2,96) return 'S';
+                if (val <= 3,31) return 'K';
                 return 'SK';
             } else {
-                if (val <= 2,59) return 'SB';
-                if (val >= 2,60) return 'B';
-                if (val >= 2,91) return 'S';
-                if (val >= 3,26) return 'K';
+                if (val <= 2,60) return 'SB';
+                if (val <= 2,91) return 'B';
+                if (val <= 3,26) return 'S';
+                if (val <= 3,61) return 'K';
                 return 'SK';
             }
         }
@@ -2205,16 +2205,16 @@ function initMenu7AutoFill() {
     if (keyTes === 'push_up') {
         let bonus = (isGK) ? 5 : 0; // Tambahan target untuk Kiper jika ada
         if (isPutra) {
-            if (val >= 56) return 'SB';
-            if (val <= 55) return 'B';
-            if (val <= 45) return 'S';
-            if (val <= 45) return 'K';
+            if (val >= 55) return 'SB';
+            if (val >= 45) return 'B';
+            if (val >= 35) return 'S';
+            if (val >= 24) return 'K';
             return 'SK';
         } else {
-            if (val >= 55) return 'SB';
-            if (val <= 54) return 'B';
-            if (val <= 44) return 'S';
-            if (val <= 34) return 'K';
+            if (val >= 54) return 'SB';
+            if (val >= 44) return 'B';
+            if (val >= 34) return 'S';
+            if (val >= 19) return 'K';
             return 'SK';
         }
     }
@@ -2223,16 +2223,16 @@ function initMenu7AutoFill() {
     if (keyTes === 'plyo_push') {
         let bonus = (isGK) ? 5 : 0;
         if (isPutra) {
-            if (val >= 36) return 'SB';
-            if (val <= 35) return 'B';
-            if (val <= 25) return 'S';
-            if (val <= 15) return 'K';
+            if (val >= 35) return 'SB';
+            if (val >= 25) return 'B';
+            if (val >= 15) return 'S';
+            if (val >= 9) return 'K';
             return 'SK';
         } else {
-            if (val >= 26) return 'SB';
-            if (val <= 25) return 'B';
-            if (val <= 17) return 'S';
-            if (val <= 9)  return 'K';
+            if (val >= 25) return 'SB';
+            if (val >= 17) return 'B';
+            if (val >= 9) return 'S';
+            if (val >= 4)  return 'K';
             return 'SK';
         }
     }
@@ -2240,16 +2240,16 @@ function initMenu7AutoFill() {
     // 5C. SQUAT (1 MNT)
     if (keyTes === 'squat') {
         if (isPutra) {
-            if (val >= 55) return 'SB';
-            if (val <= 54) return 'B';
-            if (val <= 44) return 'S';
-            if (val <= 34) return 'K';
+            if (val >= 54) return 'SB';
+            if (val >= 44) return 'B';
+            if (val >= 34) return 'S';
+            if (val >= 19) return 'K';
             return 'SK';
         } else {
-            if (val >= 51) return 'SB';
-            if (val <= 50) return 'B';
-            if (val <= 40) return 'S';
-            if (val <= 30) return 'K';
+            if (val >= 50) return 'SB';
+            if (val >= 40) return 'B';
+            if (val >= 30) return 'S';
+            if (val >= 19) return 'K';
             return 'SK';
         }
     }
@@ -2257,16 +2257,16 @@ function initMenu7AutoFill() {
     // 5D. LATERAL SHUFFLE 30S (REPS)
     if (keyTes === 'shuffle') {
         if (isPutra) {
-            if (val >= 29) return 'SB';
-            if (val <= 28) return 'B';
-            if (val <= 23) return 'S';
-            if (val <= 18) return 'K';
+            if (val >= 28) return 'SB';
+            if (val >= 23) return 'B';
+            if (val >= 18) return 'S';
+            if (val >= 13) return 'K';
             return 'SK';
         } else {
-            if (val >= 25) return 'SB';
-            if (val <= 24) return 'B';
-            if (val <= 19) return 'S';
-            if (val <= 15) return 'K';
+            if (val >= 24) return 'SB';
+            if (val >= 19) return 'B';
+            if (val >= 15) return 'S';
+            if (val >= 10) return 'K';
             return 'SK';
         }
     }
@@ -2278,16 +2278,16 @@ function initMenu7AutoFill() {
     // 6A. VERTICAL JUMP (CM)
     if (keyTes === 'vjump') {
         if (isPutra) {
-            if (val >= 71) return 'SB';
-            if (val <= 70) return 'B';
-            if (val <= 60) return 'S';
-            if (val <= 50) return 'K';
+            if (val >= 70) return 'SB';
+            if (val >= 60) return 'B';
+            if (val >= 50) return 'S';
+            if (val >= 40) return 'K';
             return 'SK';
         } else {
-            if (val >= 61) return 'SB';
-            if (val <= 60) return 'B';
-            if (val <= 50) return 'S';
-            if (val <= 40) return 'K';
+            if (val >= 60) return 'SB';
+            if (val >= 50) return 'B';
+            if (val >= 40) return 'S';
+            if (val >= 30) return 'K';
             return 'SK';
         }
     }
@@ -2296,15 +2296,15 @@ function initMenu7AutoFill() {
     if (keyTes === 'kneeling') {
         if (isPutra) {
             if (val >= 55) return 'SB';
-            if (val <= 45) return 'B';
-            if (val <= 35) return 'S';
-            if (val <= 25) return 'K';
+            if (val >= 45) return 'B';
+            if (val >= 35) return 'S';
+            if (val >= 25) return 'K';
             return 'SK';
         } else {
             if (val >= 42) return 'SB';
-            if (val <= 32) return 'B';
-            if (val <= 24) return 'S';
-            if (val <= 16) return 'K';
+            if (val >= 32) return 'B';
+            if (val >= 24) return 'S';
+            if (val >= 16) return 'K';
             return 'SK';
         }
     }
