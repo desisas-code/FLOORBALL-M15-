@@ -6035,56 +6035,66 @@ function initMenu7AutoFill() {
             </div>
 
             <!-- 2. DUA TABEL DI BAWAH (SIDE-BY-SIDE / DUA KOLOM) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">  
                 <!-- TABEL KIRI: RIWAYAT PRESKRIPSI LATIHAN DARI MENU 7 -->
-                <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
-                    <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                                <i class="fa-solid fa-clipboard-list text-blue-900"></i> Target Latihan dari Pelatih (Menu 7)
-                            </h4>
-                            <p class="text-[11px] font-semibold text-slate-400 mt-0.5">Daftar preskripsi jogging/MAS yang ditugaskan Pelatih Kepala.</p>
-                        </div>
-                        <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
-                            ${myPreskripsi.length} Target
-                        </span>
-                    </div>
+<div class="bg-white rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden">
+    <!-- HEADER KARTU -->
+    <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+        <div>
+            <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                <i class="fa-solid fa-clipboard-list text-blue-900"></i> Target Latihan dari Pelatih (Menu 7)
+            </h4>
+            <p class="text-[11px] font-semibold text-slate-400 mt-0.5">Daftar preskripsi jogging/MAS yang ditugaskan Pelatih Kepala.</p>
+        </div>
+        <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
+            ${myPreskripsi.length} Target
+        </span>
+    </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse min-w-[420px]">
-                            <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                                <tr>
-                                    <th class="p-3.5">Tanggal</th>
-                                    <th class="p-3.5 text-center">Zona</th>
-                                    <th class="p-3.5 text-center">Target Jarak</th>
-                                    <th class="p-3.5 text-center">Durasi</th>
-                                    <th class="p-3.5 text-center">Pace Target</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                                ${myPreskripsi.length > 0 ? myPreskripsi.map(p => {
-                                    const pct = Math.round(parseFloat(p.zona || '0.75') * 100);
-                                    return `
-                                        <tr class="hover:bg-blue-50/40 transition-colors">
-                                            <td class="p-3.5 font-mono font-bold text-slate-600">${p.tanggal || '-'}</td>
-                                            <td class="p-3.5 text-center font-bold">
-                                                <span class="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-0.5 rounded-md text-[10px] font-black">${pct}% MAS</span>
-                                            </td>
-                                            <td class="p-3.5 text-center text-blue-900 font-mono font-black">${p.jarak || '-'} km</td>
-                                            <td class="p-3.5 text-center font-mono font-bold text-slate-600">${p.waktu || '-'} mnt</td>
-                                            <td class="p-3.5 text-center font-mono font-black text-emerald-700">${escapeHTML(p.pace || '-')}</td>
-                                        </tr>
-                                    `;
-                                }).join('') : `
-                                    <tr>
-                                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada preskripsi latihan dari Pelatih.</td>
-                                    </tr>
-                                `}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <!-- AREA TABEL REKAP -->
+    <div class="overflow-x-auto w-full min-h-[150px]">
+        <table class="w-full text-left border-collapse min-w-[480px]">
+            <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                <tr>
+                    <th class="p-3.5">Tanggal</th>
+                    <th class="p-3.5 text-center">Zona</th>
+                    <th class="p-3.5 text-center">Target Jarak</th>
+                    <th class="p-3.5 text-center">Durasi</th>
+                    <th class="p-3.5 text-center">Pace Target</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-xs font-semibold bg-white text-slate-800">
+                ${myPreskripsi.length > 0 ? myPreskripsi.map(p => {
+                    const zonaVal = p.zona ? Math.round(parseFloat(p.zona) * 100) : 75;
+                    const tanggalVal = p.tanggal || '-';
+                    const jarakVal = p.jarak ? p.jarak + ' km' : '-';
+                    const waktuVal = p.waktu ? p.waktu + ' mnt' : '-';
+                    const paceVal = p.pace || '-';
+
+                    return `
+                        <tr class="hover:bg-blue-50/50 transition-colors">
+                            <td class="p-3.5 font-mono font-bold text-slate-700">${escapeHTML(tanggalVal)}</td>
+                            <td class="p-3.5 text-center font-bold">
+                                <span class="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1 rounded-lg text-[10px] font-black inline-block">
+                                    ${zonaVal}% MAS
+                                </span>
+                            </td>
+                            <td class="p-3.5 text-center text-blue-900 font-mono font-black">${escapeHTML(jarakVal)}</td>
+                            <td class="p-3.5 text-center font-mono font-bold text-slate-700">${escapeHTML(waktuVal)}</td>
+                            <td class="p-3.5 text-center font-mono font-black text-emerald-700">${escapeHTML(paceVal)}</td>
+                        </tr>
+                    `;
+                }).join('') : `
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">
+                            Belum ada preskripsi latihan dari Pelatih.
+                        </td>
+                    </tr>
+                `}
+            </tbody>
+        </table>
+    </div>
+</div>
 
                 <!-- TABEL KANAN: STATUS VERIFIKASI / VALIDASI LAPORAN (MENU 8) -->
                 <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
