@@ -1099,7 +1099,8 @@ function getAtletGpsLocation() {
             const accuracy = Math.round(position.coords.accuracy);
 
             state.currentGpsLocation = `${lat}, ${lng} (Akurasi: ±${accuracy}m)`;
-
+			state.gpsTimestamp = Date.now();
+			
             if (badge) {
                 badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-emerald-50/90 text-emerald-900 border border-emerald-300/80 rounded-2xl text-xs font-black flex items-center justify-between shadow-sm';
                 badge.innerHTML = `
@@ -3433,7 +3434,35 @@ function initMenu7AutoFill() {
                     console.warn("Gagal kompresi bukti strava:", err);
                 }
             }
+			const durasi = parseFloat(document.getElementById('run-durasi')?.value || 30);
+    const estJarak = parseFloat((durasi * 0.15).toFixed(2));
+    const speedKmh = parseFloat((estJarak / (durasi / 60)).toFixed(1));
 
+    const detectedMotor = speedKmh > 20.0;
+    const detectedAbnormalPace = speedKmh > 18.0;
+
+    const gpsTimestamp = state.gpsTimestamp || Date.now();
+    const gpsAgeMinutes = (Date.now() - gpsTimestamp) / (1000 * 60);
+    const detectedFakeGps = gpsAgeMinutes > 15.0;
+
+    const newReport = {
+        id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        atletId: at.id,
+        tanggal: new Date().toISOString().split('T')[0],
+        jarak: estJarak,
+        waktu: durasi,
+        speedKmh: speedKmh,
+        kalori: Math.round(estJarak * (at.bb || 65) * 0.75),
+        gpsLoc: state.currentGpsLocation || 'Lokasi Terdeteksi',
+        imgSelfieUrl: selfieUrl,
+        imgStravaUrl: stravaUrl,
+
+        detectedMotor: detectedMotor,
+        detectedAbnormalPace: detectedAbnormalPace,
+        detectedFakeGps: detectedFakeGps,
+        softwareDetected: detectedMotor ? 'Terdeteksi Motor' : (detectedFakeGps ? 'Fake GPS / Kadaluarsa' : 'Valid'),
+        status: 'Menunggu'
+    };
             const historiList = state.joggingLogs || [];
             const matchLog = historiList.slice().reverse().find(item => 
                 String(item.atletId) === String(at.id) || String(item.namaAtlet) === String(at.nama)
@@ -5996,9 +6025,9 @@ function initMenu7AutoFill() {
                         </div>
 
                         <div class="p-5 rounded-3xl bg-emerald-50/60 border border-emerald-200/80 shadow-sm">
-                            <label class="block text-[11px] font-black text-emerald-900 uppercase mb-2">2. Foto Selfie Pasca Lari <span class="text-rose-500">*</span></label>
-                            <input type="file" id="run-file-selfie" accept="image/*" required class="w-full text-xs font-extrabold text-slate-600 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
-                        </div>
+    <label class="block text-[11px] font-black text-emerald-900 uppercase mb-2">2. Foto Selfie Pasca Lari *</label>
+    <input type="file" id="run-file-selfie" accept="image/*" capture="user" required class="w-full text-xs font-extrabold text-slate-600 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-600 file:text-white cursor-pointer">
+</div>
 
                         <div class="p-5 rounded-3xl bg-blue-50/60 border border-blue-200/80 shadow-sm">
                             <label class="block text-[11px] font-black text-blue-900 uppercase mb-2">3. Screenshot Strava <span class="text-rose-500">*</span></label>
