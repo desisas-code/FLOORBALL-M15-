@@ -5967,30 +5967,32 @@ function initMenu7AutoFill() {
       const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2ScqnDdgzEe24wsQR0SCfMc7-3a8atBr9tB87VTDP4pYz8kSfy-KN7pmuJ--_Ayj5/exec";
 
       async function autoFetchFromSpreadsheet() {
-        try {
-          const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
-          const data = await res.json();
-          if (data && data.status === "success") {
-            if (data.atlet) localStorage.setItem("cf_atlet", JSON.stringify(data.atlet));
-            if (data.programLatihan) localStorage.setItem("cf_program_db", JSON.stringify(data.programLatihan));
-            if (data.laporanValidasi) localStorage.setItem("cf_laporanValidasi", JSON.stringify(data.laporanValidasi));
-            if (typeof renderContent === "function") renderContent();
-          }
-        } catch (e) {
-          console.log("Sync otomatis background pending...");
-        }
+  try {
+    const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
+    const data = await res.json();
+    if (data && data.status === "success") {
+      if (data.atlet) {
+        localStorage.setItem("cf_atlet", JSON.stringify(data.atlet));
+        state.atlet = data.atlet;
       }
-
-      // Otomatis jalan saat web dibuka & setiap 15 detik
-      window.addEventListener("DOMContentLoaded", () => {
-        autoFetchFromSpreadsheet();
-        setInterval(autoFetchFromSpreadsheet, 15000);
-      });
-
-      // Otomatis jalan saat atlet kembali membuka tab HP
-      window.addEventListener("focus", () => {
-        autoFetchFromSpreadsheet();
-      });
+      if (data.programLatihan) {
+        localStorage.setItem("cf_joggingLogs", JSON.stringify(data.programLatihan));
+        state.joggingLogs = data.programLatihan;
+      }
+      if (data.laporanValidasi) {
+        localStorage.setItem("cf_laporanValidasi", JSON.stringify(data.laporanValidasi));
+        state.laporanValidasi = data.laporanValidasi;
+      }
+      
+      // Paksa pembacaan ulang kalkulasi target lari di layar atlet
+      if (typeof updateAtletJoggingCalculations === "function") {
+        updateAtletJoggingCalculations();
+      }
+    }
+  } catch (e) {
+    console.log("Sync otomatis pending...");
+  }
+}
     </script>
 </body>
 </html> 
