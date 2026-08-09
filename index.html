@@ -1804,7 +1804,37 @@ function deleteRiwayatValidasi(id) {
                 displayPace.value = '-';
             }
         }
+function calculateRealtimePaceFromAtletInput() {
+    const at = state.activeAtlet;
+    if (!at) return;
 
+    const durasiInput = document.getElementById('run-durasi');
+    const zonaInput = document.getElementById('run-zona');
+
+    const waktuMnt = parseFloat(durasiInput?.value || 30);
+    const zonaFactor = parseFloat(zonaInput?.value || 0.75);
+
+    // Ambil baseline VO2Max atlet
+    const vo2val = getAtletVO2Max(at.id) || 45; // Default 45 jika belum tes
+    const masKmh = vo2val / 3.5;
+    const paceMinPerKm = 60 / (masKmh * zonaFactor);
+
+    // Hitung estimasi jarak & speed
+    const autoDist = (waktuMnt / paceMinPerKm).toFixed(2);
+    const speedKmh = parseFloat((autoDist / (waktuMnt / 60)).toFixed(1));
+    const estKalori = Math.round(autoDist * (at.bb || 65) * 0.75);
+
+    // Format tampilan pace
+    const mins = Math.floor(paceMinPerKm);
+    const secs = Math.round((paceMinPerKm - mins) * 60).toString().padStart(2, '0');
+    const paceFormatted = `${mins}'${secs}"`;
+
+    // Render ke tampilan HP atlet
+    if (document.getElementById('run-pace-display')) document.getElementById('run-pace-display').innerText = paceFormatted;
+    if (document.getElementById('run-jarak-display')) document.getElementById('run-jarak-display').innerText = `${autoDist} km`;
+    if (document.getElementById('run-speed-display')) document.getElementById('run-speed-display').innerText = `${speedKmh} km/h`;
+    if (document.getElementById('run-kalori-display')) document.getElementById('run-kalori-display').innerText = `${estKalori} kcal`;
+}
         function autoFillMASVO2(atletId) {
             if(!atletId) return;
             const vo2Val = getAtletVO2Max(atletId);
