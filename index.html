@@ -2054,16 +2054,16 @@ function initMenu7AutoFill() {
     // =================================----------------============
     if (keyTes === 'yoyo') {
         if (isPutra) {
-            if (>= 52.0) return 'SB';
-            if (<= 51.0) return 'B';
-            if (<= 46.0) return 'S';
-            if (<= 41.0) return 'K';
+            if (val >= 52.0) return 'SB';
+            if (val >= 46.0) return 'B';
+            if (val >= 41.0) return 'S';
+            if (val >= 36) return 'K';
             return 'SK';
         } else {
-            if (>= 57.0) return 'SB';
-            if (<= 56.0) return 'B';
-            if (<= 46.0) return 'S';
-            if (<= 41.0) return 'K';
+            if (val >= 57.0) return 'SB';
+            if (val <= 56.0) return 'B';
+            if (val <= 46.0) return 'S';
+            if (val <= 41.0) return 'K';
             return 'SK';
         }
     }
