@@ -2105,16 +2105,16 @@ function initMenu7AutoFill() {
         // 4A. SPRINT 20M (Detik)
     if (keyTes === 'sprint20') {
         if (isPutra) {
-            if (val <= 2.80) return 'SB';
+            if (val <= 2.85) return 'SB';
             if (val <= 3.10) return 'B';
-            if (val <= 3.40) return 'S';
-            if (val <= 3.80) return 'K';
+            if (val <= 3.35) return 'S';
+            if (val <= 3.60) return 'K';
             return 'SK';
         } else {
-            if (val <= 3.20) return 'SB';
-            if (val <= 3.50) return 'B';
-            if (val <= 3.80) return 'S';
-            if (val <= 4.20) return 'K';
+            if (val <= 3.15) return 'SB';
+            if (val <= 3.45) return 'B';
+            if (val <= 3.75) return 'S';
+            if (val <= 4.10) return 'K';
             return 'SK';
         }
     }
@@ -2122,36 +2122,37 @@ function initMenu7AutoFill() {
     // 4B. T-TEST AGILITY (Detik)
     if (keyTes === 'ttest') {
         if (isPutra) {
-            if (val <= 9.80)  return 'SB';
-            if (val <= 10.50) return 'B';
-            if (val <= 11.20) return 'S';
-            if (val <= 12.00) return 'K';
+            if (val <= 10.20) return 'SB';
+            if (val <= 11.00) return 'B';
+            if (val <= 11.70) return 'S';
+            if (val <= 12.50) return 'K';
             return 'SK';
         } else {
             if (val <= 11.00) return 'SB';
-            if (val <= 12.00) return 'B';
-            if (val <= 13.00) return 'S';
-            if (val <= 14.00) return 'K';
+            if (val <= 11.80) return 'B';
+            if (val <= 12.60) return 'S';
+            if (val <= 13.50) return 'K';
             return 'SK';
         }
     }
 
-    // 4C. RSA 6X20M (Detik - Rata-Rata Per Sprint)
+    // 4C. RSA 6X20M (Detik - Rata-Rata per Sprint)
     if (keyTes === 'rsa6x20') {
         if (isPutra) {
-            if (val <= 2.91) return 'SB';
-            if (val <= 3.08) return 'B';
-            if (val <= 3.30) return 'S';
-            if (val <= 3.50) return 'K';
+            if (val <= 2.90) return 'SB';
+            if (val <= 3.10) return 'B';
+            if (val <= 3.35) return 'S';
+            if (val <= 3.60) return 'K';
             return 'SK';
         } else {
-            if (val <= 3.33) return 'SB';
-            if (val <= 3.50) return 'B';
-            if (val <= 3.75) return 'S';
+            if (val <= 3.20) return 'SB';
+            if (val <= 3.45) return 'B';
+            if (val <= 3.70) return 'S';
             if (val <= 4.00) return 'K';
             return 'SK';
         }
     }
+    
         // 4D. BOX DRILL 3X3M (Detik)
         if (keyTes === 'boxdrill') {
             if (isPutra) {
