@@ -128,6 +128,32 @@
                 margin: 0 !important;
             }
         }
+		<script>
+  // Auto Sync di Background
+  const SCRIPT_URL = "URL_GOOGLE_APPS_SCRIPT_ANDA"; // Ganti dengan URL deployment Web App Anda
+
+  // 1. Ambil Data Google Sheets Otomatis Saat Web Dibuka / Setiap 30 Detik
+  async function autoFetchFromSpreadsheet() {
+    try {
+      const res = await fetch(SCRIPT_URL);
+      const data = await res.json();
+      if (data && data.status === "success") {
+        if (data.atlet) localStorage.setItem("cf_atlet_db", JSON.stringify(data.atlet));
+        if (data.programLatihan) localStorage.setItem("cf_program_db", JSON.stringify(data.programLatihan));
+        if (data.laporanValidasi) localStorage.setItem("cf_validasi_db", JSON.stringify(data.laporanValidasi));
+      }
+    } catch (e) {
+      console.log("Background sync pending connection...");
+    }
+  }
+
+  // JALANKAN OTOMATIS
+  window.addEventListener("DOMContentLoaded", () => {
+    autoFetchFromSpreadsheet();
+    // Tarik data otomatis setiap 30 detik tanpa mengganggu tampilan
+    setInterval(autoFetchFromSpreadsheet, 30000); 
+  }
+</script>
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans antialiased text-slate-700">
