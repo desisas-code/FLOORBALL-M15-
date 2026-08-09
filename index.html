@@ -127,36 +127,34 @@
                 padding: 0 !important;
                 margin: 0 !important;
             }
-        }
-		<script>
-  // Auto Sync di Background
-  const SCRIPT_URL = "URL_GOOGLE_APPS_SCRIPT_ANDA"; // Ganti dengan URL deployment Web App Anda
-
-  // 1. Ambil Data Google Sheets Otomatis Saat Web Dibuka / Setiap 30 Detik
-  async function autoFetchFromSpreadsheet() {
-    try {
-      const res = await fetch(SCRIPT_URL);
-      const data = await res.json();
-      if (data && data.status === "success") {
-        if (data.atlet) localStorage.setItem("cf_atlet_db", JSON.stringify(data.atlet));
-        if (data.programLatihan) localStorage.setItem("cf_program_db", JSON.stringify(data.programLatihan));
-        if (data.laporanValidasi) localStorage.setItem("cf_validasi_db", JSON.stringify(data.laporanValidasi));
-      }
-    } catch (e) {
-      console.log("Background sync pending connection...");
-    }
-  }
-
-  // JALANKAN OTOMATIS
-  window.addEventListener("DOMContentLoaded", () => {
-    autoFetchFromSpreadsheet();
-    // Tarik data otomatis setiap 30 detik tanpa mengganggu tampilan
-    setInterval(autoFetchFromSpreadsheet, 30000); 
-  }
-</script>
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans antialiased text-slate-700">
+
+    <script>
+      // Auto Sync di Background
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2ScqnDdgzEe24wsQR0SCfMc7-3a8atBr9tB87VTDP4pYz8kSfy-KN7pmuJ--_Ayj5/exec";
+
+      async function autoFetchFromSpreadsheet() {
+        try {
+          const res = await fetch(SCRIPT_URL);
+          const data = await res.json();
+          if (data && data.status === "success") {
+            if (data.atlet) localStorage.setItem("cf_atlet_db", JSON.stringify(data.atlet));
+            if (data.programLatihan) localStorage.setItem("cf_program_db", JSON.stringify(data.programLatihan));
+            if (data.laporanValidasi) localStorage.setItem("cf_validasi_db", JSON.stringify(data.laporanValidasi));
+          }
+        } catch (e) {
+          console.log("Background sync pending connection...");
+        }
+      }
+
+      // JALANKAN OTOMATIS (Ditutup dengan benar)
+      window.addEventListener("DOMContentLoaded", () => {
+        autoFetchFromSpreadsheet();
+        setInterval(autoFetchFromSpreadsheet, 30000); 
+      });
+    </script>
 
     <div id="toast-container"></div>
 
@@ -2157,15 +2155,15 @@ function initMenu7AutoFill() {
         if (keyTes === 'boxdrill') {
             if (isPutra) {
                 if (val <= 7.50) return 'SB';
-                if (val <= 8,20) return 'B';
-                if (val <= 9,00) return 'S';
-                if (val <= 10,00) return 'K';
+                if (val <= 8.20) return 'B';
+                if (val <= 9.00) return 'S';
+                if (val <= 10.00) return 'K';
                 return 'SK';
             } else {
-                if (val <= 8,80) return 'SB';
-                if (val <= 9,50) return 'B';
-                if (val <= 10,50) return 'S';
-                if (val <= 11,50) return 'K';
+                if (val <= 8.80) return 'SB';
+                if (val <= 9.50) return 'B';
+                if (val <= 10.50) return 'S';
+                if (val <= 11.50) return 'K';
                 return 'SK';
             }
         }
@@ -2173,16 +2171,16 @@ function initMenu7AutoFill() {
         // 4E. CREADE RSA 6X4M (Detik)
         if (keyTes === 'creade_rsa') {
             if (isPutra) {
-                if (val <= 2,30) return 'SB';
-                if (val <= 2,61) return 'B';
-                if (val <= 2,96) return 'S';
-                if (val <= 3,31) return 'K';
+                if (val <= 2.30) return 'SB';
+                if (val <= 2.61) return 'B';
+                if (val <= 2.96) return 'S';
+                if (val <= 3.31) return 'K';
                 return 'SK';
             } else {
-                if (val <= 2,60) return 'SB';
-                if (val <= 2,91) return 'B';
-                if (val <= 3,26) return 'S';
-                if (val <= 3,61) return 'K';
+                if (val <= 2.60) return 'SB';
+                if (val <= 2.91) return 'B';
+                if (val <= 3.26) return 'S';
+                if (val <= 3.61) return 'K';
                 return 'SK';
             }
         }
@@ -6325,14 +6323,15 @@ function initMenu7AutoFill() {
         }
       }
 
-      window.addEventListener("DOMContentLoaded", () => {
-        autoFetchFromSpreadsheet();
-        setInterval(autoFetchFromSpreadsheet, 10000); // Tarik data setiap 10 detik
-      });
 
-      window.addEventListener("focus", () => {
-        autoFetchFromSpreadsheet();
-      });
-    </script>
-</body>
-</html> 
+window.addEventListener("DOMContentLoaded", () => {
+ autoFetchFromSpreadsheet();
+setInterval(autoFetchFromSpreadsheet, 10000); // Tarik data setiap 10 detik
+});
+
+window.addEventListener("focus", () => {
+autoFetchFromSpreadsheet();
+});
+ </script>
+ </body>
+ </html>
