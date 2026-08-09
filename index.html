@@ -5938,8 +5938,15 @@ function initMenu7AutoFill() {
     const at = state.activeAtlet;
     if (!at) return;
 
+    // 1. Ambil data preskripsi latihan dari Pelatih (Menu 7) khusus untuk atlet ini
+    const myPreskripsi = (state.joggingLogs || []).filter(j => String(j.atletId) === String(at.id));
+    
+    // 2. Ambil data status laporan validasi (Menu 8) khusus untuk atlet ini
+    const myReports = (state.laporanValidasi || []).filter(l => String(l.atletId) === String(at.id));
+
     container.innerHTML = `
         <div class="space-y-6">
+            <!-- 1. FORM INPUT LAPORAN (BAGIAN ATAS) -->
             <div class="bg-white/95 backdrop-blur-xl p-6 sm:p-8 rounded-[32px] border border-slate-200/80 shadow-xl space-y-6">
                 <div class="border-b border-slate-100 pb-4">
                     <h3 class="text-base sm:text-lg font-black text-slate-800 font-display flex items-center gap-2">
@@ -5951,53 +5958,48 @@ function initMenu7AutoFill() {
                 </div>
 
                 <form onsubmit="submitAtletLaporanJogging(event)" class="space-y-6">
-    <!-- BARIS 1: INFORMASI ATLET & TARGET -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-            <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">Nama Atlet Skuad</label>
-            <input type="text" readonly value="${escapeHTML(at.nama)} (${escapeHTML(at.posisi)})" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-100 text-sm font-extrabold text-slate-700 shadow-inner">
-        </div>
-        <div>
-            <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">Target Durasi (Menit)</label>
-            <input type="number" step="1" min="1" id="run-durasi" oninput="calculateRealtimePaceFromAtletInput()" placeholder="Masukkan durasi..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-extrabold text-blue-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-sm">
-        </div>
-        <div>
-            <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">Target Intensitas Zona</label>
-            <select id="run-zona" onchange="calculateRealtimePaceFromAtletInput()" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-extrabold text-purple-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-sm">
-                <option value="0.60">Zone 1 (60% MAS)</option>
-                <option value="0.75" selected>Zone 2: Aerobic Base (75% MAS)</option>
-                <option value="0.80">Zone 3 (80% MAS)</option>
-                <option value="0.90">Zone 4 (90% MAS)</option>
-                <option value="1.00">Zone 5 (100% MAS)</option>
-            </select>
-        </div>
-    </div>
+                    <!-- BARIS 1: INFORMASI ATLET & TARGET -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">Nama Atlet Skuad</label>
+                            <input type="text" readonly value="${escapeHTML(at.nama)} (${escapeHTML(at.posisi)})" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-100 text-sm font-extrabold text-slate-700 shadow-inner">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">Target Durasi (Menit)</label>
+                            <input type="number" step="1" min="1" id="run-durasi" oninput="calculateRealtimePaceFromAtletInput()" placeholder="Masukkan durasi..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-extrabold text-blue-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">Target Intensitas Zona</label>
+                            <select id="run-zona" onchange="calculateRealtimePaceFromAtletInput()" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-extrabold text-purple-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-sm">
+                                <option value="0.60">Zone 1 (60% MAS)</option>
+                                <option value="0.75" selected>Zone 2: Aerobic Base (75% MAS)</option>
+                                <option value="0.80">Zone 3 (80% MAS)</option>
+                                <option value="0.90">Zone 4 (90% MAS)</option>
+                                <option value="1.00">Zone 5 (100% MAS)</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <!-- BARIS 2: UNGGAH BUKTI FOTO & GPS -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- 1. TITIK LOKASI GPS -->
                         <div class="p-5 rounded-3xl bg-slate-50/80 border border-slate-200/90 shadow-sm hover:border-blue-300 transition-all">
                             <label class="block text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 flex items-center justify-between">
                                 <span>1. Titik Lokasi GPS <span class="text-rose-500">*</span></span>
                                 <i class="fa-solid fa-location-crosshairs text-blue-900 text-sm"></i>
                             </label>
-                            
                             <button type="button" onclick="getAtletGpsLocation()" class="w-full px-4 py-3.5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-800 hover:to-indigo-900 text-white font-black text-xs shadow-lg shadow-blue-900/20 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-crosshairs text-cyan-400"></i> Kunci Koordinat GPS
                             </button>
-                            
                             <div id="gps-status-badge" class="w-full mt-2.5 px-3.5 py-2.5 bg-white text-slate-400 border border-slate-200/90 rounded-2xl text-xs font-semibold text-center shadow-inner">
                                 Belum Diambil (Klik Tombol Di Atas)
                             </div>
                         </div>
 
-                        <!-- 2. FOTO SELFIE -->
                         <div class="p-5 rounded-3xl bg-emerald-50/60 border border-emerald-200/80 shadow-sm">
                             <label class="block text-[11px] font-black text-emerald-900 uppercase mb-2">2. Foto Selfie Pasca Lari <span class="text-rose-500">*</span></label>
                             <input type="file" id="run-file-selfie" accept="image/*" required class="w-full text-xs font-extrabold text-slate-600 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
                         </div>
 
-                        <!-- 3. SCREENSHOT STRAVA -->
                         <div class="p-5 rounded-3xl bg-blue-50/60 border border-blue-200/80 shadow-sm">
                             <label class="block text-[11px] font-black text-blue-900 uppercase mb-2">3. Screenshot Strava <span class="text-rose-500">*</span></label>
                             <input type="file" id="run-file-bukti" accept="image/*" required class="w-full text-xs font-extrabold text-slate-600 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-900 file:text-white hover:file:bg-blue-950 cursor-pointer">
@@ -6030,6 +6032,120 @@ function initMenu7AutoFill() {
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <!-- 2. DUA TABEL DI BAWAH (SIDE-BY-SIDE / DUA KOLOM) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- TABEL KIRI: RIWAYAT PRESKRIPSI LATIHAN DARI MENU 7 -->
+                <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
+                    <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-list text-blue-900"></i> Target Latihan dari Pelatih (Menu 7)
+                            </h4>
+                            <p class="text-[11px] font-semibold text-slate-400 mt-0.5">Daftar preskripsi jogging/MAS yang ditugaskan Pelatih Kepala.</p>
+                        </div>
+                        <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
+                            ${myPreskripsi.length} Target
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[420px]">
+                            <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                                <tr>
+                                    <th class="p-3.5">Tanggal</th>
+                                    <th class="p-3.5 text-center">Zona</th>
+                                    <th class="p-3.5 text-center">Target Jarak</th>
+                                    <th class="p-3.5 text-center">Durasi</th>
+                                    <th class="p-3.5 text-center">Pace Target</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+                                ${myPreskripsi.length > 0 ? myPreskripsi.map(p => {
+                                    const pct = Math.round(parseFloat(p.zona || '0.75') * 100);
+                                    return `
+                                        <tr class="hover:bg-blue-50/40 transition-colors">
+                                            <td class="p-3.5 font-mono font-bold text-slate-600">${p.tanggal || '-'}</td>
+                                            <td class="p-3.5 text-center font-bold">
+                                                <span class="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-0.5 rounded-md text-[10px] font-black">${pct}% MAS</span>
+                                            </td>
+                                            <td class="p-3.5 text-center text-blue-900 font-mono font-black">${p.jarak || '-'} km</td>
+                                            <td class="p-3.5 text-center font-mono font-bold text-slate-600">${p.waktu || '-'} mnt</td>
+                                            <td class="p-3.5 text-center font-mono font-black text-emerald-700">${escapeHTML(p.pace || '-')}</td>
+                                        </tr>
+                                    `;
+                                }).join('') : `
+                                    <tr>
+                                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada preskripsi latihan dari Pelatih.</td>
+                                    </tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABEL KANAN: STATUS VERIFIKASI / VALIDASI LAPORAN (MENU 8) -->
+                <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
+                    <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                                <i class="fa-solid fa-shield-check text-blue-900"></i> Status Laporan Validasi Pelatih
+                            </h4>
+                            <p class="text-[11px] font-semibold text-slate-400 mt-0.5">Status verifikasi bukti lari oleh Pelatih Kepala.</p>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-900 border border-emerald-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
+                            ${myReports.length} Laporan
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[420px]">
+                            <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                                <tr>
+                                    <th class="p-3.5">Tanggal Lapor</th>
+                                    <th class="p-3.5 text-center">Jarak</th>
+                                    <th class="p-3.5 text-center">Durasi</th>
+                                    <th class="p-3.5 text-center">Speed</th>
+                                    <th class="p-3.5 text-center">Status Pelatih</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+                                ${myReports.length > 0 ? myReports.map(r => {
+                                    let badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                                    let icon = 'fa-clock text-amber-600';
+                                    if (r.status === 'Disetujui') {
+                                        badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                                        icon = 'fa-circle-check text-emerald-600';
+                                    } else if (r.status === 'Ditolak') {
+                                        badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                                        icon = 'fa-circle-xmark text-rose-600';
+                                    }
+
+                                    return `
+                                        <tr class="hover:bg-blue-50/40 transition-colors">
+                                            <td class="p-3.5 font-mono font-bold text-slate-600">${r.tanggal || '-'}</td>
+                                            <td class="p-3.5 text-center font-mono font-black text-blue-900">${r.jarak || 0} km</td>
+                                            <td class="p-3.5 text-center font-mono font-bold text-slate-600">${r.waktu || 0} mnt</td>
+                                            <td class="p-3.5 text-center font-mono font-black text-emerald-700">${r.speedKmh || 0} km/h</td>
+                                            <td class="p-3.5 text-center">
+                                                <span class="px-3 py-1 rounded-xl text-[10px] font-black border inline-flex items-center gap-1.5 ${badgeColor}">
+                                                    <i class="fa-solid ${icon}"></i> ${r.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('') : `
+                                    <tr>
+                                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan dikirimkan.</td>
+                                    </tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     `;
