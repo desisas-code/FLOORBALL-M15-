@@ -2114,13 +2114,13 @@ function initMenu7AutoFill() {
         // 4A. SPRINT 20M (Detik)
         if (keyTes === 'sprint20') {
             if (isPutra) {
-                if (val >= 2.90) return 'SB';
+                if (val <= 2.90) return 'SB';
                 if (val >= 3,11) return 'B';
                 if (val >= 3.31) return 'S';
                 if (val >= 3.51) return 'K';
                 return 'SK';
             } else {
-                if (val >= 3.2) return 'SB';
+                if (val <= 3.2) return 'SB';
                 if (val >= 3.46) return 'B';
                 if (val >= 3.71) return 'S';
                 if (val >= 3,96) return 'K';
