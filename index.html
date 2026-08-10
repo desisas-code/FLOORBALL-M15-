@@ -6640,11 +6640,9 @@ saveStorage('laporanValidasi', state.laporanValidasi);
         setTimeout(() => {
                 renderChartsForMenu(state.currentMenu);
             }, 50);
-
         }
-    </script>
-	<!-- SINKRONISASI OTOMATIS REALTIME & FUNGSI PENDUKUNG (FIXED) -->
-<script>
+	}		
+		
   // 1. KONSOLIDASI SYNC SPREADSHEET & AUTO-POLLING
   async function autoFetchFromSpreadsheet() {
     try {
