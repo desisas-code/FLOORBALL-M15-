@@ -154,6 +154,11 @@
         }
       }
 
+      window.addEventListener("DOMContentLoaded", () => {
+  setInterval(autoFetchFromSpreadsheet, 60000); 
+});
+    </script>
+
     <div id="toast-container"></div>
 
     <!-- 1. LAYAR LOGIN -->
@@ -1009,6 +1014,13 @@ if (menuId === 'menu-4') {
             }
         }
 
+       window.addEventListener('DOMContentLoaded', () => {
+    // Muat data dari localStorage agar state.atlet terisi 41 data
+    state.atlet = loadStorage('atlet', []); 
+    
+    // Inisialisasi tampilan login
+    selectLoginRole('pelatih');
+});
         async function syncDataToSpreadsheet() {
             const toast = showToast("Menyinkronkan data ke Google Spreadsheet...", "loading");
             
@@ -1290,7 +1302,7 @@ function restoreDataJSON(event) {
                 { id: 'm1', atletId: '1', tanggal: '2026-07-30', vo2max: '48.5', walkSec: 15, jogSec: 15, sprintSec: 15, walkDist: 23, jogDist: 40, sprintDist: 69, rep: 10 }
             ]),
             rpeLogs: loadStorage('rpeLogs', []),
-            saveStorage('uploadedHashes', Array.from(state.uploadedHashes));
+            uploadedHashes: new Set(loadStorage('uploadedHashes', ['img_dummy_strava_sample_1', 'img_dummy_strava_sample_2'])),
             laporanValidasi: loadStorage('laporanValidasi', [
                 {
                     id: 'v1',
@@ -1727,7 +1739,7 @@ function deleteRiwayatValidasi(id) {
                 const selectElem = document.getElementById(`bulk-status-${at.id}`);
                 if (selectElem) {
                     newEntries.push({
-                        id: `${Date.now()}_${index}_${at.id}`
+                        id: Date.now().toString() + '_' + at.id,
                         atletId: at.id,
                         tanggal,
                         jenis,
@@ -3171,10 +3183,9 @@ function renderMatchHeatmap() {
         </div>
     `;
 
-    const canvasEl = document.getElementById('chart-posisi-atlet');
-if (canvasEl) {
-    const ctxPos = canvasEl.getContext('2d');
-    // inisialisasi Chart.js ...
+    setTimeout(() => {
+        renderMatchHeatmap();
+    }, 50);
 }
 
         function changeProgramAtlet(val) {
@@ -6642,16 +6653,9 @@ saveStorage('laporanValidasi', state.laporanValidasi);
 
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", () => {
-  // 1. Muat data atlet dari localStorage ke state
-  state.atlet = loadStorage('atlet', []); 
-
-  // 2. Inisialisasi tampilan login
-  selectLoginRole('pelatih');
-
-  // 3. Jalankan sinkronisasi background
-  autoFetchFromSpreadsheet();
-  setInterval(autoFetchFromSpreadsheet, 30000);
-});
+    autoFetchFromSpreadsheet();
+    setInterval(autoFetchFromSpreadsheet, 30000); 
+  });
 
   window.addEventListener("focus", () => {
     autoFetchFromSpreadsheet();
