@@ -1015,6 +1015,10 @@ if (menuId === 'menu-4') {
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+    // Muat data dari localStorage agar state.atlet terisi 41 data
+    state.atlet = loadStorage('atlet', []); 
+    
+    // Inisialisasi tampilan login
     selectLoginRole('pelatih');
 });
 
