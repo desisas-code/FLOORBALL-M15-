@@ -3609,16 +3609,7 @@ function renderMatchHeatmap() {
     const pace = document.getElementById('jogging-pace-display')?.value || '-';
     const vo2max = getAtletVO2Max(atletId) || '-';
 
-    const newLog = { 
-        id: generateUniqueID('jog'), 
-        atletId, 
-        tanggal, 
-        vo2max, 
-        zona, 
-        jarak, 
-        waktu, 
-        pace 
-    };
+    const newLog = { id: generateUniqueID('jog'), atletId, tanggal, vo2max, zona, jarak, waktu, pace };
     state.joggingLogs.unshift(newLog);
     saveStorage('joggingLogs', state.joggingLogs);
 
@@ -3626,7 +3617,7 @@ function renderMatchHeatmap() {
     const estKalori = Math.round((speedKmh * 1.05) * 65 * (waktu / 60));
 
     const newValidasiSync = {
-        id: generateUniqueID('jog'),
+        id: generateUniqueID('val'),
         atletId: atletId,
         tanggal: tanggal,
         jarak: jarak,
