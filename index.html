@@ -1290,7 +1290,7 @@ function restoreDataJSON(event) {
                 { id: 'm1', atletId: '1', tanggal: '2026-07-30', vo2max: '48.5', walkSec: 15, jogSec: 15, sprintSec: 15, walkDist: 23, jogDist: 40, sprintDist: 69, rep: 10 }
             ]),
             rpeLogs: loadStorage('rpeLogs', []),
-            uploadedHashes: new Set(loadStorage('uploadedHashes', ['img_dummy_strava_sample_1', 'img_dummy_strava_sample_2'])),
+            saveStorage('uploadedHashes', Array.from(state.uploadedHashes));
             laporanValidasi: loadStorage('laporanValidasi', [
                 {
                     id: 'v1',
@@ -1727,7 +1727,7 @@ function deleteRiwayatValidasi(id) {
                 const selectElem = document.getElementById(`bulk-status-${at.id}`);
                 if (selectElem) {
                     newEntries.push({
-                        id: Date.now().toString() + '_' + at.id,
+                        id: `${Date.now()}_${index}_${at.id}`
                         atletId: at.id,
                         tanggal,
                         jenis,
@@ -3171,9 +3171,10 @@ function renderMatchHeatmap() {
         </div>
     `;
 
-    setTimeout(() => {
-        renderMatchHeatmap();
-    }, 50);
+    const canvasEl = document.getElementById('chart-posisi-atlet');
+if (canvasEl) {
+    const ctxPos = canvasEl.getContext('2d');
+    // inisialisasi Chart.js ...
 }
 
         function changeProgramAtlet(val) {
