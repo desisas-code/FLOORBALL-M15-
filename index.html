@@ -2778,45 +2778,37 @@ function renderMatchHeatmap() {
     const activeLineObj = state.matchLive.lines[state.matchLive.activeLine] || {};
     const positions = ['FL', 'FR', 'C', 'DL', 'DR'];
     const activeOnCourtPlayerIds = [...Object.values(activeLineObj).filter(id => id !== ''), state.matchLive.activeGKId];
-    const activePlayer = state.atlet.find(a => a.id === state.matchLive.activePlayerId) || state.atlet[0] || { id: '1', nama: 'Default' };
+    const activePlayer = state.atlet.find(a => String(a.id) === String(state.matchLive.activePlayerId)) || state.atlet[0] || { id: '1', nama: 'Default' };
     const activeStats = state.matchLive.playerStats[activePlayer.id] || { passAcc:0, passFail:0, recAcc:0, recFail:0, shootAcc:0, foul:0, dribbleTime:0 };
 
     const matchTimer = state.matchLive.matchTimer || { isRunning: false, elapsedSec: 0 };
     const mSec = matchTimer.elapsedSec || 0;
     const timerMin = Math.floor(mSec / 60).toString().padStart(2, '0');
     const timerSec = (mSec % 60).toString().padStart(2, '0');
-	const activeGKId = state.matchLive.activeGKId;
+
+    const activeGKId = state.matchLive.activeGKId;
     const activeGKObj = state.atlet.find(a => String(a.id) === String(activeGKId));
     const gkStats = state.matchLive.gkStats?.[activeGKId] || { saves: 0, goalsConceded: 0, outletAcc: 0, outletFail: 0 };
     const savePct = calculateGKSavePercentage(activeGKId);
-    container.innerHTML = `
-        <!-- KONTROL SHIFT LINEUP (LINE 1, 2, 3) -->
-<div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl mb-4 text-center shadow-inner">
-    <span class="text-[10px] font-black text-cyan-400 uppercase tracking-widest block mb-2">⚡ Shift Lineup Aktif Bertanding</span>
-    <div class="grid grid-cols-3 gap-2">
-        <button onclick="switchMatchLine(1)" class="py-2 px-3 rounded-xl font-black text-xs transition cursor-pointer ${state.matchLive?.activeLine === 'Line 1' ? 'bg-amber-400 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
-            Line 1
-        </button>
-        <button onclick="switchMatchLine(2)" class="py-2 px-3 rounded-xl font-black text-xs transition cursor-pointer ${state.matchLive?.activeLine === 'Line 2' ? 'bg-amber-400 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
-            Line 2
-        </button>
-        <button onclick="switchMatchLine(3)" class="py-2 px-3 rounded-xl font-black text-xs transition cursor-pointer ${state.matchLive?.activeLine === 'Line 3' ? 'bg-amber-400 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
-            Line 3
-        </button>
-    </div>
-</div>
 
-		<!-- 1. SCOREBOARD STADIUM DIGITAL (PRO MATCH UI) -->
+    container.innerHTML = `
+        <!-- 1. KONTROL SHIFT LINEUP -->
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl mb-4 text-center shadow-inner">
+            <span class="text-[10px] font-black text-cyan-400 uppercase tracking-widest block mb-2">⚡ Shift Lineup Aktif Bertanding</span>
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="switchMatchLine('Line 1')" class="py-2 px-3 rounded-xl font-black text-xs transition cursor-pointer ${state.matchLive?.activeLine === 'Line 1' ? 'bg-amber-400 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">Line 1</button>
+                <button onclick="switchMatchLine('Line 2')" class="py-2 px-3 rounded-xl font-black text-xs transition cursor-pointer ${state.matchLive?.activeLine === 'Line 2' ? 'bg-amber-400 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">Line 2</button>
+                <button onclick="switchMatchLine('Line 3')" class="py-2 px-3 rounded-xl font-black text-xs transition cursor-pointer ${state.matchLive?.activeLine === 'Line 3' ? 'bg-amber-400 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">Line 3</button>
+            </div>
+        </div>
+
+        <!-- 2. SCOREBOARD STADIUM DIGITAL -->
         <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 text-white p-6 sm:p-8 rounded-[32px] border border-slate-800/90 shadow-2xl mb-6 relative overflow-hidden">
             <div class="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
-                
-                <!-- TIM KITA -->
                 <div class="flex items-center gap-4">
                     <div class="text-center">
                         <span class="text-[10px] font-black uppercase text-cyan-400 tracking-widest block mb-1">TIM KITA</span>
-                        <div class="text-5xl font-black text-amber-400 font-display bg-slate-900/90 px-6 py-2.5 rounded-2xl border border-slate-700/80 shadow-2xl min-w-[90px]">
-                            ${state.matchLive.scoreTeam || 0}
-                        </div>
+                        <div class="text-5xl font-black text-amber-400 font-display bg-slate-900/90 px-6 py-2.5 rounded-2xl border border-slate-700/80 shadow-2xl min-w-[90px]">${state.matchLive.scoreTeam || 0}</div>
                     </div>
                     <div class="flex flex-col gap-1.5">
                         <button onclick="updateMatchScore('team', 1)" class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-black text-base flex items-center justify-center active:scale-95 shadow-lg shadow-emerald-600/30">+</button>
@@ -2824,7 +2816,6 @@ function renderMatchHeatmap() {
                     </div>
                 </div>
 
-                <!-- MATCH TIMER & PERIOD CONTROL -->
                 <div class="flex flex-col items-center gap-2 text-center">
                     <select onchange="setMatchPeriod(this.value)" class="bg-slate-800/90 text-amber-300 font-black text-xs px-4 py-1.5 rounded-xl border border-slate-700/90 focus:outline-none cursor-pointer shadow-inner">
                         <option value="Babak 1" ${state.matchLive.period === 'Babak 1' ? 'selected' : ''}>Babak 1</option>
@@ -2838,20 +2829,18 @@ function renderMatchHeatmap() {
                     </div>
 
                     <div class="flex gap-2 mt-1">
-                        <button onclick="toggleMatchTimer()" class="px-5 py-2 rounded-xl font-black text-xs shadow-lg transition-all ${matchTimer.isRunning ? 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-amber-400/20' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'}">
+                        <button onclick="toggleMatchTimer()" class="px-5 py-2 rounded-xl font-black text-xs shadow-lg transition-all ${matchTimer.isRunning ? 'bg-amber-400 hover:bg-amber-500 text-slate-950' : 'bg-emerald-500 hover:bg-emerald-600 text-white'}">
                             <i class="fa-solid ${matchTimer.isRunning ? 'fa-pause' : 'fa-play'} mr-1"></i> ${matchTimer.isRunning ? 'Pause' : 'Start'}
-                            </button>
-							<button onclick="resetMatchTimer()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">
-        <i class="fa-solid fa-rotate-left"></i>
-    </button>
-    <!-- KODE DIPINDAHKAN KE SINI (SEBEULUM TAG </div>) -->
-   <button onclick="shareMatchToWhatsApp()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg transition cursor-pointer">
-       <i class="fa-brands fa-whatsapp text-base"></i> Bagikan ke WA
-    </button>
- </div>
+                        </button>
+                        <button onclick="resetMatchTimer()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                        <button onclick="shareMatchToWhatsApp()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg transition cursor-pointer">
+                            <i class="fa-brands fa-whatsapp text-base"></i> WA
+                        </button>
+                    </div>
                 </div>
 
-                <!-- TIM LAWAN -->
                 <div class="flex items-center gap-4">
                     <div class="flex flex-col gap-1.5">
                         <button onclick="updateMatchScore('opponent', 1)" class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-black text-base flex items-center justify-center active:scale-95 shadow-lg shadow-emerald-600/30">+</button>
@@ -2859,15 +2848,11 @@ function renderMatchHeatmap() {
                     </div>
                     <div class="text-center">
                         <span class="text-[10px] font-black uppercase text-rose-400 tracking-widest block mb-1">LAWAN</span>
-                        <div class="text-5xl font-black text-rose-400 font-display bg-slate-900/90 px-6 py-2.5 rounded-2xl border border-slate-700/80 shadow-2xl min-w-[90px]">
-                            ${state.matchLive.scoreOpponent || 0}
-                        </div>
+                        <div class="text-5xl font-black text-rose-400 font-display bg-slate-900/90 px-6 py-2.5 rounded-2xl border border-slate-700/80 shadow-2xl min-w-[90px]">${state.matchLive.scoreOpponent || 0}</div>
                     </div>
                 </div>
-
             </div>
 
-            <!-- FOUL COUNTER BARIS BAWAH -->
             <div class="mt-5 pt-4 border-t border-slate-800/80 flex items-center justify-around text-xs font-bold relative z-10">
                 <div class="flex items-center gap-2">
                     <span class="text-slate-400 uppercase text-[10px] font-black">Foul Tim:</span>
@@ -2885,7 +2870,7 @@ function renderMatchHeatmap() {
             </div>
         </div>
 
-<!-- A. ANALISIS KIPER LIVE (GK) -->
+        <!-- 3. ANALISIS KIPER LIVE (GK) -->
         <div class="bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-white p-6 rounded-[28px] border border-slate-800 shadow-xl mb-6">
             <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4 flex-wrap gap-2">
                 <div class="flex items-center gap-3">
@@ -2908,10 +2893,9 @@ function renderMatchHeatmap() {
                 </div>
             </div>
 
-            <!-- CONTROLLER AKSI KIPER -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col justify-between">
-                    <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider block mb-1">Saves (Penyelamatan)</span>
+                    <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider block mb-1">Saves</span>
                     <div class="flex items-center justify-between mt-1">
                         <span class="text-2xl font-black text-white font-mono">${gkStats.saves}</span>
                         <div class="flex gap-1">
@@ -2922,7 +2906,7 @@ function renderMatchHeatmap() {
                 </div>
 
                 <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col justify-between">
-                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-wider block mb-1">Kebobolan (Goal Conceded)</span>
+                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-wider block mb-1">Kebobolan</span>
                     <div class="flex items-center justify-between mt-1">
                         <span class="text-2xl font-black text-rose-400 font-mono">${gkStats.goalsConceded}</span>
                         <div class="flex gap-1">
@@ -2933,7 +2917,7 @@ function renderMatchHeatmap() {
                 </div>
 
                 <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col justify-between">
-                    <span class="text-[10px] font-black text-cyan-400 uppercase tracking-wider block mb-1">Outlet Pass Sukses</span>
+                    <span class="text-[10px] font-black text-cyan-400 uppercase tracking-wider block mb-1">Outlet Sukses</span>
                     <div class="flex items-center justify-between mt-1">
                         <span class="text-2xl font-black text-cyan-300 font-mono">${gkStats.outletAcc}</span>
                         <div class="flex gap-1">
@@ -2944,7 +2928,7 @@ function renderMatchHeatmap() {
                 </div>
 
                 <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col justify-between">
-                    <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider block mb-1">Outlet Pass Gagal</span>
+                    <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider block mb-1">Outlet Gagal</span>
                     <div class="flex items-center justify-between mt-1">
                         <span class="text-2xl font-black text-amber-400 font-mono">${gkStats.outletFail}</span>
                         <div class="flex gap-1">
@@ -2956,7 +2940,7 @@ function renderMatchHeatmap() {
             </div>
         </div>
 
-        <!-- B. EFISIENSI SHIFT LINEUP (+/- RATING) -->
+        <!-- 4. EFISIENSI SHIFT LINEUP (+/- RATING) -->
         <div class="bg-white/95 backdrop-blur-xl p-6 rounded-[28px] border border-slate-200/80 shadow-md mb-6">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
                 <h4 class="font-black text-slate-900 text-xs font-display flex items-center gap-2 uppercase tracking-wider">
@@ -2993,7 +2977,7 @@ function renderMatchHeatmap() {
             </div>
         </div>
 
-        <!-- 2. PANU MANAGER LINE-UP MATCH -->
+        <!-- 5. PANEL MANAGER LINE-UP MATCH -->
         <div class="bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md mb-6">
             <div class="border-b border-slate-100 pb-4 mb-4 flex justify-between items-center flex-wrap gap-3">
                 <h3 class="text-sm sm:text-base font-black text-slate-800 flex items-center gap-2 font-display">
@@ -3008,12 +2992,10 @@ function renderMatchHeatmap() {
                 </div>
             </div>
 
-            <!-- TABS ROTASI LINE -->
             <div class="flex gap-2 mb-4">
                 ${lineNames.map(line => `<button onclick="switchMatchLine('${line}')" class="flex-1 py-2.5 rounded-2xl font-black text-xs border transition-all ${state.matchLive.activeLine === line ? 'bg-blue-900 text-white border-blue-950 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200/80 hover:bg-slate-100'}">${line}</button>`).join('')}
             </div>
 
-            <!-- SELECTOR PEMAIN DITINGKATKAN -->
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
                 ${positions.map(pos => `
                     <div>
@@ -3027,9 +3009,8 @@ function renderMatchHeatmap() {
             </div>
         </div>
 
-        <!-- 3. LAPANGAN TAKTIS SPASIAL & CONTROLLER AKSI PEMAIN -->
+        <!-- 6. LAPANGAN TAKTIS SPASIAL & CONTROLLER AKSI -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-            <!-- LAPANGAN TAKTIS (LEFT PANEL) -->
             <div class="lg:col-span-7 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md">
                 <div class="flex gap-2 mb-4">
                     <button onclick="setSpatialEventType('loss')" class="flex-1 py-2.5 rounded-2xl font-black text-xs transition-all ${state.matchLive.activeSpatialEventType === 'loss' ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Kehilangan</button>
@@ -3038,48 +3019,33 @@ function renderMatchHeatmap() {
                 </div>
 
                 <div class="relative w-full aspect-[2/1] bg-[#0066B2] rounded-[24px] sm:rounded-[30px] border-[5px] sm:border-[7px] border-slate-900 shadow-2xl overflow-hidden cursor-crosshair" onclick="handleCourtClick(event)">
-
-    <!-- LAYER 1: HEATMAP (z-0) -->
-    <div id="court-heatmap-layer" class="absolute inset-0 pointer-events-none z-0"></div>
-
-    <!-- LAYER 2: GARIS & AREA FLOORBALL OFFICIAL (z-10) -->
-    <div class="absolute inset-0 pointer-events-none z-10">
-        <!-- Garis Tengah & Titik Tengah (Center Spot) -->
-        <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white/90"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/90"></div>
-
-        <!-- Titik Face-Off (4 Titik Lapangan Floorball) -->
-        <div class="absolute top-[20%] left-[15%] -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
-        <div class="absolute bottom-[20%] left-[15%] -translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
-        <div class="absolute top-[20%] right-[15%] translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
-        <div class="absolute bottom-[20%] right-[15%] translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
-
-        <!-- Area Gawang Kiri (Goalkeeper Area & Small Crease) -->
-        <div class="absolute top-1/2 left-[8.75%] -translate-y-1/2 w-[12.5%] h-[40%] border-2 border-white bg-white/10 flex items-center justify-start">
-            <div class="w-[62.5%] h-[50%] border-2 border-white bg-rose-500/40"></div>
-        </div>
-
-        <!-- Area Gawang Kanan (Goalkeeper Area & Small Crease) -->
-        <div class="absolute top-1/2 right-[8.75%] -translate-y-1/2 w-[12.5%] h-[40%] border-2 border-white bg-white/10 flex items-center justify-end">
-            <div class="w-[62.5%] h-[50%] border-2 border-white bg-rose-500/40"></div>
-        </div>
-    </div>
-
-    <!-- LAYER 3: PIN AKSI EVENT ATLET (z-20) -->
-    <div class="relative z-20 w-full h-full pointer-events-none">
-        ${state.matchLive.spatialEvents.map(ev => `
-            <div onclick="event.stopPropagation();" class="pointer-events-auto absolute w-5 h-5 sm:w-6 sm:h-6 bg-amber-400 text-slate-900 rounded-full flex items-center justify-center font-black text-[10px] shadow-lg -translate-x-1/2 -translate-y-1/2 border border-slate-900" style="left: ${ev.x}%; top: ${ev.y}%;">
-                ${escapeHTML(state.atlet.find(a => a.id === ev.playerId)?.nama.charAt(0) || '?')}
+                    <div id="court-heatmap-layer" class="absolute inset-0 pointer-events-none z-0"></div>
+                    <div class="absolute inset-0 pointer-events-none z-10">
+                        <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white/90"></div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/90"></div>
+                        <div class="absolute top-[20%] left-[15%] -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
+                        <div class="absolute bottom-[20%] left-[15%] -translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
+                        <div class="absolute top-[20%] right-[15%] translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
+                        <div class="absolute bottom-[20%] right-[15%] translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
+                        <div class="absolute top-1/2 left-[8.75%] -translate-y-1/2 w-[12.5%] h-[40%] border-2 border-white bg-white/10 flex items-center justify-start">
+                            <div class="w-[62.5%] h-[50%] border-2 border-white bg-rose-500/40"></div>
+                        </div>
+                        <div class="absolute top-1/2 right-[8.75%] -translate-y-1/2 w-[12.5%] h-[40%] border-2 border-white bg-white/10 flex items-center justify-end">
+                            <div class="w-[62.5%] h-[50%] border-2 border-white bg-rose-500/40"></div>
+                        </div>
+                    </div>
+                    <div class="relative z-20 w-full h-full pointer-events-none">
+                        ${state.matchLive.spatialEvents.map(ev => `
+                            <div onclick="event.stopPropagation();" class="pointer-events-auto absolute w-5 h-5 sm:w-6 sm:h-6 bg-amber-400 text-slate-900 rounded-full flex items-center justify-center font-black text-[10px] shadow-lg -translate-x-1/2 -translate-y-1/2 border border-slate-900" style="left: ${ev.x}%; top: ${ev.y}%;">
+                                ${escapeHTML(state.atlet.find(a => a.id === ev.playerId)?.nama.charAt(0) || '?')}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
             </div>
-        `).join('')}
-    </div>
 
-</div>
-
-            <!-- CONTROLLER AKSI PEMAIN (RIGHT PANEL) -->
             <div class="lg:col-span-5 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md flex flex-col justify-between">
                 <div>
-                    <!-- PEMILIH PEMAIN DI LAPANGAN -->
                     <div class="grid grid-cols-3 gap-1.5 mb-4">
                         ${activeOnCourtPlayerIds.map(pId => {
                             const pObj = state.atlet.find(a => a.id === pId);
@@ -3088,7 +3054,6 @@ function renderMatchHeatmap() {
                         }).join('')}
                     </div>
 
-                    <!-- DRIBBLE TIMER -->
                     <div class="bg-slate-900 text-white p-4 rounded-2xl mb-4 flex items-center justify-between border border-slate-800 shadow-inner">
                         <div>
                             <p class="text-[10px] text-slate-400 uppercase font-black">Dribble Timer (${escapeHTML(activePlayer.nama.split(' ')[0])})</p>
@@ -3097,7 +3062,6 @@ function renderMatchHeatmap() {
                         <button onclick="toggleDribbleTimer()" class="px-5 py-2.5 rounded-xl font-black text-xs bg-emerald-500 hover:bg-emerald-600 text-white active:scale-95 transition-all shadow-md shadow-emerald-500/30">${state.matchLive.dribbleTimer.isRunning ? 'Stop' : 'Start'}</button>
                     </div>
 
-                    <!-- COUNTER AKSI PEMAIN -->
                     <div class="grid grid-cols-2 gap-2">
                         <div onclick="recordMatchStat('passAcc')" class="p-3 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl flex justify-between items-center cursor-pointer active:scale-95 transition-transform hover:bg-emerald-100/80">
                             <div><span class="block text-[9px] font-black text-emerald-600 uppercase">PASS AKURAT</span><span class="text-base font-black text-emerald-800">${activeStats.passAcc}</span></div>
@@ -3124,108 +3088,101 @@ function renderMatchHeatmap() {
             </div>
         </div>
 
-        <!-- 4. LOG EVENT PERTANDINGAN & RINGKASAN STATISTIK PEMAIN (FULL WIDTH RESPONSIVE) -->
-<div class="w-full space-y-6 mb-6">
-
-    <!-- A. TABEL REKAP STATISTIK PEMAIN (DITARUH DI ATAS AGAR MAKSIMAL) -->
-    <div class="w-full bg-white/95 backdrop-blur-xl rounded-[28px] border border-slate-200/80 shadow-md overflow-hidden">
-        <div class="p-4 sm:p-5 bg-slate-50/80 border-b flex justify-between items-center flex-wrap gap-2">
-            <h4 class="font-black text-xs sm:text-sm text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-chart-simple text-blue-900"></i> Ringkasan Statistik Pemain Match Live
-            </h4>
-            <span class="text-[10px] font-extrabold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
-                ${state.atlet.length} Pemain Skuad
-            </span>
-        </div>
-        
-        <div class="w-full overflow-x-auto custom-scrollbar">
-            <table class="w-full text-left border-collapse min-w-[600px]">
-                <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                    <tr>
-                        <th class="p-3.5 pl-5">Nama Pemain</th>
-                        <th class="p-3.5 text-center">Passing</th>
-                        <th class="p-3.5 text-center">Receiving</th>
-                        <th class="p-3.5 text-center">Dribble</th>
-                        <th class="p-3.5 text-center">Foul</th>
-                        <th class="p-3.5 text-center pr-5">Akurasi Pass %</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                    ${state.atlet.map(p => {
-                        const pStat = state.matchLive.playerStats[p.id] || { passAcc:0, passFail:0, recAcc:0, recFail:0, shootAcc:0, foul:0, dribbleTime:0 };
-                        const totalPass = pStat.passAcc + pStat.passFail;
-                        const passPct = totalPass > 0 ? Math.round((pStat.passAcc / totalPass) * 100) : 0;
-                        
-                        let passBarColor = 'bg-rose-500';
-                        if (passPct >= 75) passBarColor = 'bg-emerald-500';
-                        else if (passPct >= 50) passBarColor = 'bg-amber-500';
-
-                        return `
-                            <tr class="hover:bg-blue-50/40 transition-colors">
-                                <td class="p-3.5 pl-5">
-                                    <div class="font-extrabold text-slate-800">${escapeHTML(p.nama)}</div>
-                                    <span class="text-[9px] bg-blue-50 text-blue-900 border border-blue-200 px-2 py-0.5 rounded-md font-black mt-0.5 inline-block">${escapeHTML(p.posisi)}</span>
-                                </td>
-                                <td class="p-3.5 text-center font-mono">
-                                    <div class="flex justify-center items-center shadow-sm rounded-lg overflow-hidden w-fit mx-auto">
-                                        <span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 border border-emerald-200 font-black">${pStat.passAcc}</span>
-                                        <span class="bg-rose-50 text-rose-700 px-2.5 py-1 border-y border-r border-rose-200 font-black">${pStat.passFail}</span>
-                                    </div>
-                                </td>
-                                <td class="p-3.5 text-center font-mono">
-                                    <div class="flex justify-center items-center shadow-sm rounded-lg overflow-hidden w-fit mx-auto">
-                                        <span class="bg-blue-50 text-blue-700 px-2.5 py-1 border border-blue-200 font-black">${pStat.recAcc}</span>
-                                        <span class="bg-amber-50 text-amber-700 px-2.5 py-1 border-y border-r border-amber-200 font-black">${pStat.recFail}</span>
-                                    </div>
-                                </td>
-                                <td class="p-3.5 text-center">
-                                    <span class="font-mono font-black text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 shadow-sm">${pStat.dribbleTime}s</span>
-                                </td>
-                                <td class="p-3.5 text-center">
-                                    <span class="font-mono font-black ${pStat.foul > 0 ? 'text-purple-700 bg-purple-50 border border-purple-200' : 'text-slate-400 bg-slate-50 border border-slate-200'} px-2.5 py-1 rounded-lg">${pStat.foul || 0}</span>
-                                </td>
-                                <td class="p-3.5 text-center pr-5 align-middle">
-                                    <div class="flex flex-col gap-1 items-center justify-center min-w-[80px] mx-auto">
-                                        <span class="font-mono font-black text-xs ${passPct >= 75 ? 'text-emerald-600' : (passPct >= 50 ? 'text-amber-600' : 'text-rose-600')}">
-                                            ${passPct}%
-                                        </span>
-                                        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                            <div class="h-full rounded-full transition-all duration-500 ${passBarColor}" style="width: ${passPct}%;"></div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- B. LOG AKTIVITAS PERTANDINGAN -->
-    <div class="w-full bg-white/95 backdrop-blur-xl rounded-[28px] border border-slate-200/80 shadow-md overflow-hidden flex flex-col max-h-[350px]">
-        <div class="p-4 bg-slate-50/80 border-b flex justify-between items-center shrink-0">
-            <h4 class="font-black text-xs sm:text-sm text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-blue-900"></i> Log Event Pertandingan
-            </h4>
-            <span class="bg-blue-100 text-blue-900 px-2.5 py-0.5 rounded-full text-[10px] font-black">${state.matchLive.logs.length} Log</span>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-            ${state.matchLive.logs.length > 0 ? state.matchLive.logs.map(log => `
-                <div class="p-3 bg-slate-50 border border-slate-200/70 rounded-2xl flex items-center justify-between text-xs">
-                    <div>
-                        <span class="font-mono text-[10px] text-slate-400 font-bold block">${log.time}</span>
-                        <p class="font-extrabold text-slate-700 mt-0.5">${escapeHTML(log.desc)}</p>
-                    </div>
-                    <button onclick="deleteMatchLog('${log.id}')" class="text-rose-400 hover:text-rose-600 p-1.5"><i class="fa-solid fa-xmark"></i></button>
+        <!-- 7. REKAP STATISTIK PEMAIN & LOG ACTIVITY (RESPONSIVE FULL WIDTH) -->
+        <div class="w-full space-y-6 mb-6">
+            <div class="w-full bg-white/95 backdrop-blur-xl rounded-[28px] border border-slate-200/80 shadow-md overflow-hidden">
+                <div class="p-4 sm:p-5 bg-slate-50/80 border-b flex justify-between items-center flex-wrap gap-2">
+                    <h4 class="font-black text-xs sm:text-sm text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-simple text-blue-900"></i> Ringkasan Statistik Pemain Match Live
+                    </h4>
                 </div>
-            `).join('') : `<p class="text-xs text-slate-400 text-center py-8 italic font-semibold">Belum ada aktivitas tercatat.</p>`}
+                
+                <div class="w-full overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                            <tr>
+                                <th class="p-3.5 pl-5">Nama Pemain</th>
+                                <th class="p-3.5 text-center">Passing</th>
+                                <th class="p-3.5 text-center">Receiving</th>
+                                <th class="p-3.5 text-center">Dribble</th>
+                                <th class="p-3.5 text-center">Foul</th>
+                                <th class="p-3.5 text-center pr-5">Akurasi Pass %</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+                            ${state.atlet.map(p => {
+                                const pStat = state.matchLive.playerStats[p.id] || { passAcc:0, passFail:0, recAcc:0, recFail:0, shootAcc:0, foul:0, dribbleTime:0 };
+                                const totalPass = pStat.passAcc + pStat.passFail;
+                                const passPct = totalPass > 0 ? Math.round((pStat.passAcc / totalPass) * 100) : 0;
+                                
+                                let passBarColor = 'bg-rose-500';
+                                if (passPct >= 75) passBarColor = 'bg-emerald-500';
+                                else if (passPct >= 50) passBarColor = 'bg-amber-500';
+
+                                return `
+                                    <tr class="hover:bg-blue-50/40 transition-colors">
+                                        <td class="p-3.5 pl-5">
+                                            <div class="font-extrabold text-slate-800">${escapeHTML(p.nama)}</div>
+                                            <span class="text-[9px] bg-blue-50 text-blue-900 border border-blue-200 px-2 py-0.5 rounded-md font-black mt-0.5 inline-block">${escapeHTML(p.posisi)}</span>
+                                        </td>
+                                        <td class="p-3.5 text-center font-mono">
+                                            <div class="flex justify-center items-center shadow-sm rounded-lg overflow-hidden w-fit mx-auto">
+                                                <span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 border border-emerald-200 font-black">${pStat.passAcc}</span>
+                                                <span class="bg-rose-50 text-rose-700 px-2.5 py-1 border-y border-r border-rose-200 font-black">${pStat.passFail}</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-3.5 text-center font-mono">
+                                            <div class="flex justify-center items-center shadow-sm rounded-lg overflow-hidden w-fit mx-auto">
+                                                <span class="bg-blue-50 text-blue-700 px-2.5 py-1 border border-blue-200 font-black">${pStat.recAcc}</span>
+                                                <span class="bg-amber-50 text-amber-700 px-2.5 py-1 border-y border-r border-amber-200 font-black">${pStat.recFail}</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-3.5 text-center">
+                                            <span class="font-mono font-black text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 shadow-sm">${pStat.dribbleTime}s</span>
+                                        </td>
+                                        <td class="p-3.5 text-center">
+                                            <span class="font-mono font-black ${pStat.foul > 0 ? 'text-purple-700 bg-purple-50 border border-purple-200' : 'text-slate-400 bg-slate-50 border border-slate-200'} px-2.5 py-1 rounded-lg">${pStat.foul || 0}</span>
+                                        </td>
+                                        <td class="p-3.5 text-center pr-5 align-middle">
+                                            <div class="flex flex-col gap-1 items-center justify-center min-w-[80px] mx-auto">
+                                                <span class="font-mono font-black text-xs ${passPct >= 75 ? 'text-emerald-600' : (passPct >= 50 ? 'text-amber-600' : 'text-rose-600')}">
+                                                    ${passPct}%
+                                                </span>
+                                                <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                                    <div class="h-full rounded-full transition-all duration-500 ${passBarColor}" style="width: ${passPct}%;"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="w-full bg-white/95 backdrop-blur-xl rounded-[28px] border border-slate-200/80 shadow-md overflow-hidden flex flex-col max-h-[350px]">
+                <div class="p-4 bg-slate-50/80 border-b flex justify-between items-center shrink-0">
+                    <h4 class="font-black text-xs sm:text-sm text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-blue-900"></i> Log Event Pertandingan
+                    </h4>
+                    <span class="bg-blue-100 text-blue-900 px-2.5 py-0.5 rounded-full text-[10px] font-black">${state.matchLive.logs.length} Log</span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                    ${state.matchLive.logs.length > 0 ? state.matchLive.logs.map(log => `
+                        <div class="p-3 bg-slate-50 border border-slate-200/70 rounded-2xl flex items-center justify-between text-xs">
+                            <div>
+                                <span class="font-mono text-[10px] text-slate-400 font-bold block">${log.time}</span>
+                                <p class="font-extrabold text-slate-700 mt-0.5">${escapeHTML(log.desc)}</p>
+                            </div>
+                            <button onclick="deleteMatchLog('${log.id}')" class="text-rose-400 hover:text-rose-600 p-1.5"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    `).join('') : `<p class="text-xs text-slate-400 text-center py-8 italic font-semibold">Belum ada aktivitas tercatat.</p>`}
+                </div>
+            </div>
         </div>
-    </div>
+    `;
 
-</div>
-
-			// SISIPKAN TEPAT SEBELUM PENUTUP FUNGSI renderMatchLiveUI
     setTimeout(() => {
         renderMatchHeatmap();
     }, 50);
