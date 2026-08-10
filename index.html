@@ -2660,11 +2660,15 @@ function renderMatchHeatmap() {
                     <div class="flex gap-2 mt-1">
                         <button onclick="toggleMatchTimer()" class="px-5 py-2 rounded-xl font-black text-xs shadow-lg transition-all ${matchTimer.isRunning ? 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-amber-400/20' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'}">
                             <i class="fa-solid ${matchTimer.isRunning ? 'fa-pause' : 'fa-play'} mr-1"></i> ${matchTimer.isRunning ? 'Pause' : 'Start'}
-                        </button>
-                        <button onclick="resetMatchTimer()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl font-bold text-xs active:scale-95">
-                            <i class="fa-solid fa-rotate-left"></i>
-                        </button>
-                    </div>
+                            </button>
+							<button onclick="resetMatchTimer()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">
+        <i class="fa-solid fa-rotate-left"></i>
+    </button>
+    <!-- KODE DIPINDAHKAN KE SINI (SEBEULUM TAG </div>) -->
+   <button onclick="shareMatchToWhatsApp()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg transition cursor-pointer">
+       <i class="fa-brands fa-whatsapp text-base"></i> Bagikan ke WA
+    </button>
+ </div>
                 </div>
 
                 <!-- TIM LAWAN -->
@@ -3801,7 +3805,8 @@ function renderMatchHeatmap() {
                     const cederaBadge = isCedera 
                         ? `<span class="bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-xl text-[10px] font-black flex items-center gap-1.5 w-fit mx-auto shadow-sm"><i class="fa-solid fa-notes-medical"></i> ${escapeHTML(a.cedera)}</span>` 
                         : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-xl text-[10px] font-black flex items-center gap-1.5 w-fit mx-auto shadow-sm"><i class="fa-solid fa-shield-heart"></i> Bugar</span>`;
-
+					const acwrStatus = getACWRStatus(a);
+					
                     return `
                     <tr class="hover:bg-blue-50/40 transition-all duration-200 group hover:scale-[1.002]">
                         <td class="py-4 px-5">
@@ -3810,7 +3815,7 @@ function renderMatchHeatmap() {
                                     ${inisial}
                                 </div>
                                 <div>
-                                    <p class="font-black text-slate-900 text-sm tracking-tight">${escapeHTML(a.nama)}</p>
+                                    <p onclick="openAtletRadarModal('${a.id}')" class="font-black text-slate-900 text-sm tracking-tight hover:text-amber-500 cursor-pointer transition">${escapeHTML(a.nama)}</p>
                                     <p class="text-[10px] text-slate-400 font-extrabold mt-0.5">${a.usia} Thn • ${escapeHTML(a.gender)}</p>
                                 </div>
                             </div>
@@ -3845,8 +3850,13 @@ function renderMatchHeatmap() {
                             </div>
                         </td>
                         <td class="py-4 px-4 text-center">
-                            ${cederaBadge}
-                        </td>
+    <div class="flex items-center justify-center gap-1.5 flex-wrap">
+        ${cederaBadge}
+        <span class="${acwrStatus.color} border px-2.5 py-1 rounded-xl text-[10px] font-black uppercase inline-block">
+            ACWR: ${acwrStatus.label} (${acwrStatus.ratio})
+        </span>
+    </div>
+</td>
                         <td class="py-4 px-5 text-center">
                             <div class="flex items-center justify-center gap-1.5">
                                 <button onclick="openModalAtlet('${a.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-blue-100 active:scale-90 flex items-center justify-center" title="Edit Data"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
@@ -6451,7 +6461,130 @@ if ('serviceWorker' in navigator) {
       .then(() => console.log('PWA Service Worker Berhasil Terpasang!'))
       .catch(err => console.log('Gagal pasang Service Worker:', err));
   });
-}		
+}
+
+// 1. FUNGSI MEMBUAT POP-UP MODAL RADAR CHART
+function openAtletRadarModal(atletId) {
+    const atlet = state.atlet.find(a => String(a.id) === String(atletId));
+    if (!atlet) return;
+
+    let modalEl = document.getElementById('atlet-radar-modal');
+    if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = 'atlet-radar-modal';
+        modalEl.className = 'fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
+        document.body.appendChild(modalEl);
+    }
+
+    modalEl.innerHTML = `
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm text-white relative shadow-2xl">
+            <button onclick="document.getElementById('atlet-radar-modal').remove()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">&times;</button>
+            <h3 class="text-lg font-black text-amber-400 text-center mb-1">${escapeHTML(atlet.nama)}</h3>
+            <p class="text-xs text-slate-400 text-center mb-4">${escapeHTML(atlet.posisi || 'Pemain')}</p>
+            
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <canvas id="atletRadarChart"></canvas>
+            </div>
+        </div>
+    `;
+
+    setTimeout(() => {
+        renderAtletRadarChart(atlet);
+    }, 50);
+}
+
+// 2. FUNGSI MENGGAMBAR GRAFIK RADAR CHART
+let atletRadarChartInstance = null;
+function renderAtletRadarChart(atletStats) {
+    const ctx = document.getElementById('atletRadarChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+
+    if (atletRadarChartInstance) {
+        atletRadarChartInstance.destroy();
+    }
+
+    atletRadarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Speed', 'Endurance', 'Passing', 'Shooting', 'Agility'],
+            datasets: [{
+                label: 'Nilai Atlet',
+                data: [
+                    atletStats.speed || 75,
+                    atletStats.endurance || 80,
+                    atletStats.passing || 70,
+                    atletStats.shooting || 65,
+                    atletStats.agility || 85
+                ],
+                backgroundColor: 'rgba(245, 158, 11, 0.25)',
+                borderColor: '#f59e0b',
+                pointBackgroundColor: '#fbbf24',
+                pointBorderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                    pointLabels: { color: '#cbd5e1', font: { size: 10, weight: 'bold' } },
+                    ticks: { display: false, beginAtZero: true, max: 100 }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+// 3. FUNGSI KALKULASI RASIO BEBAN LATIHAN (ACWR ALERT)
+function getACWRStatus(atlet) {
+    const history = atlet.historyLatihan || [];
+    
+    // Hitung rata-rata 7 hari (Acute) vs 28 hari (Chronic)
+    const acuteLoad = history.slice(-7).reduce((a, b) => a + b, 0) / 7;
+    const chronicLoad = history.slice(-28).reduce((a, b) => a + b, 0) / 28;
+    
+    if (!chronicLoad || chronicLoad === 0) {
+        return { ratio: '0.00', label: 'No Data', color: 'bg-slate-100 text-slate-600 border-slate-300' };
+    }
+    
+    const ratio = (acuteLoad / chronicLoad).toFixed(2);
+    
+    if (ratio < 0.8) return { ratio, label: 'Under', color: 'bg-blue-50 text-blue-700 border-blue-200' };
+    if (ratio <= 1.3) return { ratio, label: 'Optimal', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    if (ratio <= 1.5) return { ratio, label: 'Caution', color: 'bg-amber-50 text-amber-700 border-amber-200' };
+    return { ratio, label: 'High Risk', color: 'bg-rose-50 text-rose-700 border-rose-200' };
+}
+
+// 4. FUNGSI SHARE LAPORAN PERTANDINGAN KE WHATSAPP
+function shareMatchToWhatsApp() {
+    const m = state.matchLive || {};
+    const scoreTeam = m.scoreTeam || 0;
+    const scoreOpponent = m.scoreOpponent || 0;
+    const opponentName = m.opponentName || 'Lawan';
+
+    // Format Teks Ringkasan Pertandingan
+    let text = `🏑 *LAPORAN HASIL PERTANDINGAN FLOORBALL*\n`;
+    text += `===============================\n`;
+    text += `*TIM KITA*  [ ${scoreTeam} ] - [ ${scoreOpponent} ]  *${opponentName.toUpperCase()}*\n`;
+    text += `===============================\n\n`;
+
+    // Statistik Aksi & Event
+    const events = m.spatialEvents || [];
+    if (events.length > 0) {
+        text += `📊 *STATISTIK AKSI LAPANGAN:*\n`;
+        text += `• Total Event Taktis: ${events.length} Aksi\n`;
+    }
+
+    text += `\n_Diproses otomatis via Coach Floorball System_ ⚡`;
+
+    // Buka WhatsApp Web / App
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+}
+		
  </script>
  </body>
  </html>
