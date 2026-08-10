@@ -6843,11 +6843,19 @@ window.dbOnValue(window.dbRef(window.db, 'atletData'), (snapshot) => {
   }
 });
 
-// 2. DI SINI TEMPATNYA: Upload otomatis data dari HP ini ke Firebase
-const dataLokal = localStorage.getItem('FLOORBALL_APP_DATA') || localStorage.getItem('atletData') || localStorage.getItem('skuad');
-if (dataLokal) {
-  window.dbSet(window.dbRef(window.db, 'atletData'), JSON.parse(dataLokal));
+// 2. Upload otomatis semua data lokal dari HP utama ke Firebase Realtime Database
+for (let i = 0; i < localStorage.length; i++) {
+  const key = localStorage.key(i);
+  const val = localStorage.getItem(key);
+  try {
+    const parsed = JSON.parse(val);
+    // Jika data berupa array (daftar atlet) atau objek besar, kirim ke Firebase
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      window.dbSet(window.dbRef(window.db, 'atletData'), parsed);
+    }
+  } catch (e) {}
 }
+
 </script>
 </body>
 </html>
