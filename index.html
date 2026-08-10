@@ -376,8 +376,15 @@
 
     <!-- LOGIKA APP JAVASCRIPT -->
     <script>
-        const COACH_PASSWORD_DEFAULT = "midun15";
-        const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2ScqnDdgzEe24wsQR0SCfMc7-3a8atBr9tB87VTDP4pYz8kSfy-KN7pmuJ--_Ayj5/exec"; 
+       const COACH_PASSWORD_DEFAULT = "midun15";
+const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2ScqnDdgzEe24wsQR0SCfMc7-3a8atBr9tB87VTDP4pYz8kSfy-KN7pmuJ--_Ayj5/exec"; 
+
+function generateUniqueID(prefix = 'id') {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `${prefix}_${crypto.randomUUID()}`;
+    }
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
 
         function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
     return new Promise((resolve, reject) => {
@@ -1192,25 +1199,30 @@ function getAtletGpsLocation() {
         }
 
         function saveStorage(key, value) {
-            try {
-                localStorage.setItem('cf_' + key, JSON.stringify(value));
-            } catch (err) {
-                showToast("Memori browser penuh! Hapus riwayat lama.", "error");
-            }
+    try {
+        let dataToSave = value;
+
+        // SANITISASI BASE64: Cegah penumpukan gambar Base64 di LocalStorage
+        if (key === 'laporanValidasi' && Array.isArray(value)) {
+            dataToSave = value.map(item => {
+                const cleanItem = { ...item };
+                // Jika URL berisi string Base64 lokal, kosongkan saat disimpan ke memori permanen
+                if (cleanItem.imgSelfieUrl && cleanItem.imgSelfieUrl.startsWith('data:image/')) {
+                    cleanItem.imgSelfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80'; 
+                }
+                if (cleanItem.imgStravaUrl && cleanItem.imgStravaUrl.startsWith('data:image/')) {
+                    cleanItem.imgStravaUrl = 'https://images.unsplash.com/photo-1510519138161-584459eb1b37?w=500&q=80'; 
+                }
+                return cleanItem;
+            });
         }
 
-        function exportToCSV(filename, headers, rows) {
-            const csvContent = "data:text/csv;charset=utf-8," 
-                + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
+        localStorage.setItem('cf_' + key, JSON.stringify(dataToSave));
+    } catch (err) {
+        console.error("Storage Error:", err);
+        showToast("Memori browser penuh! Hapus beberapa riwayat lama.", "error");
+    }
+}
 		// FITUR BACKUP DATA LOKAL KE FILE JSON
 function backupDataJSON() {
     const backupData = {
@@ -1427,112 +1439,115 @@ function restoreDataJSON(event) {
         initMatchPlayerStats();
 
         function selectLoginRole(role) {
-            state.loginRole = role;
-            const tabPelatih = document.getElementById('tab-pelatih');
-            const tabAtlet = document.getElementById('tab-atlet');
-            const fieldsContainer = document.getElementById('auth-fields-container');
-            const button = document.getElementById('auth-button');
+    state.loginRole = role;
+    const tabPelatih = document.getElementById('tab-pelatih');
+    const tabAtlet = document.getElementById('tab-atlet');
+    const fieldsContainer = document.getElementById('auth-fields-container');
+    const button = document.getElementById('auth-button');
 
-            if (role === 'pelatih') {
-                if(tabPelatih) tabPelatih.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all bg-white text-blue-900 shadow-sm';
-                if(tabAtlet) tabAtlet.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all text-slate-500 hover:text-slate-800';
-                
-                if(fieldsContainer) {
-                    fieldsContainer.innerHTML = `
-                        <div>
-                            <label class="block text-[11px] font-black text-slate-500 tracking-wider uppercase mb-2">KATA SANDI PELATIH</label>
-                            <input type="password" id="auth-input-password" required placeholder="Masukkan kata sandi pelatih" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700">
-                        </div>
-                    `;
-                }
-                if(button) button.innerHTML = 'Masuk Mode Pelatih <i class="fa-solid fa-arrow-right text-xs"></i>';
-            } else {
-                if(tabAtlet) tabAtlet.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all bg-white text-blue-900 shadow-sm';
-                if(tabPelatih) tabPelatih.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all text-slate-500 hover:text-slate-800';
-                
-                const optionsHtml = state.atlet.map(a => `<option value="${a.id}">${escapeHTML(a.nama)} (${escapeHTML(a.posisi)})</option>`).join('');
+    if (role === 'pelatih') {
+        if (tabPelatih) tabPelatih.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all bg-white text-blue-900 shadow-sm';
+        if (tabAtlet) tabAtlet.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all text-slate-500 hover:text-slate-800';
+        
+        if (fieldsContainer) {
+            fieldsContainer.innerHTML = `
+                <div>
+                    <label class="block text-[11px] font-black text-slate-500 tracking-wider uppercase mb-2">KATA SANDI PELATIH</label>
+                    <input type="password" id="auth-input-password" required placeholder="Masukkan kata sandi pelatih" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700">
+                </div>
+            `;
+        }
+        if (button) button.innerHTML = 'Masuk Mode Pelatih <i class="fa-solid fa-arrow-right text-xs"></i>';
+    } else {
+        if (tabAtlet) tabAtlet.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all bg-white text-blue-900 shadow-sm';
+        if (tabPelatih) tabPelatih.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all text-slate-500 hover:text-slate-800';
+        
+        // Hanya tampilkan Nama dan Posisi pada dropdown, TANPA mengekspos atribut PIN di HTML
+        const optionsHtml = state.atlet.map(a => `<option value="${escapeHTML(String(a.id))}">${escapeHTML(a.nama)} (${escapeHTML(a.posisi)})</option>`).join('');
 
-                if(fieldsContainer) {
-                    fieldsContainer.innerHTML = `
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-[11px] font-black text-slate-500 tracking-wider uppercase mb-1.5">PILIH NAMA ATLET</label>
-                                <select id="auth-select-atlet" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700 bg-white">
-                                    <option value="">-- Pilih Atlet Skuad --</option>
-                                    ${optionsHtml}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-black text-slate-500 tracking-wider uppercase mb-1.5">PIN MASING-MASING ATLET</label>
-                                <input type="password" id="auth-input-pin" required maxlength="6" placeholder="Masukkan PIN rahasia Anda" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-mono font-bold focus:outline-none focus:border-blue-700">
-                            </div>
-                        </div>
-                    `;
-                }
-                if(button) button.innerHTML = 'Masuk Mode Atlet <i class="fa-solid fa-arrow-right text-xs"></i>';
+        if (fieldsContainer) {
+            fieldsContainer.innerHTML = `
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-500 tracking-wider uppercase mb-1.5">PILIH NAMA ATLET</label>
+                        <select id="auth-select-atlet" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700 bg-white">
+                            <option value="">-- Pilih Atlet Skuad --</option>
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-500 tracking-wider uppercase mb-1.5">PIN MASING-MASING ATLET</label>
+                        <input type="password" id="auth-input-pin" required maxlength="6" autocomplete="current-password" placeholder="Masukkan PIN rahasia Anda" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-mono font-bold focus:outline-none focus:border-blue-700">
+                    </div>
+                </div>
+            `;
+        }
+        if (button) button.innerHTML = 'Masuk Mode Atlet <i class="fa-solid fa-arrow-right text-xs"></i>';
+    }
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+    const toast = showToast('Memverifikasi akses...', 'loading');
+
+    setTimeout(() => {
+        if (toast) toast.remove();
+        if (state.loginRole === 'pelatih') {
+            const passInputElem = document.getElementById('auth-input-password');
+            const passInput = passInputElem ? passInputElem.value : '';
+            if (passInput !== COACH_PASSWORD_DEFAULT) {
+                showToast('Kata sandi Pelatih salah!', 'error');
+                return;
             }
+            state.currentRole = 'Pelatih';
+            state.currentMenu = 'menu-1';
+            state.activeAtlet = null;
+            
+            if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
+            if (document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
+            if (document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
+            if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
+
+            if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+            if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+            
+            renderSidebar();
+            renderContent();
+            showToast('Berhasil masuk Mode Pelatih!', 'success');
+        } else {
+            const selectAtletElem = document.getElementById('auth-select-atlet');
+            const inputPinElem = document.getElementById('auth-input-pin');
+            const selectedId = selectAtletElem ? selectAtletElem.value : '';
+            const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
+
+            const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
+
+            // Sanitisasi pencocokan tipe data String untuk menghindari kegagalan tipe data
+            if (!targetAtlet || String(targetAtlet.pin).trim() !== String(inputPin)) {
+                showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
+                if (inputPinElem) inputPinElem.value = '';
+                return;
+            }
+
+            state.activeAtlet = targetAtlet;
+            state.currentRole = 'Atlet';
+            state.currentMenu = 'menu-atlet-1';
+
+            const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
+            if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
+            if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
+            if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
+
+            if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+            if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+            
+            renderSidebar();
+            renderContent();
+            showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
         }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const toast = showToast('Memverifikasi akses...', 'loading');
-
-            setTimeout(() => {
-                if(toast) toast.remove();
-                if (state.loginRole === 'pelatih') {
-                    const passInputElem = document.getElementById('auth-input-password');
-                    const passInput = passInputElem ? passInputElem.value : '';
-                    if (passInput !== COACH_PASSWORD_DEFAULT) {
-                        showToast('Kata sandi Pelatih salah!', 'error');
-                        return;
-                    }
-                    state.currentRole = 'Pelatih';
-                    state.currentMenu = 'menu-1';
-                    state.activeAtlet = null;
-                    
-                    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
-                    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
-                    if(document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
-                    if(document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
-
-                    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-                    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
-                    
-                    renderSidebar();
-                    renderContent();
-                    showToast('Berhasil masuk Mode Pelatih!', 'success');
-                } else {
-                    const selectAtletElem = document.getElementById('auth-select-atlet');
-                    const inputPinElem = document.getElementById('auth-input-pin');
-                    const selectedId = selectAtletElem ? selectAtletElem.value : '';
-                    const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
-
-                    const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
-
-                    if (!targetAtlet || targetAtlet.pin !== inputPin) {
-                        showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
-                        return;
-                    }
-
-                    state.activeAtlet = targetAtlet;
-                    state.currentRole = 'Atlet';
-                    state.currentMenu = 'menu-atlet-1';
-
-                    const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
-                    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
-                    if(document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
-                    if(document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
-
-                    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-                    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
-                    
-                    renderSidebar();
-                    renderContent();
-                    showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
-                }
-            }, 500);
-        }
+    }, 400);
+}
 
         function logout() {
             if (state.matchLive.dribbleTimer.intervalId) {
@@ -1739,7 +1754,7 @@ function deleteRiwayatValidasi(id) {
                 const selectElem = document.getElementById(`bulk-status-${at.id}`);
                 if (selectElem) {
                     newEntries.push({
-                        id: Date.now().toString() + '_' + at.id,
+						id: generateUniqueID('abs'),
                         atletId: at.id,
                         tanggal,
                         jenis,
@@ -3393,7 +3408,7 @@ function renderMatchHeatmap() {
             listFieldTes.forEach(f => {
                 const elem = document.getElementById(`field-${f.key}`);
                 if (elem && elem.value.trim() !== '') {
-                    newEntries.push({ id: (Date.now() + Math.random()).toString(), atletId, tanggal, keyTes: f.key, skor: elem.value.trim() });
+                    newEntries.push({ id: generateUniqueID('tf'), atletId, tanggal, keyTes: f.key, skor: elem.value.trim() });
                 }
             });
 
@@ -3426,7 +3441,7 @@ function renderMatchHeatmap() {
             if (!atlet) return;
 
             const newTeknikData = {
-                id: 'tek_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                id: generateUniqueID('tek'),
                 atletId,
                 tanggal,
                 dualGate: {
@@ -3485,7 +3500,7 @@ function renderMatchHeatmap() {
             const jenis = document.getElementById('absensi-jenis')?.value;
             const status = document.getElementById('absensi-status')?.value;
 
-            const newAbsensi = { id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), atletId, tanggal, jenis, status };
+            const newAbsensi = { id: generateUniqueID('abs'), atletId, tanggal, jenis, status };
             state.absensi.unshift(newAbsensi);
             saveStorage('absensi', state.absensi);
             renderContent();
@@ -3527,7 +3542,7 @@ function renderMatchHeatmap() {
                 }
             } else {
                 state.atlet.unshift({ 
-                    id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), 
+                    id: generateUniqueID('atl'), 
                     nama, 
                     posisi, 
                     gender, 
@@ -3594,7 +3609,7 @@ function renderMatchHeatmap() {
             const pace = document.getElementById('jogging-pace-display')?.value || '-';
             const vo2max = getAtletVO2Max(atletId) || '-';
 
-            const newLog = { id: 'j' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), atletId, tanggal, vo2max, zona, jarak, waktu, pace };
+            const newLog = { id: generateUniqueID('jog'), atletId, ... };
             state.joggingLogs.unshift(newLog);
             saveStorage('joggingLogs', state.joggingLogs);
 
@@ -3602,7 +3617,7 @@ function renderMatchHeatmap() {
             const estKalori = Math.round((speedKmh * 1.05) * 65 * (waktu / 60));
             
             const newValidasiSync = {
-                id: 'v' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                id: generateUniqueID('jog'),
                 atletId: atletId,
                 tanggal: tanggal,
                 jarak: jarak,
@@ -3646,7 +3661,7 @@ function renderMatchHeatmap() {
             const jogDist = parseInt(document.getElementById('mas-jog-dist-display')?.value) || 0;
             const walkDist = parseInt(document.getElementById('mas-walk-dist-display')?.value) || 0;
 
-            const newLog = { id: 'm' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), atletId, tanggal, vo2max, walkSec, jogSec, sprintSec, walkDist, jogDist, sprintDist, rep };
+            const newLog = { generateUniqueID('mas') };
             state.masLogs.unshift(newLog);
             saveStorage('masLogs', state.masLogs);
             renderContent();
@@ -3730,7 +3745,7 @@ function renderMatchHeatmap() {
             const kaloriVal = Math.round(jarakVal * (at.bb || 65) * 0.75);
 
             const newReport = {
-                id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                id: generateUniqueID('val'),
                 atletId: at.id,
                 tanggal: matchLog ? matchLog.tanggal : new Date().toISOString().split('T')[0],
                 jarak: jarakVal,
@@ -3750,8 +3765,8 @@ function renderMatchHeatmap() {
            state.laporanValidasi.unshift(newReport);
 
 // Batasi simpanan gambar di localStorage maksimal 10 laporan terbaru agar memori tidak penuh
-if (state.laporanValidasi.length > 10) {
-    state.laporanValidasi = state.laporanValidasi.slice(0, 10);
+if (state.laporanValidasi.length > 6) {
+    state.laporanValidasi = state.laporanValidasi.slice(0, 6);
 }
 
 saveStorage('laporanValidasi', state.laporanValidasi);
@@ -3794,14 +3809,15 @@ saveStorage('laporanValidasi', state.laporanValidasi);
             const hrMax = parseInt(document.getElementById('rpe-hrmax')?.value) || 0;
             const sRPE = rpeVal * durasi;
 
-            const newRpe = { id: 'rpe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), atletId: atlet.id, tanggal, rpeVal, durasi, hrMax, sRPE };
-            state.rpeLogs.unshift(newRpe);
-            saveStorage('rpeLogs', state.rpeLogs);
-            renderSidebar(); 
-            renderContent();
-            showToast('Catatan beban latihan RPE berhasil disimpan!', 'success');
-        }
-
+			const newRpe = { 
+   			 id: generateUniqueID('rpe'), 
+   			 atletId: atlet.id, 
+  			 tanggal, 
+  			 rpeVal, 
+   			 durasi, 
+   			 hrMax, 
+   			 sRPE 
+		};
         function exportDataAtletCSV() {
             const headers = ['Nama', 'Posisi', 'Gender', 'Usia', 'Tinggi (cm)', 'Berat (kg)', 'PIN', 'Cedera'];
             const rows = state.atlet.map(a => [a.nama, a.posisi, a.gender, a.usia, a.tb, a.bb, a.pin, a.cedera]);
@@ -4081,9 +4097,9 @@ saveStorage('laporanValidasi', state.laporanValidasi);
                         </td>
                         <td class="py-4 px-4 text-center">
                             <div class="bg-slate-950 text-slate-100 px-3 py-1.5 rounded-xl border border-slate-800 w-fit mx-auto shadow-inner flex items-center gap-1.5 font-mono font-black text-xs">
-                                <i class="fa-solid fa-key text-[9px] text-cyan-400"></i>
-                                <span>${escapeHTML(a.pin)}</span>
-                            </div>
+    <i class="fa-solid fa-key text-[9px] text-cyan-400"></i>
+    <span class="text-slate-400 tracking-widest">••••••</span>
+</div>
                         </td>
                         <td class="py-4 px-4 text-center">
     <div class="flex items-center justify-center gap-1.5 flex-wrap">
@@ -6661,22 +6677,32 @@ saveStorage('laporanValidasi', state.laporanValidasi);
     autoFetchFromSpreadsheet();
   });
 
-  // 2. MODAL RADAR ATLET (MEMBACA DATA TES FISIK ASLI)
-  function openAtletRadarModal(atletId) {
+  // 1. MODAL RADAR ATLET DENGAN CLEANUP MEMORI
+function openAtletRadarModal(atletId) {
     const atlet = state.atlet.find(a => String(a.id) === String(atletId));
     if (!atlet) return;
 
+    // Bersihkan modal lama jika masih ada
     let modalEl = document.getElementById('atlet-radar-modal');
-    if (!modalEl) {
-      modalEl = document.createElement('div');
-      modalEl.id = 'atlet-radar-modal';
-      modalEl.className = 'fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
-      document.body.appendChild(modalEl);
-    }
+    if (modalEl) modalEl.remove();
+
+    modalEl = document.createElement('div');
+    modalEl.id = 'atlet-radar-modal';
+    modalEl.className = 'fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
+    
+    // Hancurkan instance chart saat modal ditutup
+    window.closeAtletRadarModal = function() {
+        if (atletRadarChartInstance) {
+            atletRadarChartInstance.destroy();
+            atletRadarChartInstance = null;
+        }
+        const modal = document.getElementById('atlet-radar-modal');
+        if (modal) modal.remove();
+    };
 
     modalEl.innerHTML = `
       <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm text-white relative shadow-2xl">
-        <button onclick="document.getElementById('atlet-radar-modal').remove()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">&times;</button>
+        <button onclick="closeAtletRadarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">&times;</button>
         <h3 class="text-lg font-black text-amber-400 text-center mb-1">${escapeHTML(atlet.nama)}</h3>
         <p class="text-xs text-slate-400 text-center mb-4">${escapeHTML(atlet.posisi || 'Pemain')} • ${escapeHTML(atlet.gender)}</p>
         
@@ -6686,36 +6712,39 @@ saveStorage('laporanValidasi', state.laporanValidasi);
       </div>
     `;
 
+    document.body.appendChild(modalEl);
+
     setTimeout(() => {
       renderAtletRadarChart(atlet);
     }, 50);
-  }
+}
 
-  let atletRadarChartInstance = null;
-  function renderAtletRadarChart(atlet) {
+// 2. RENDER CHART DENGAN AMAN
+let atletRadarChartInstance = null;
+function renderAtletRadarChart(atlet) {
     const ctx = document.getElementById('atletRadarChart');
     if (!ctx || typeof Chart === 'undefined') return;
 
+    // Hancurkan grafik lama sebelum membuat grafik baru
     if (atletRadarChartInstance) {
       atletRadarChartInstance.destroy();
+      atletRadarChartInstance = null;
     }
 
-    // Ambil nilai dari database tesFisik asli milik atlet
     const myTes = state.tesFisik.filter(t => String(t.atletId) === String(atlet.id));
     const getScore = (key, defaultVal) => {
       const item = myTes.find(t => t.keyTes === key);
       if (!item) return defaultVal;
-      // Normalisasi skor sederhana ke skala 0-100 untuk radar
       const val = parseFloat(item.skor) || 0;
       return Math.min(100, Math.max(20, val * 1.5)); 
     };
 
     const dataRadar = [
-      getScore('sprint20', 70), // Speed
-      getScore('yoyo', 75),     // Endurance
-      getScore('push_up', 65),  // Strength
-      getScore('vsit', 80),     // Flexibility
-      getScore('ttest', 70)     // Agility
+      getScore('sprint20', 70),
+      getScore('yoyo', 75),     
+      getScore('push_up', 65),  
+      getScore('vsit', 80),     
+      getScore('ttest', 70)     
     ];
 
     atletRadarChartInstance = new Chart(ctx, {
@@ -6745,7 +6774,7 @@ saveStorage('laporanValidasi', state.laporanValidasi);
         plugins: { legend: { display: false } }
       }
     });
-  }
+}
 
   // 3. SHARE WHATSAPP PERTANDINGAN
   function shareMatchToWhatsApp() {
