@@ -1211,6 +1211,60 @@ function getAtletGpsLocation() {
             document.body.removeChild(link);
         }
 
+		// FITUR BACKUP DATA LOKAL KE FILE JSON
+function backupDataJSON() {
+    const backupData = {
+        atlet: state.atlet,
+        absensi: state.absensi,
+        tesFisik: state.tesFisik,
+        tesTeknik: state.tesTeknik,
+        rpeLogs: state.rpeLogs,
+        joggingLogs: state.joggingLogs,
+        masLogs: state.masLogs,
+        laporanValidasi: state.laporanValidasi,
+        exportedAt: new Date().toISOString()
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `Backup_Floorball_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    showToast("File backup JSON berhasil diunduh!", "success");
+}
+
+// FITUR RESTORE DATA DARI FILE JSON
+function restoreDataJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (data.atlet) { state.atlet = data.atlet; saveStorage('atlet', state.atlet); }
+            if (data.absensi) { state.absensi = data.absensi; saveStorage('absensi', state.absensi); }
+            if (data.tesFisik) { state.tesFisik = data.tesFisik; saveStorage('tesFisik', state.tesFisik); }
+            if (data.tesTeknik) { state.tesTeknik = data.tesTeknik; saveStorage('tesTeknik', state.tesTeknik); }
+            if (data.rpeLogs) { state.rpeLogs = data.rpeLogs; saveStorage('rpeLogs', state.rpeLogs); }
+            if (data.joggingLogs) { state.joggingLogs = data.joggingLogs; saveStorage('joggingLogs', state.joggingLogs); }
+            if (data.masLogs) { state.masLogs = data.masLogs; saveStorage('masLogs', state.masLogs); }
+            if (data.laporanValidasi) { state.laporanValidasi = data.laporanValidasi; saveStorage('laporanValidasi', state.laporanValidasi); }
+
+            renderSidebar();
+            renderContent();
+            showToast("Database berhasil dipulihkan dari file JSON!", "success");
+        } catch (err) {
+            showToast("Gagal memulihkan: Format file JSON tidak valid!", "error");
+        }
+    };
+    reader.readAsText(file);
+}
+		
         const state = {
             loginRole: 'pelatih',
             currentRole: 'Pelatih',
@@ -2451,34 +2505,33 @@ function initMenu7AutoFill() {
      showToast(`Event dicatat untuk ${escapeHTML(activePlayer.nama)}!`, 'success');
  }
 
-		// =========================================================================
-// VISUALISASI HEATMAP TAKTIS MATCH LIVE
-// =========================================================================
-let matchHeatmapInstance = null;
+		let matchHeatmapInstance = null;
 
 function renderMatchHeatmap() {
     const container = document.getElementById('court-heatmap-layer');
     if (!container || typeof h337 === 'undefined') return;
 
-    // Bersihkan instance heatmap lama jika ada
+    // 1. Bersihkan layer container sebelum membuat heatmap baru
     container.innerHTML = '';
+    matchHeatmapInstance = null;
 
+    // 2. Buat instance baru secara bersih
     matchHeatmapInstance = h337.create({
         container: container,
-        radius: 25,
+        radius: 20,
         maxOpacity: 0.6,
         minOpacity: 0.1,
         blur: 0.75
     });
 
-    const points = state.matchLive.spatialEvents.map(ev => ({
+    const points = (state.matchLive.spatialEvents || []).map(ev => ({
         x: Math.round((ev.x / 100) * container.offsetWidth),
         y: Math.round((ev.y / 100) * container.offsetHeight),
         value: 1
     }));
 
     matchHeatmapInstance.setData({
-        max: 5,
+        max: 3,
         data: points
     });
 }
@@ -3544,8 +3597,14 @@ function renderMatchHeatmap() {
                 status: 'Menunggu'
             };
 
-            state.laporanValidasi.unshift(newReport);
-            saveStorage('laporanValidasi', state.laporanValidasi);
+           state.laporanValidasi.unshift(newReport);
+
+// Batasi simpanan gambar di localStorage maksimal 10 laporan terbaru agar memori tidak penuh
+if (state.laporanValidasi.length > 10) {
+    state.laporanValidasi = state.laporanValidasi.slice(0, 10);
+}
+
+saveStorage('laporanValidasi', state.laporanValidasi);
 
             if (toast) toast.remove();
             renderSidebar();
@@ -6407,224 +6466,177 @@ function renderMatchHeatmap() {
 
         }
     </script>
-	<!-- SINKRONISASI OTOMATIS REALTIME FIX -->
-    <script>
-      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2ScqnDdgzEe24wsQR0SCfMc7-3a8atBr9tB87VTDP4pYz8kSfy-KN7pmuJ--_Ayj5/exec";
+	<!-- SINKRONISASI OTOMATIS REALTIME & FUNGSI PENDUKUNG (FIXED) -->
+<script>
+  // 1. KONSOLIDASI SYNC SPREADSHEET & AUTO-POLLING
+  async function autoFetchFromSpreadsheet() {
+    try {
+      const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL}?_t=${new Date().getTime()}`);
+      const data = await res.json();
+      
+      if (data && data.status === "success") {
+        if (data.atlet) {
+          state.atlet = data.atlet;
+          saveStorage("atlet", data.atlet);
+        }
+        if (data.programLatihan) {
+          state.joggingLogs = data.programLatihan;
+          saveStorage("joggingLogs", data.programLatihan);
+        }
+        if (data.laporanValidasi) {
+          state.laporanValidasi = data.laporanValidasi;
+          saveStorage("laporanValidasi", data.laporanValidasi);
+        }
 
-      async function autoFetchFromSpreadsheet() {
-        try {
-          const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
-          const data = await res.json();
-          if (data && data.status === "success") {
-            if (data.atlet) {
-              state.atlet = data.atlet;
-              localStorage.setItem("cf_atlet", JSON.stringify(data.atlet));
-            }
-            if (data.programLatihan) {
-              // Simpan data program pelatih langsung ke joggingLogs agar terbaca oleh layar atlet
-              state.joggingLogs = data.programLatihan;
-              localStorage.setItem("cf_joggingLogs", JSON.stringify(data.programLatihan));
-            }
-            if (data.laporanValidasi) {
-              state.laporanValidasi = data.laporanValidasi;
-              localStorage.setItem("cf_laporanValidasi", JSON.stringify(data.laporanValidasi));
-            }
-            
-            // Re-render tampilan & hitung ulang target durasi/pace di HP atlet
-            if (typeof updateAtletJoggingCalculations === "function") {
-              updateAtletJoggingCalculations();
-            }
-            if (typeof renderContent === "function" && state.currentMenu === 'menu-atlet-4') {
-              renderContent();
-            }
-          }
-        } catch (e) {
-          console.log("Sync otomatis pending connection...");
+        // Re-render jika sedang membuka menu terkait
+        if (typeof updateAtletJoggingCalculations === "function" && state.currentRole === 'Atlet') {
+          updateAtletJoggingCalculations();
+        }
+        if (state.currentMenu === 'menu-atlet-4' || state.currentMenu === 'menu-8') {
+          renderContent();
         }
       }
+    } catch (e) {
+      console.log("Sync otomatis pending connection...");
+    }
+  }
 
-
-window.addEventListener("DOMContentLoaded", () => {
- autoFetchFromSpreadsheet();
-setInterval(autoFetchFromSpreadsheet, 10000); // Tarik data setiap 10 detik
-});
-
-window.addEventListener("focus", () => {
-autoFetchFromSpreadsheet();
-});
-
-// REGISTRASI SERVICE WORKER UNTUK AKSES OFFLINE PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const swCode = `
-      const CACHE_NAME = 'cf-pwa-cache-v1';
-      const urlsToCache = [
-        './',
-        'https://cdn.tailwindcss.com',
-        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-        'https://cdn.jsdelivr.net/npm/sweetalert2@11',
-        'https://cdn.jsdelivr.net/npm/chart.js'
-      ];
-
-      self.addEventListener('install', event => {
-        event.waitUntil(
-          caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-        );
-      });
-
-      self.addEventListener('fetch', event => {
-        event.respondWith(
-          caches.match(event.request).then(response => {
-            return response || fetch(event.request);
-          })
-        );
-      });
-    `;
-
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    const swUrl = URL.createObjectURL(blob);
-
-    navigator.serviceWorker.register(swUrl)
-      .then(() => console.log('PWA Service Worker Berhasil Terpasang!'))
-      .catch(err => console.log('Gagal pasang Service Worker:', err));
+  // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
+  window.addEventListener("DOMContentLoaded", () => {
+    autoFetchFromSpreadsheet();
+    setInterval(autoFetchFromSpreadsheet, 30000); 
   });
-}
 
-// 1. FUNGSI MEMBUAT POP-UP MODAL RADAR CHART
-function openAtletRadarModal(atletId) {
+  window.addEventListener("focus", () => {
+    autoFetchFromSpreadsheet();
+  });
+
+  // 2. MODAL RADAR ATLET (MEMBACA DATA TES FISIK ASLI)
+  function openAtletRadarModal(atletId) {
     const atlet = state.atlet.find(a => String(a.id) === String(atletId));
     if (!atlet) return;
 
     let modalEl = document.getElementById('atlet-radar-modal');
     if (!modalEl) {
-        modalEl = document.createElement('div');
-        modalEl.id = 'atlet-radar-modal';
-        modalEl.className = 'fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
-        document.body.appendChild(modalEl);
+      modalEl = document.createElement('div');
+      modalEl.id = 'atlet-radar-modal';
+      modalEl.className = 'fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
+      document.body.appendChild(modalEl);
     }
 
     modalEl.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm text-white relative shadow-2xl">
-            <button onclick="document.getElementById('atlet-radar-modal').remove()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">&times;</button>
-            <h3 class="text-lg font-black text-amber-400 text-center mb-1">${escapeHTML(atlet.nama)}</h3>
-            <p class="text-xs text-slate-400 text-center mb-4">${escapeHTML(atlet.posisi || 'Pemain')}</p>
-            
-            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                <canvas id="atletRadarChart"></canvas>
-            </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm text-white relative shadow-2xl">
+        <button onclick="document.getElementById('atlet-radar-modal').remove()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">&times;</button>
+        <h3 class="text-lg font-black text-amber-400 text-center mb-1">${escapeHTML(atlet.nama)}</h3>
+        <p class="text-xs text-slate-400 text-center mb-4">${escapeHTML(atlet.posisi || 'Pemain')} • ${escapeHTML(atlet.gender)}</p>
+        
+        <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+          <canvas id="atletRadarChart"></canvas>
         </div>
+      </div>
     `;
 
     setTimeout(() => {
-        renderAtletRadarChart(atlet);
+      renderAtletRadarChart(atlet);
     }, 50);
-}
+  }
 
-// 2. FUNGSI MENGGAMBAR GRAFIK RADAR CHART
-let atletRadarChartInstance = null;
-function renderAtletRadarChart(atletStats) {
+  let atletRadarChartInstance = null;
+  function renderAtletRadarChart(atlet) {
     const ctx = document.getElementById('atletRadarChart');
     if (!ctx || typeof Chart === 'undefined') return;
 
     if (atletRadarChartInstance) {
-        atletRadarChartInstance.destroy();
+      atletRadarChartInstance.destroy();
     }
+
+    // Ambil nilai dari database tesFisik asli milik atlet
+    const myTes = state.tesFisik.filter(t => String(t.atletId) === String(atlet.id));
+    const getScore = (key, defaultVal) => {
+      const item = myTes.find(t => t.keyTes === key);
+      if (!item) return defaultVal;
+      // Normalisasi skor sederhana ke skala 0-100 untuk radar
+      const val = parseFloat(item.skor) || 0;
+      return Math.min(100, Math.max(20, val * 1.5)); 
+    };
+
+    const dataRadar = [
+      getScore('sprint20', 70), // Speed
+      getScore('yoyo', 75),     // Endurance
+      getScore('push_up', 65),  // Strength
+      getScore('vsit', 80),     // Flexibility
+      getScore('ttest', 70)     // Agility
+    ];
 
     atletRadarChartInstance = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: ['Speed', 'Endurance', 'Passing', 'Shooting', 'Agility'],
-            datasets: [{
-                label: 'Nilai Atlet',
-                data: [
-                    atletStats.speed || 75,
-                    atletStats.endurance || 80,
-                    atletStats.passing || 70,
-                    atletStats.shooting || 65,
-                    atletStats.agility || 85
-                ],
-                backgroundColor: 'rgba(245, 158, 11, 0.25)',
-                borderColor: '#f59e0b',
-                pointBackgroundColor: '#fbbf24',
-                pointBorderColor: '#fff'
-            }]
+      type: 'radar',
+      data: {
+        labels: ['Speed', 'Endurance', 'Strength', 'Flexibility', 'Agility'],
+        datasets: [{
+          label: 'Profil Kebugaran',
+          data: dataRadar,
+          backgroundColor: 'rgba(56, 189, 248, 0.25)',
+          borderColor: '#38BDF8',
+          pointBackgroundColor: '#38BDF8',
+          pointBorderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+            pointLabels: { color: '#cbd5e1', font: { size: 10, weight: 'bold' } },
+            ticks: { display: false, beginAtZero: true, max: 100 }
+          }
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                r: {
-                    angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
-                    grid: { color: 'rgba(255, 255, 255, 0.2)' },
-                    pointLabels: { color: '#cbd5e1', font: { size: 10, weight: 'bold' } },
-                    ticks: { display: false, beginAtZero: true, max: 100 }
-                }
-            },
-            plugins: { legend: { display: false } }
-        }
+        plugins: { legend: { display: false } }
+      }
     });
-}
+  }
 
-// 3. FUNGSI KALKULASI RASIO BEBAN LATIHAN (ACWR ALERT)
-function getACWRStatus(atlet) {
-    const history = atlet.historyLatihan || [];
-    
-    // Hitung rata-rata 7 hari (Acute) vs 28 hari (Chronic)
-    const acuteLoad = history.slice(-7).reduce((a, b) => a + b, 0) / 7;
-    const chronicLoad = history.slice(-28).reduce((a, b) => a + b, 0) / 28;
-    
-    if (!chronicLoad || chronicLoad === 0) {
-        return { ratio: '0.00', label: 'No Data', color: 'bg-slate-100 text-slate-600 border-slate-300' };
-    }
-    
-    const ratio = (acuteLoad / chronicLoad).toFixed(2);
-    
-    if (ratio < 0.8) return { ratio, label: 'Under', color: 'bg-blue-50 text-blue-700 border-blue-200' };
-    if (ratio <= 1.3) return { ratio, label: 'Optimal', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-    if (ratio <= 1.5) return { ratio, label: 'Caution', color: 'bg-amber-50 text-amber-700 border-amber-200' };
-    return { ratio, label: 'High Risk', color: 'bg-rose-50 text-rose-700 border-rose-200' };
-}
-
-// 4. FUNGSI SHARE LAPORAN PERTANDINGAN KE WHATSAPP
-function shareMatchToWhatsApp() {
+  // 3. SHARE WHATSAPP PERTANDINGAN
+  function shareMatchToWhatsApp() {
     const m = state.matchLive || {};
     const scoreTeam = m.scoreTeam || 0;
     const scoreOpponent = m.scoreOpponent || 0;
-    const opponentName = m.opponentName || 'Lawan';
+    const period = m.period || 'Match';
 
-    // Format Teks Ringkasan Pertandingan
-    let text = `🏑 *LAPORAN HASIL PERTANDINGAN FLOORBALL*\n`;
+    let text = `🏑 *UPDATE SKOR MATCH LIVE FLOORBALL*\n`;
     text += `===============================\n`;
-    text += `*TIM KITA*  [ ${scoreTeam} ] - [ ${scoreOpponent} ]  *${opponentName.toUpperCase()}*\n`;
+    text += `*TIM KITA* [ ${scoreTeam} ] vs [ ${scoreOpponent} ] *LAWAN*\n`;
+    text += `Status: ${period}\n`;
+    text += `Foul Tim: ${m.foulTeam || 0} | Foul Lawan: ${m.foulOpponent || 0}\n`;
     text += `===============================\n\n`;
 
-    // Statistik Aksi & Event
     const events = m.spatialEvents || [];
     if (events.length > 0) {
-        text += `📊 *STATISTIK AKSI LAPANGAN:*\n`;
-        text += `• Total Event Taktis: ${events.length} Aksi\n`;
+      text += `📊 Total Aksi Lapangan Recorded: ${events.length} Event\n`;
     }
 
     text += `\n_Diproses otomatis via Coach Floorball System_ ⚡`;
 
-    // Buka WhatsApp Web / App
     const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');
-}
+  }
 
-		// 5. FUNGSI SWITCH ROTASI LINEUP (LINE 1, 2, 3)
-function switchMatchLine(lineNum) {
-    if (!state.matchLive) state.matchLive = {};
-    state.matchLive.activeLine = `Line ${lineNum}`;
-    
-    if (typeof showToast === 'function') {
-        showToast(`Shift Aktif: Line ${lineNum}`, 'success');
-    }
-    
-    saveStorage('matchLive', state.matchLive);
-    renderMatchLiveUI();
-}
-		
- </script>
+  // 4. SERVICE WORKER FOR PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      const swCode = `
+        const CACHE_NAME = 'cf-pwa-cache-v2';
+        const urlsToCache = ['./', 'https://cdn.tailwindcss.com'];
+        self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(urlsToCache))));
+        self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob))
+        .then(() => console.log('PWA Service Worker Active'))
+        .catch(err => console.log('SW Error:', err));
+    });
+  }
+</script>
  </body>
  </html>
