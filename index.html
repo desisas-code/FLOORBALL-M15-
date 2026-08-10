@@ -2745,35 +2745,44 @@ function renderMatchHeatmap() {
                     <button onclick="setSpatialEventType('shoot_att')" class="flex-1 py-2.5 rounded-2xl font-black text-xs transition-all ${state.matchLive.activeSpatialEventType === 'shoot_att' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Shoot</button>
                 </div>
 
-                <div class="relative w-full aspect-[2/1] bg-[#0066B2] rounded-[24px] sm:rounded-[30px] border-[5px] sm:border-[7px] border-slate-900 shadow-2xl overflow-hidden cursor-crosshair glow-effect" onclick="handleCourtClick(event)">
-                    <!-- LAYER CONTAINER HEATMAP -->
-			     <div id="court-heatmap-layer" class="absolute inset-0 pointer-events-none z-0"><
-					<div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white/90"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-24 sm:h-24 rounded-full border-2 border-white/80 pointer-events-none"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-white pointer-events-none shadow"></div>
+                <div class="relative w-full aspect-[2/1] bg-[#0066B2] rounded-[24px] sm:rounded-[30px] border-[5px] sm:border-[7px] border-slate-900 shadow-2xl overflow-hidden cursor-crosshair" onclick="handleCourtClick(event)">
 
-                    <div class="absolute top-[15%] left-[8.75%] w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-white -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-                    <div class="absolute bottom-[15%] left-[8.75%] w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-white -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
-                    <div class="absolute top-[15%] right-[8.75%] w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-white translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-                    <div class="absolute bottom-[15%] right-[8.75%] w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-white translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+    <!-- LAYER 1: HEATMAP (z-0) -->
+    <div id="court-heatmap-layer" class="absolute inset-0 pointer-events-none z-0"></div>
 
-                    <div class="absolute top-1/2 left-[8.75%] -translate-y-1/2 w-[12.5%] h-[40%] border-2 border-white bg-white/10 pointer-events-none flex items-center justify-start">
-                        <div class="w-[62.5%] h-[50%] border-2 border-white bg-rose-500/30"></div>
-                    </div>
-                    <div class="absolute top-1/2 left-[8.75%] -translate-y-1/2 w-[2.5%] h-[20%] bg-slate-900 border-2 border-white rounded-r-md pointer-events-none shadow-md"></div>
+    <!-- LAYER 2: GARIS & AREA FLOORBALL OFFICIAL (z-10) -->
+    <div class="absolute inset-0 pointer-events-none z-10">
+        <!-- Garis Tengah & Titik Tengah (Center Spot) -->
+        <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white/90"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/90"></div>
 
-                    <div class="absolute top-1/2 right-[8.75%] -translate-y-1/2 w-[12.5%] h-[40%] border-2 border-white bg-white/10 pointer-events-none flex items-center justify-end">
-                        <div class="w-[62.5%] h-[50%] border-2 border-white bg-rose-500/30"></div>
-                    </div>
-                    <div class="absolute top-1/2 right-[8.75%] -translate-y-1/2 w-[2.5%] h-[20%] bg-slate-900 border-2 border-white rounded-l-md pointer-events-none shadow-md"></div>
+        <!-- Titik Face-Off (4 Titik Lapangan Floorball) -->
+        <div class="absolute top-[20%] left-[15%] -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
+        <div class="absolute bottom-[20%] left-[15%] -translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
+        <div class="absolute top-[20%] right-[15%] translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
+        <div class="absolute bottom-[20%] right-[15%] translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white/90"></div>
 
-                    ${state.matchLive.spatialEvents.map(ev => `
-                        <div onclick="event.stopPropagation();" class="absolute w-5 h-5 sm:w-6 sm:h-6 bg-amber-400 text-slate-900 rounded-full flex items-center justify-center font-black text-[9px] sm:text-[10px] shadow-lg border-2 border-white -translate-x-1/2 -translate-y-1/2 transition-transform hover:scale-125 z-10" style="left: ${ev.x}%; top: ${ev.y}%;">
-                            ${escapeHTML(state.atlet.find(a => a.id === ev.playerId)?.nama.charAt(0) || '?')}
-                        </div>
-                    `).join('')}
-                </div>
+        <!-- Area Gawang Kiri (Goalkeeper Area & Small Crease) -->
+        <div class="absolute top-1/2 left-[8.75%] -translate-y-1/2 w-[12.5%] h-[40%] border-2 border-white bg-white/10 flex items-center justify-start">
+            <div class="w-[62.5%] h-[50%] border-2 border-white bg-rose-500/40"></div>
+        </div>
+
+        <!-- Area Gawang Kanan (Goalkeeper Area & Small Crease) -->
+        <div class="absolute top-1/2 right-[8.75%] -translate-y-1/2 w-[12.5%] h-[40%] border-2 border-white bg-white/10 flex items-center justify-end">
+            <div class="w-[62.5%] h-[50%] border-2 border-white bg-rose-500/40"></div>
+        </div>
+    </div>
+
+    <!-- LAYER 3: PIN AKSI EVENT ATLET (z-20) -->
+    <div class="relative z-20 w-full h-full pointer-events-none">
+        ${state.matchLive.spatialEvents.map(ev => `
+            <div onclick="event.stopPropagation();" class="pointer-events-auto absolute w-5 h-5 sm:w-6 sm:h-6 bg-amber-400 text-slate-900 rounded-full flex items-center justify-center font-black text-[10px] shadow-lg -translate-x-1/2 -translate-y-1/2 border border-slate-900" style="left: ${ev.x}%; top: ${ev.y}%;">
+                ${escapeHTML(state.atlet.find(a => a.id === ev.playerId)?.nama.charAt(0) || '?')}
             </div>
+        `).join('')}
+    </div>
+
+</div>
 
             <!-- CONTROLLER AKSI PEMAIN (RIGHT PANEL) -->
             <div class="lg:col-span-5 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md flex flex-col justify-between">
