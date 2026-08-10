@@ -154,11 +154,9 @@
         }
       }
 
-      // JALANKAN OTOMATIS (Ditutup dengan benar)
       window.addEventListener("DOMContentLoaded", () => {
-        autoFetchFromSpreadsheet();
-        setInterval(autoFetchFromSpreadsheet, 30000); 
-      });
+  setInterval(autoFetchFromSpreadsheet, 60000); 
+});
     </script>
 
     <div id="toast-container"></div>
@@ -1017,10 +1015,8 @@ if (menuId === 'menu-4') {
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            loadAtletFromSheet().then(() => {
-                selectLoginRole('pelatih');
-            });
-        });
+    selectLoginRole('pelatih');
+});
 
         async function syncDataToSpreadsheet() {
             const toast = showToast("Menyinkronkan data ke Google Spreadsheet...", "loading");
