@@ -3600,51 +3600,60 @@ function renderMatchHeatmap() {
         }
 
         async function submitJoggingLog(e) {
-            e.preventDefault();
-            const atletId = document.getElementById('jogging-atlet-id')?.value;
-            const tanggal = document.getElementById('jogging-tanggal')?.value;
-            const zona = document.getElementById('jogging-zona')?.value;
-            const waktu = parseFloat(document.getElementById('jogging-waktu')?.value || 0);
-            const jarak = parseFloat(document.getElementById('jogging-jarak')?.value || 0);
-            const pace = document.getElementById('jogging-pace-display')?.value || '-';
-            const vo2max = getAtletVO2Max(atletId) || '-';
+    e.preventDefault();
+    const atletId = document.getElementById('jogging-atlet-id')?.value;
+    const tanggal = document.getElementById('jogging-tanggal')?.value;
+    const zona = document.getElementById('jogging-zona')?.value;
+    const waktu = parseFloat(document.getElementById('jogging-waktu')?.value || 0);
+    const jarak = parseFloat(document.getElementById('jogging-jarak')?.value || 0);
+    const pace = document.getElementById('jogging-pace-display')?.value || '-';
+    const vo2max = getAtletVO2Max(atletId) || '-';
 
-            const newLog = { id: generateUniqueID('jog'), atletId, ... };
-            state.joggingLogs.unshift(newLog);
-            saveStorage('joggingLogs', state.joggingLogs);
+    const newLog = { 
+        id: generateUniqueID('jog'), 
+        atletId, 
+        tanggal, 
+        vo2max, 
+        zona, 
+        jarak, 
+        waktu, 
+        pace 
+    };
+    state.joggingLogs.unshift(newLog);
+    saveStorage('joggingLogs', state.joggingLogs);
 
-            const speedKmh = waktu > 0 ? parseFloat((jarak / (waktu / 60)).toFixed(1)) : 0;
-            const estKalori = Math.round((speedKmh * 1.05) * 65 * (waktu / 60));
-            
-            const newValidasiSync = {
-                id: generateUniqueID('jog'),
-                atletId: atletId,
-                tanggal: tanggal,
-                jarak: jarak,
-                waktu: waktu,
-                paceSec: 0,
-                speedKmh: speedKmh,
-                kalori: estKalori,
-                hrAvg: 145,
-                cadenceSpm: 160,
-                gpsLoc: 'Input Langsung Pelatih',
-                stravaLink: '',
-                imgStravaHash: 'sync_' + Date.now(),
-                imgStravaUrl: 'https://images.unsplash.com/photo-1510519138161-584459eb1b37?w=500&q=80',
-                imgSelfieUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80',
-                detectedMotor: false,
-                detectedLowHR: false,
-                detectedEdit: false,
-                softwareDetected: 'Disetujui Langsung Pelatih',
-                status: 'Disetujui'
-            };
+    const speedKmh = waktu > 0 ? parseFloat((jarak / (waktu / 60)).toFixed(1)) : 0;
+    const estKalori = Math.round((speedKmh * 1.05) * 65 * (waktu / 60));
 
-            state.laporanValidasi.unshift(newValidasiSync);
-            saveStorage('laporanValidasi', state.laporanValidasi);
+    const newValidasiSync = {
+        id: generateUniqueID('jog'),
+        atletId: atletId,
+        tanggal: tanggal,
+        jarak: jarak,
+        waktu: waktu,
+        paceSec: 0,
+        speedKmh: speedKmh,
+        kalori: estKalori,
+        hrAvg: 145,
+        cadenceSpm: 160,
+        gpsLoc: 'Input Langsung Pelatih',
+        stravaLink: '',
+        imgStravaHash: 'sync_' + Date.now(),
+        imgStravaUrl: 'https://images.unsplash.com/photo-1510519138161-584459eb1b37?w=500&q=80',
+        imgSelfieUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80',
+        detectedMotor: false,
+        detectedLowHR: false,
+        detectedEdit: false,
+        softwareDetected: 'Disetujui Langsung Pelatih',
+        status: 'Disetujui'
+    };
 
-            renderContent();
-            showToast('Sesi jogging berhasil dicatat & disinkronkan ke atlet!', 'success');
-        }
+    state.laporanValidasi.unshift(newValidasiSync);
+    saveStorage('laporanValidasi', state.laporanValidasi);
+
+    renderContent();
+    showToast('Sesi jogging berhasil dicatat & disinkronkan ke atlet!', 'success');
+}
 
         async function submitMASLog(e) {
             e.preventDefault();
