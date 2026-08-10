@@ -1840,19 +1840,30 @@ function getACWRStatus(atlet) {
 
             if (displayVO2) displayVO2.value = `${vo2Val} ml/kg/m`;
 
-            const masKmh = vo2Val / 3.5; 
-            const zoneFactor = parseFloat(selectZona);
-            const paceMinPerKm = 60 / (masKmh * zoneFactor); 
-            
-            const waktuMnt = parseFloat(document.getElementById('jogging-waktu')?.value || 30);
-            if (inputJarak) {
-                const autoDist = (waktuMnt / paceMinPerKm).toFixed(2);
-                inputJarak.value = autoDist;
-            }
+            // 1. Ambil baseline VO2Max atlet
+const vo2val = vo2Val || 45; // Default 45 jika belum ada skor tes
+const masKmh = vo2val / 3.5;
+const zoneFactor = parseFloat(selectZona);
+const paceMinPerKm = 60 / (masKmh * zoneFactor);
 
-            calculateRealtimePace();
-        }
+// 2. Ambil parameter waktu (default 30 mnt)
+const waktuMnt = parseFloat(document.getElementById('jogging-waktu')?.value || 30);
 
+// 3. Hitung estimasi jarak & kecepatan
+const autoDist = (waktuMnt / paceMinPerKm).toFixed(2);
+if (inputJarak) {
+    inputJarak.value = autoDist;
+}
+
+// 4. Format tampilan pace (menit'detik")
+const mins = Math.floor(paceMinPerKm);
+const secs = Math.round((paceMinPerKm - mins) * 60).toString().padStart(2, '0');
+const paceFormatted = `${mins}'${secs}" /km`;
+
+// 5. Tampilkan langsung ke input pace
+if (displayPace) {
+    displayPace.value = paceFormatted;
+}
         function calculateRealtimePace() {
             const distElem = document.getElementById('jogging-jarak');
             const timeElem = document.getElementById('jogging-waktu');
