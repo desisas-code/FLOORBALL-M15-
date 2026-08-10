@@ -6821,11 +6821,7 @@ window.dbSet = set;
 window.dbOnValue = onValue;
 window.dbOnValue(window.dbRef(window.db, 'atletData'), (snapshot) => {
   const data = snapshot.val();
-  if (data) {
-    tampilkanData(data);
-  }
-});
-// Inisialisasi Firebase & Realtime Database
+  // Inisialisasi Firebase & Realtime Database
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -6843,13 +6839,12 @@ window.dbOnValue(window.dbRef(window.db, 'atletData'), (snapshot) => {
   }
 });
 
-// 2. Upload otomatis semua data lokal dari HP utama ke Firebase Realtime Database
+// 2. Upload otomatis semua data lokal dari HP utama ke Firebase
 for (let i = 0; i < localStorage.length; i++) {
   const key = localStorage.key(i);
   const val = localStorage.getItem(key);
   try {
     const parsed = JSON.parse(val);
-    // Jika data berupa array (daftar atlet) atau objek besar, kirim ke Firebase
     if (Array.isArray(parsed) && parsed.length > 0) {
       window.dbSet(window.dbRef(window.db, 'atletData'), parsed);
     }
