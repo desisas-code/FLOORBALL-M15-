@@ -6825,7 +6825,29 @@ window.dbOnValue(window.dbRef(window.db, 'atletData'), (snapshot) => {
     tampilkanData(data);
   }
 });
+// Inisialisasi Firebase & Realtime Database
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
+// Sambungkan fungsi simpan/baca ke window
+window.db = db;
+window.dbRef = ref;
+window.dbSet = set;
+window.dbOnValue = onValue;
+
+// 1. Baca data otomatis dari Firebase ke tampilan
+window.dbOnValue(window.dbRef(window.db, 'atletData'), (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    tampilkanData(data);
+  }
+});
+
+// 2. DI SINI TEMPATNYA: Upload otomatis data dari HP ini ke Firebase
+const dataLokal = localStorage.getItem('FLOORBALL_APP_DATA') || localStorage.getItem('atletData') || localStorage.getItem('skuad');
+if (dataLokal) {
+  window.dbSet(window.dbRef(window.db, 'atletData'), JSON.parse(dataLokal));
+}
 </script>
- </body>
- </html>
+</body>
+</html>
