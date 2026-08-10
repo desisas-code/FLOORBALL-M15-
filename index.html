@@ -2588,42 +2588,129 @@ function updateMatchScore(team, delta, triggerGKConceded = true) {
             renderMatchLiveUI();
         }
 
-        function handleCourtClick(e) {
-            const court = e.currentTarget;
-            const rect = court.getBoundingClientRect();
-            
-            let clientX = e.clientX;
-            let clientY = e.clientY;
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            }
+        // =========================================================================
+// POIN 3: MULTI-COLOR SPATIAL EVENT & HEATMAP ANALYSIS
+// =========================================================================
+function setSpatialEventType(type) {
+    state.matchLive.activeSpatialEventType = type;
+    renderMatchLiveUI();
+}
 
-            const x = Math.round(((clientX - rect.left) / rect.width) * 100);
-            const y = Math.round(((clientY - rect.top) / rect.height) * 100);
+function filterSpatialHeatmapView(type) {
+    state.matchLive.heatmapFilterType = type; // 'all', 'loss', 'intercept', 'shoot_att'
+    renderMatchLiveUI();
+}
 
-            const activePlayer = state.atlet.find(a => a.id === state.matchLive.activePlayerId);
-            if (!activePlayer) return;
+// MENIMPA BARIS 2591 BARIS LAMA
+function handleCourtClick(e) {
+    const court = e.currentTarget;
+    const rect = court.getBoundingClientRect();
+    
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    }
 
-            const typeNames = { loss: 'Kehilangan Bola', intercept: 'Cut Bola', shoot_att: 'Percobaan Shoot' };
-            
-            state.matchLive.spatialEvents.unshift({
-                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), x, y, type: state.matchLive.activeSpatialEventType,
-                playerId: activePlayer.id, timestamp: new Date().toLocaleTimeString()
-            });
+    const x = Math.round(((clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((clientY - rect.top) / rect.height) * 100);
 
-            state.matchLive.logs.unshift({
-                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), time: new Date().toLocaleTimeString(),
-                playerId: activePlayer.id, type: 'spatial', desc: `[Spatial] ${escapeHTML(activePlayer.nama)} - ${typeNames[state.matchLive.activeSpatialEventType]} di (${x}%, ${y}%)`
-            });
+    const activePlayer = state.atlet.find(a => String(a.id) === String(state.matchLive.activePlayerId));
+    if (!activePlayer) {
+        showToast("Pilih pemain di lapangan terlebih dahulu!", "error");
+        return;
+    }
 
-            saveStorage('matchLive', state.matchLive);
-     renderMatchLiveUI();
-     renderMatchHeatmap();
-     showToast(`Event dicatat untuk ${escapeHTML(activePlayer.nama)}!`, 'success');
- }
+    // Pembagian 3 Zona Taktis berdasarkan koordinat X
+    let zoneName = "Transition Zone";
+    if (x <= 35) zoneName = "Defensive Zone";
+    else if (x >= 65) zoneName = "Scoring / Slot Zone";
 
-		let matchHeatmapInstance = null;
+    const typeNames = { 
+        loss: 'Kehilangan Bola 🔴', 
+        intercept: 'Cut Bola 🟢', 
+        shoot_att: 'Percobaan Shoot 🟡' 
+    };
+    
+    const eventType = state.matchLive.activeSpatialEventType || 'loss';
+
+    if (!state.matchLive.spatialEvents) state.matchLive.spatialEvents = [];
+
+    state.matchLive.spatialEvents.unshift({
+        id: 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        x, y, 
+        type: eventType,
+        zone: zoneName,
+        playerId: activePlayer.id, 
+        timestamp: new Date().toLocaleTimeString()
+    });
+
+    state.matchLive.logs.unshift({
+        id: 'log_' + Date.now(),
+        time: new Date().toLocaleTimeString(),
+        playerId: activePlayer.id,
+        type: 'spatial',
+        desc: `[Spatial] ${escapeHTML(activePlayer.nama)} - ${typeNames[eventType]} di ${zoneName} (${x}%, ${y}%)`
+    });
+
+    saveStorage('matchLive', state.matchLive);
+    renderMatchLiveUI();
+    showToast(`${typeNames[eventType]} dicatat di ${zoneName}!`, 'success');
+}
+
+let matchHeatmapInstance = null;
+
+function renderMatchHeatmap() {
+    const container = document.getElementById('court-heatmap-layer');
+    if (!container || typeof h337 === 'undefined') return;
+
+    container.innerHTML = '';
+    matchHeatmapInstance = null;
+
+    const activeFilter = state.matchLive.heatmapFilterType || 'all';
+    const filteredEvents = (state.matchLive.spatialEvents || []).filter(ev => {
+        if (activeFilter === 'all') return true;
+        return ev.type === activeFilter;
+    });
+
+    // Skema Warna Gradient Heatmap Berdasarkan Filter
+    let gradientConfig = {
+        '.2': 'blue',
+        '.4': 'cyan',
+        '.6': 'lime',
+        '.8': 'yellow',
+        '1.0': 'red'
+    };
+
+    if (activeFilter === 'loss') {
+        gradientConfig = { '.3': '#fca5a5', '.7': '#ef4444', '1.0': '#991b1b' }; // Gradasi Merah
+    } else if (activeFilter === 'intercept') {
+        gradientConfig = { '.3': '#6ee7b7', '.7': '#10b981', '1.0': '#065f46' }; // Gradasi Hijau
+    } else if (activeFilter === 'shoot_att') {
+        gradientConfig = { '.3': '#fde047', '.7': '#eab308', '1.0': '#854d0e' }; // Gradasi Kuning
+    }
+
+    matchHeatmapInstance = h337.create({
+        container: container,
+        radius: 22,
+        maxOpacity: 0.65,
+        minOpacity: 0.1,
+        blur: 0.75,
+        gradient: gradientConfig
+    });
+
+    const points = filteredEvents.map(ev => ({
+        x: Math.round((ev.x / 100) * container.offsetWidth),
+        y: Math.round((ev.y / 100) * container.offsetHeight),
+        value: 1
+    }));
+
+    matchHeatmapInstance.setData({
+        max: 3,
+        data: points
+    });
+}
 
 function renderMatchHeatmap() {
     const container = document.getElementById('court-heatmap-layer');
