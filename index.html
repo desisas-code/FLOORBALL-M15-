@@ -6784,21 +6784,17 @@ saveStorage('laporanValidasi', state.laporanValidasi);
     window.open(waUrl, '_blank');
   }
 
-  // 4. SERVICE WORKER FOR PWA
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      const swCode = `
-        const CACHE_NAME = 'cf-pwa-cache-v2';
-        const urlsToCache = ['./', 'https://cdn.tailwindcss.com'];
-        self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(urlsToCache))));
-        self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
-      `;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(blob))
-        .then(() => console.log('PWA Service Worker Active'))
-        .catch(err => console.log('SW Error:', err));
+  // 4. SERVICE WORKER FOR PWA (Network First)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // Hapus registrasi Service Worker lama yang mengunci cache
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
     });
-  }
+  });
+}
 </script>
  </body>
  </html>
