@@ -138,7 +138,7 @@
 
     <script>
       // Auto Sync di Background
-      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw82jXPVLViZ0xxvQSJFoebInUPCDpL6zK90ufcvdt3XizAWr_gq2s6Qkymk1UQ2wBT/exec";
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2ScqnDdgzEe24wsQR0SCfMc7-3a8atBr9tB87VTDP4pYz8kSfy-KN7pmuJ--_Ayj5/exec";
 
       async function autoFetchFromSpreadsheet() {
         try {
@@ -377,7 +377,7 @@
     <!-- LOGIKA APP JAVASCRIPT -->
     <script>
         const COACH_PASSWORD_DEFAULT = "midun15";
-        const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw82jXPVLViZ0xxvQSJFoebInUPCDpL6zK90ufcvdt3XizAWr_gq2s6Qkymk1UQ2wBT/exec"; 
+        const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2ScqnDdgzEe24wsQR0SCfMc7-3a8atBr9tB87VTDP4pYz8kSfy-KN7pmuJ--_Ayj5/exec"; 
 
         function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
     return new Promise((resolve, reject) => {
@@ -1014,20 +1014,12 @@ if (menuId === 'menu-4') {
             }
         }
 
-      window.addEventListener('DOMContentLoaded', () => {
-    // Memuat data yang tersimpan dari hasil sync Google Sheet sebelumnya
+       window.addEventListener('DOMContentLoaded', () => {
+    // Muat data dari localStorage agar state.atlet terisi 41 data
     state.atlet = loadStorage('atlet', []); 
     
-    // Inisialisasi statistik match live untuk atlet yang ada
-    initMatchPlayerStats();
-    
-    // Default masuk ke halaman login pelatih
+    // Inisialisasi tampilan login
     selectLoginRole('pelatih');
-
-    // Tarik data terbaru dari Google Sheet di background
-    if (typeof autoFetchFromSpreadsheet === 'function') {
-        autoFetchFromSpreadsheet();
-    }
 });
         async function syncDataToSpreadsheet() {
             const toast = showToast("Menyinkronkan data ke Google Spreadsheet...", "loading");
@@ -1776,69 +1768,48 @@ function deleteRiwayatValidasi(id) {
             return records.length > 0 ? parseFloat(records[0].skor) : null; 
         }
 
-        // =========================================================================
-// KALKULATOR EWMA ACWR & REKOMENDASI BEBAN LATIHAN OTOMATIS
-// =========================================================================
-function calculateAtletEWMA_ACWR(atletId) {
-    const logs = state.rpeLogs
-        .filter(r => String(r.atletId) === String(atletId) && r.tanggal)
-        .sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+        function calculateAtletACWR(atletId) {
+            const logs = state.rpeLogs.filter(r => String(r.atletId) === String(atletId));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-    if (logs.length === 0) {
-        return {
-            acuteLoad: 0,
-            chronicLoad: 0,
-            acwrRatio: 0.00,
-            statusRisk: "No Data",
-            badgeClass: "bg-slate-100 text-slate-600 border-slate-300",
-            recommendation: "Belum ada entri RPE tercatat untuk atlet ini."
-        };
-    }
+            let acuteLoad = 0;   
+            let chronicSum = 0;  
 
-    const lambdaAcute = 2 / (7 + 1);
-    const lambdaChronic = 2 / (28 + 1);
+            logs.forEach(log => {
+                if (!log.tanggal) return;
+                const logDate = new Date(log.tanggal);
+                logDate.setHours(0, 0, 0, 0);
+                
+                const diffDays = Math.floor((today - logDate) / (1000 * 60 * 60 * 24));
 
-    let ewmaAcute = logs[0].sRPE || 0;
-    let ewmaChronic = logs[0].sRPE || 0;
+                if (diffDays >= 0 && diffDays < 7) {
+                    acuteLoad += (log.sRPE || 0);
+                }
+                if (diffDays >= 0 && diffDays < 28) {
+                    chronicSum += (log.sRPE || 0);
+                }
+            });
 
-    for (let i = 1; i < logs.length; i++) {
-        const load = logs[i].sRPE || 0;
-        ewmaAcute = (load * lambdaAcute) + ((1 - lambdaAcute) * ewmaAcute);
-        ewmaChronic = (load * lambdaChronic) + ((1 - lambdaChronic) * ewmaChronic);
-    }
+            const chronicLoad = Math.round(chronicSum / 4);
+            let acwrRatio = chronicLoad > 0 ? parseFloat((acuteLoad / chronicLoad).toFixed(2)) : 0;
 
-    const acuteLoad = Math.round(ewmaAcute);
-    const chronicLoad = Math.round(ewmaChronic);
-    const acwrRatio = chronicLoad > 0 ? parseFloat((acuteLoad / chronicLoad).toFixed(2)) : 0;
+            let statusRisk = "Underloading";
+            let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
 
-    let statusRisk = "Underloading";
-    let badgeClass = "bg-blue-100 text-blue-900 border-blue-300";
-    let recommendation = "Beban latihan terlalu rendah. Tingkatkan volume secara bertahap.";
+            if (acwrRatio >= 0.8 && acwrRatio <= 1.3) {
+                statusRisk = "Sweet Spot (Aman)";
+                badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
+            } else if (acwrRatio > 1.3 && acwrRatio <= 1.5) {
+                statusRisk = "High Risk (Waspada)";
+                badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
+            } else if (acwrRatio > 1.5) {
+                statusRisk = "Danger Zone (Sangat Rawan)";
+                badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
+            }
 
-    if (acwrRatio >= 0.8 && acwrRatio <= 1.3) {
-        statusRisk = "Sweet Spot (Aman)";
-        badgeClass = "bg-emerald-100 text-emerald-900 border-emerald-300";
-        recommendation = "Beban latihan optimal! Pertahankan ritme program latihan saat ini.";
-    } else if (acwrRatio > 1.3 && acwrRatio <= 1.5) {
-        statusRisk = "High Risk (Waspada)";
-        badgeClass = "bg-amber-100 text-amber-900 border-amber-300";
-        recommendation = "Potensi kelelahan menumpuk. Turunkan intensitas sesi berikutnya sebesar 15-20%.";
-    } else if (acwrRatio > 1.5) {
-        statusRisk = "Danger Zone (Sangat Rawan)";
-        badgeClass = "bg-rose-100 text-rose-900 border-rose-300";
-        recommendation = "⚠️ Risiko tinggi cedera overuse! Lakukan tapering segera, kurangi volume 30-50%.";
-    }
-
-    return {
-        acuteLoad,
-        chronicLoad,
-        acwrRatio,
-        statusRisk,
-        badgeClass,
-        recommendation,
-        totalLogs: logs.length
-    };
-}
+            return { acuteLoad, chronicLoad, acwrRatio, statusRisk, badgeClass, totalLogs: logs.length };
+        }
 
 		// 3. FUNGSI KALKULASI RASIO BEBAN LATIHAN (ACWR ALERT)
 function getACWRStatus(atlet) {
@@ -2596,129 +2567,42 @@ function updateMatchScore(team, delta, triggerGKConceded = true) {
             renderMatchLiveUI();
         }
 
-        // =========================================================================
-// POIN 3: MULTI-COLOR SPATIAL EVENT & HEATMAP ANALYSIS
-// =========================================================================
-function setSpatialEventType(type) {
-    state.matchLive.activeSpatialEventType = type;
-    renderMatchLiveUI();
-}
+        function handleCourtClick(e) {
+            const court = e.currentTarget;
+            const rect = court.getBoundingClientRect();
+            
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
 
-function filterSpatialHeatmapView(type) {
-    state.matchLive.heatmapFilterType = type; // 'all', 'loss', 'intercept', 'shoot_att'
-    renderMatchLiveUI();
-}
+            const x = Math.round(((clientX - rect.left) / rect.width) * 100);
+            const y = Math.round(((clientY - rect.top) / rect.height) * 100);
 
-// MENIMPA BARIS 2591 BARIS LAMA
-function handleCourtClick(e) {
-    const court = e.currentTarget;
-    const rect = court.getBoundingClientRect();
-    
-    let clientX = e.clientX;
-    let clientY = e.clientY;
-    if (e.touches && e.touches.length > 0) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    }
+            const activePlayer = state.atlet.find(a => a.id === state.matchLive.activePlayerId);
+            if (!activePlayer) return;
 
-    const x = Math.round(((clientX - rect.left) / rect.width) * 100);
-    const y = Math.round(((clientY - rect.top) / rect.height) * 100);
+            const typeNames = { loss: 'Kehilangan Bola', intercept: 'Cut Bola', shoot_att: 'Percobaan Shoot' };
+            
+            state.matchLive.spatialEvents.unshift({
+                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), x, y, type: state.matchLive.activeSpatialEventType,
+                playerId: activePlayer.id, timestamp: new Date().toLocaleTimeString()
+            });
 
-    const activePlayer = state.atlet.find(a => String(a.id) === String(state.matchLive.activePlayerId));
-    if (!activePlayer) {
-        showToast("Pilih pemain di lapangan terlebih dahulu!", "error");
-        return;
-    }
+            state.matchLive.logs.unshift({
+                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), time: new Date().toLocaleTimeString(),
+                playerId: activePlayer.id, type: 'spatial', desc: `[Spatial] ${escapeHTML(activePlayer.nama)} - ${typeNames[state.matchLive.activeSpatialEventType]} di (${x}%, ${y}%)`
+            });
 
-    // Pembagian 3 Zona Taktis berdasarkan koordinat X
-    let zoneName = "Transition Zone";
-    if (x <= 35) zoneName = "Defensive Zone";
-    else if (x >= 65) zoneName = "Scoring / Slot Zone";
+            saveStorage('matchLive', state.matchLive);
+     renderMatchLiveUI();
+     renderMatchHeatmap();
+     showToast(`Event dicatat untuk ${escapeHTML(activePlayer.nama)}!`, 'success');
+ }
 
-    const typeNames = { 
-        loss: 'Kehilangan Bola 🔴', 
-        intercept: 'Cut Bola 🟢', 
-        shoot_att: 'Percobaan Shoot 🟡' 
-    };
-    
-    const eventType = state.matchLive.activeSpatialEventType || 'loss';
-
-    if (!state.matchLive.spatialEvents) state.matchLive.spatialEvents = [];
-
-    state.matchLive.spatialEvents.unshift({
-        id: 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        x, y, 
-        type: eventType,
-        zone: zoneName,
-        playerId: activePlayer.id, 
-        timestamp: new Date().toLocaleTimeString()
-    });
-
-    state.matchLive.logs.unshift({
-        id: 'log_' + Date.now(),
-        time: new Date().toLocaleTimeString(),
-        playerId: activePlayer.id,
-        type: 'spatial',
-        desc: `[Spatial] ${escapeHTML(activePlayer.nama)} - ${typeNames[eventType]} di ${zoneName} (${x}%, ${y}%)`
-    });
-
-    saveStorage('matchLive', state.matchLive);
-    renderMatchLiveUI();
-    showToast(`${typeNames[eventType]} dicatat di ${zoneName}!`, 'success');
-}
-
-let matchHeatmapInstance = null;
-
-function renderMatchHeatmap() {
-    const container = document.getElementById('court-heatmap-layer');
-    if (!container || typeof h337 === 'undefined') return;
-
-    container.innerHTML = '';
-    matchHeatmapInstance = null;
-
-    const activeFilter = state.matchLive.heatmapFilterType || 'all';
-    const filteredEvents = (state.matchLive.spatialEvents || []).filter(ev => {
-        if (activeFilter === 'all') return true;
-        return ev.type === activeFilter;
-    });
-
-    // Skema Warna Gradient Heatmap Berdasarkan Filter
-    let gradientConfig = {
-        '.2': 'blue',
-        '.4': 'cyan',
-        '.6': 'lime',
-        '.8': 'yellow',
-        '1.0': 'red'
-    };
-
-    if (activeFilter === 'loss') {
-        gradientConfig = { '.3': '#fca5a5', '.7': '#ef4444', '1.0': '#991b1b' }; // Gradasi Merah
-    } else if (activeFilter === 'intercept') {
-        gradientConfig = { '.3': '#6ee7b7', '.7': '#10b981', '1.0': '#065f46' }; // Gradasi Hijau
-    } else if (activeFilter === 'shoot_att') {
-        gradientConfig = { '.3': '#fde047', '.7': '#eab308', '1.0': '#854d0e' }; // Gradasi Kuning
-    }
-
-    matchHeatmapInstance = h337.create({
-        container: container,
-        radius: 22,
-        maxOpacity: 0.65,
-        minOpacity: 0.1,
-        blur: 0.75,
-        gradient: gradientConfig
-    });
-
-    const points = filteredEvents.map(ev => ({
-        x: Math.round((ev.x / 100) * container.offsetWidth),
-        y: Math.round((ev.y / 100) * container.offsetHeight),
-        value: 1
-    }));
-
-    matchHeatmapInstance.setData({
-        max: 3,
-        data: points
-    });
-}
+		let matchHeatmapInstance = null;
 
 function renderMatchHeatmap() {
     const container = document.getElementById('court-heatmap-layer');
@@ -4005,58 +3889,52 @@ saveStorage('laporanValidasi', state.laporanValidasi);
             const pageTitle = document.getElementById('page-title');
             if (!container || !pageTitle) return;
 
-            } else if (state.currentMenu === 'menu-1') {
+            if (state.currentMenu === 'menu-1') {
     pageTitle.innerText = "Data Atlet & Autentikasi PIN";
     
-    // Perlindungan jika state.atlet belum terisi / kosong
-    const atletList = state.atlet || [];
-    const filteredAtlet = atletList.filter(a => 
-        (a.nama || '').toLowerCase().includes(state.searchQueryAtlet) ||
-        (a.posisi || '').toLowerCase().includes(state.searchQueryAtlet)
+    const filteredAtlet = state.atlet.filter(a => 
+        a.nama.toLowerCase().includes(state.searchQueryAtlet) ||
+        a.posisi.toLowerCase().includes(state.searchQueryAtlet)
     );
 
-    // Kalkulasi Rata-rata Aman dari Error Division by Zero
-    const totalAtlet = atletList.length;
-    const avgUsia = totalAtlet > 0 ? (atletList.reduce((acc, a) => acc + (parseInt(a.usia) || 0), 0) / totalAtlet).toFixed(1) : 0;
-    const avgTB = totalAtlet > 0 ? Math.round(atletList.reduce((acc, a) => acc + (parseInt(a.tb) || 0), 0) / totalAtlet) : 0;
-    const avgBB = totalAtlet > 0 ? Math.round(atletList.reduce((acc, a) => acc + (parseInt(a.bb) || 0), 0) / totalAtlet) : 0;
-
     container.innerHTML = `
-        <!-- 1. KARTU STATISTIK UTAMA -->
+        <!-- 1. KARTU STATISTIK UTAMA (UPGRADED WITH HOVER & GLOW) -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
-            <div class="bg-white/90 backdrop-blur-md p-6 rounded-[28px] border border-slate-200/80 shadow-sm hover:shadow-xl transition-all flex items-center gap-4 group">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center font-black text-2xl shrink-0 shadow-lg shadow-blue-500/20">
+            <div class="bg-white/90 backdrop-blur-md p-6 rounded-[28px] border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-4 group">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center font-black text-2xl shrink-0 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-users"></i>
                 </div>
                 <div>
                     <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Total Skuad</p>
-                    <h4 class="text-3xl font-black text-slate-900 font-display">${totalAtlet} <span class="text-sm font-bold text-slate-500">Atlet</span></h4>
+                    <h4 class="text-3xl font-black text-slate-900 font-display">${state.atlet.length} <span class="text-sm font-bold text-slate-500">Atlet</span></h4>
                 </div>
             </div>
 
-            <div class="bg-white/90 backdrop-blur-md p-6 rounded-[28px] border border-slate-200/80 shadow-sm hover:shadow-xl transition-all flex items-center gap-4 group">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white flex items-center justify-center font-black text-2xl shrink-0 shadow-lg shadow-emerald-500/20">
+            <div class="bg-white/90 backdrop-blur-md p-6 rounded-[28px] border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-4 group">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white flex items-center justify-center font-black text-2xl shrink-0 shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-shield-halved"></i>
                 </div>
                 <div>
-                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider">PIN Akses Terdaftar</p>
-                    <h4 class="text-3xl font-black text-slate-900 font-display">${totalAtlet} <span class="text-sm font-bold text-emerald-600">Verified</span></h4>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider">PIN Akses Aktif</p>
+                    <h4 class="text-3xl font-black text-slate-900 font-display">${state.atlet.length} <span class="text-sm font-bold text-emerald-600">Verified</span></h4>
                 </div>
             </div>
 
-            <div class="bg-white/90 backdrop-blur-md p-6 rounded-[28px] border border-slate-200/80 shadow-sm hover:shadow-xl transition-all flex items-center gap-4 group">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center font-black text-2xl shrink-0 shadow-lg shadow-amber-500/20">
+            <div class="bg-white/90 backdrop-blur-md p-6 rounded-[28px] border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-4 group">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center font-black text-2xl shrink-0 shadow-lg shadow-amber-500/20 group-hover:scale-110 transition-transform relative">
                     <i class="fa-solid fa-notes-medical"></i>
+                    ${state.atlet.filter(a => a.cedera !== 'Tidak ada').length > 0 ? '<span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 border-2 border-white rounded-full animate-ping"></span>' : ''}
                 </div>
                 <div>
                     <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Pantauan Medis</p>
-                    <h4 class="text-3xl font-black text-slate-900 font-display">${atletList.filter(a => a.cedera && a.cedera !== 'Tidak ada').length} <span class="text-sm font-bold text-rose-500">Cedera</span></h4>
+                    <h4 class="text-3xl font-black text-slate-900 font-display">${state.atlet.filter(a => a.cedera !== 'Tidak ada').length} <span class="text-sm font-bold text-rose-500">Cedera</span></h4>
                 </div>
             </div>
         </div>
 
-        <!-- 2. CHART POSISI & METRIK DEMOGRAFI -->
+        <!-- 2. CHART POSISI DENGAN LEGENDA INTERAKTIF & METRIK DEMOGRAFI -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+            <!-- DIAGRAM DOUGHNUT CHART -->
             <div class="lg:col-span-5 bg-white p-6 rounded-[28px] border border-slate-200/80 shadow-sm flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-4">
                     <h4 class="font-black text-slate-800 text-xs flex items-center gap-2 font-display uppercase tracking-wider">
@@ -4069,139 +3947,165 @@ saveStorage('laporanValidasi', state.laporanValidasi);
                 </div>
             </div>
 
+            <!-- RINGKASAN DEMOGRAFI SKUAD -->
             <div class="lg:col-span-7 bg-white p-6 rounded-[28px] border border-slate-200/80 shadow-sm flex flex-col justify-between">
                 <h4 class="font-black text-slate-800 text-xs mb-4 flex items-center gap-2 font-display uppercase tracking-wider">
                     <i class="fa-solid fa-layer-group text-blue-900 text-sm"></i> Demografi & Komposisi Skuad
                 </h4>
                 
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                    <div class="p-4 bg-slate-50 border border-slate-200/70 rounded-2xl">
+                    <div class="p-4 bg-slate-50 border border-slate-200/70 rounded-2xl hover:border-blue-300 transition-colors">
                         <span class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Putra</span>
                         <span class="text-xl font-black text-slate-800 font-mono mt-1 block">
-                            ${atletList.filter(a => a.gender === 'Putra').length} <span class="text-xs font-bold text-slate-500">Atlet</span>
+                            ${state.atlet.filter(a => a.gender === 'Putra').length} <span class="text-xs font-bold text-slate-500">Atlet</span>
                         </span>
                     </div>
-                    <div class="p-4 bg-slate-50 border border-slate-200/70 rounded-2xl">
+                    <div class="p-4 bg-slate-50 border border-slate-200/70 rounded-2xl hover:border-blue-300 transition-colors">
                         <span class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Putri</span>
                         <span class="text-xl font-black text-slate-800 font-mono mt-1 block">
-                            ${atletList.filter(a => a.gender === 'Putri').length} <span class="text-xs font-bold text-slate-500">Atlet</span>
+                            ${state.atlet.filter(a => a.gender === 'Putri').length} <span class="text-xs font-bold text-slate-500">Atlet</span>
                         </span>
                     </div>
-                    <div class="p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl">
+                    <div class="p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl hover:border-blue-400 transition-colors">
                         <span class="block text-[10px] font-black text-blue-800 uppercase tracking-wider">Kiper (GK)</span>
                         <span class="text-xl font-black text-blue-950 font-mono mt-1 block">
-                            ${atletList.filter(a => a.posisi === 'GK').length} <span class="text-xs font-bold text-blue-700">Pemain</span>
+                            ${state.atlet.filter(a => a.posisi === 'GK').length} <span class="text-xs font-bold text-blue-700">Pemain</span>
                         </span>
                     </div>
-                    <div class="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl">
+                    <div class="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl hover:border-amber-400 transition-colors">
                         <span class="block text-[10px] font-black text-amber-800 uppercase tracking-wider">Rerata Usia</span>
                         <span class="text-xl font-black text-amber-950 font-mono mt-1 block">
-                            ${avgUsia} <span class="text-xs font-bold text-amber-700">Thn</span>
+                            ${(state.atlet.reduce((acc, a) => acc + (parseInt(a.usia) || 0), 0) / (state.atlet.length || 1)).toFixed(1)} <span class="text-xs font-bold text-amber-700">Thn</span>
                         </span>
                     </div>
-                    <div class="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl">
+                    <div class="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl hover:border-emerald-400 transition-colors">
                         <span class="block text-[10px] font-black text-emerald-800 uppercase tracking-wider">Rerata TB</span>
                         <span class="text-xl font-black text-emerald-950 font-mono mt-1 block">
-                            ${avgTB} <span class="text-xs font-bold text-emerald-700">cm</span>
+                            ${Math.round(state.atlet.reduce((acc, a) => acc + (parseInt(a.tb) || 0), 0) / (state.atlet.length || 1))} <span class="text-xs font-bold text-emerald-700">cm</span>
                         </span>
                     </div>
-                    <div class="p-4 bg-purple-50/70 border border-purple-200/80 rounded-2xl">
+                    <div class="p-4 bg-purple-50/70 border border-purple-200/80 rounded-2xl hover:border-purple-400 transition-colors">
                         <span class="block text-[10px] font-black text-purple-800 uppercase tracking-wider">Rerata BB</span>
                         <span class="text-xl font-black text-purple-950 font-mono mt-1 block">
-                            ${avgBB} <span class="text-xs font-bold text-purple-700">kg</span>
+                            ${Math.round(state.atlet.reduce((acc, a) => acc + (parseInt(a.bb) || 0), 0) / (state.atlet.length || 1))} <span class="text-xs font-bold text-purple-700">kg</span>
                         </span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. TABEL SKUAD & PROFIL ATLET -->
-        <div class="bg-white/90 backdrop-blur-md rounded-[32px] border border-slate-200/80 shadow-lg overflow-hidden">
-            <div class="p-6 border-b border-slate-100/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
-                <div>
-                    <h3 class="text-lg font-black text-slate-900 font-display flex items-center gap-2">
-                        <i class="fa-solid fa-users-gear text-blue-900"></i> Daftar Skuad & Profil Atlet
-                    </h3>
-                    <p class="text-xs font-semibold text-slate-400 mt-0.5">Kelola data antropometri, autentikasi PIN, dan catatan medis skuad.</p>
-                </div>
-                <div class="flex items-center gap-2.5 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-64">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" oninput="filterSearchAtlet(this.value)" value="${escapeHTML(state.searchQueryAtlet)}" placeholder="Cari nama atau posisi..." class="w-full pl-9 pr-4 py-2.5 rounded-2xl border border-slate-200/90 text-xs font-semibold focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white">
-                    </div>
-                    <button onclick="exportDataAtletCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i> Ekspor CSV</button>
-                    <button onclick="openModalAtlet()" class="bg-blue-900 hover:bg-blue-950 text-white px-5 py-2.5 rounded-2xl font-extrabold text-xs shadow-md shadow-blue-900/20 active:scale-95 transition-all shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-plus"></i> Atlet Baru</button>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[800px]">
-                    <thead class="bg-slate-900 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                        <tr>
-                            <th class="py-4 px-5 text-left">Profil Atlet</th>
-                            <th class="py-4 px-4 text-center">Posisi</th>
-                            <th class="py-4 px-4 text-center">Antropometri</th>
-                            <th class="py-4 px-4 text-center">Akses PIN</th>
-                            <th class="py-4 px-4 text-center">Status Medis</th>
-                            <th class="py-4 px-5 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100/90 text-xs font-semibold">
-                        ${filteredAtlet.length > 0 ? filteredAtlet.map(a => {
-                            const inisial = (a.nama || 'A').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                            const isCedera = a.cedera && a.cedera !== 'Tidak ada';
-
-                            return `
-                            <tr class="hover:bg-blue-50/40 transition-all duration-200">
-                                <td class="py-4 px-5">
-                                    <div class="flex items-center gap-3.5">
-                                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-900 via-indigo-800 to-cyan-500 text-white flex items-center justify-center font-black text-xs shadow-md shrink-0 font-display ring-2 ring-white">
-                                            ${inisial}
-                                        </div>
-                                        <div>
-                                            <p onclick="openAtletRadarModal('${a.id}')" class="font-black text-slate-900 text-sm tracking-tight hover:text-amber-500 cursor-pointer transition">${escapeHTML(a.nama)}</p>
-                                            <p class="text-[10px] text-slate-400 font-extrabold mt-0.5">${a.usia || '-'} Thn • ${escapeHTML(a.gender || '-')}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-4 text-center">
-                                    <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1.5 rounded-xl text-[10px] inline-block">
-                                        ${escapeHTML(a.posisi)}
-                                    </span>
-                                </td>
-                                <td class="py-4 px-4 text-center">
-                                    <span class="font-mono font-bold text-slate-700">${a.tb || '-'} cm / ${a.bb || '-'} kg</span>
-                                </td>
-                                <td class="py-4 px-4 text-center">
-                                    <div class="bg-slate-950 text-slate-100 px-3 py-1.5 rounded-xl border border-slate-800 w-fit mx-auto font-mono font-black text-xs">
-                                        <i class="fa-solid fa-key text-[9px] text-cyan-400 mr-1"></i>${escapeHTML(a.pin || '-')}
-                                    </div>
-                                </td>
-                                <td class="py-4 px-4 text-center">
-                                    ${isCedera 
-                                        ? `<span class="bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-xl text-[10px] font-black inline-block"><i class="fa-solid fa-notes-medical mr-1"></i>${escapeHTML(a.cedera)}</span>`
-                                        : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-xl text-[10px] font-black inline-block"><i class="fa-solid fa-shield-heart mr-1"></i>Bugar</span>`
-                                    }
-                                </td>
-                                <td class="py-4 px-5 text-center">
-                                    <div class="flex items-center justify-center gap-1.5">
-                                        <button onclick="openModalAtlet('${a.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white w-8 h-8 rounded-xl transition-all border border-blue-100 flex items-center justify-center"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
-                                        <button onclick="deleteAtletOptimistic('${a.id}')" class="text-rose-500 bg-rose-50 hover:bg-rose-500 hover:text-white w-8 h-8 rounded-xl transition-all border border-rose-100 flex items-center justify-center"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            `;
-                        }).join('') : `
-                            <tr>
-                                <td colspan="6" class="p-8 text-center text-slate-400 italic font-semibold">
-                                    Belum ada data atlet terdaftar. Klik tombol <b>"Sync Spreadsheet"</b> di kanan atas atau tambah atlet secara manual.
-                                </td>
-                            </tr>
-                        `}
-                    </tbody>
-                </table>
-            </div>
+        <!-- TABEL SKUAD & PROFIL ATLET MODERN -->
+<div class="bg-white/90 backdrop-blur-md rounded-[32px] border border-slate-200/80 shadow-lg overflow-hidden">
+    <div class="p-6 border-b border-slate-100/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
+        <div>
+            <h3 class="text-lg font-black text-slate-900 font-display flex items-center gap-2">
+                <i class="fa-solid fa-users-gear text-blue-900"></i> Daftar Skuad & Profil Atlet
+            </h3>
+            <p class="text-xs font-semibold text-slate-400 mt-0.5">Kelola data antropometri, autentikasi PIN, dan catatan medis skuad.</p>
         </div>
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+            <div class="relative w-full sm:w-64">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" oninput="filterSearchAtlet(this.value)" value="${escapeHTML(state.searchQueryAtlet)}" placeholder="Cari nama atau posisi..." class="w-full pl-9 pr-4 py-2.5 rounded-2xl border border-slate-200/90 text-xs font-semibold focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all bg-white">
+            </div>
+            <button onclick="exportDataAtletCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i> Ekspor CSV</button>
+            <button onclick="openModalAtlet()" class="bg-blue-900 hover:bg-blue-950 text-white px-5 py-2.5 rounded-2xl font-extrabold text-xs shadow-md shadow-blue-900/20 active:scale-95 transition-all shrink-0 flex items-center gap-1.5"><i class="fa-solid fa-plus"></i> Atlet Baru</button>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[800px]">
+            <thead class="bg-slate-900 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                <tr>
+                    <th class="py-4 px-5 text-left">Profil Atlet</th>
+                    <th class="py-4 px-4 text-center">Posisi</th>
+                    <th class="py-4 px-4 text-center">Antropometri</th>
+                    <th class="py-4 px-4 text-center">HR Max</th>
+                    <th class="py-4 px-4 text-center">Akses PIN</th>
+                    <th class="py-4 px-4 text-center">Status Medis</th>
+                    <th class="py-4 px-5 text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100/90 text-xs font-semibold">
+                ${filteredAtlet.map(a => {
+                    const inisial = a.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    const hrMaxEst = 220 - (parseInt(a.usia) || 20);
+                    const isCedera = a.cedera !== 'Tidak ada';
+
+                    // Color Coding Posisi
+                    let posColor = 'bg-blue-50 text-blue-900 border-blue-200';
+                    if (a.posisi === 'GK') posColor = 'bg-amber-500/10 text-amber-800 border-amber-300/80';
+                    else if (a.posisi === 'C') posColor = 'bg-indigo-500/10 text-indigo-900 border-indigo-300/80';
+                    else if (['FL','FR'].includes(a.posisi)) posColor = 'bg-cyan-500/10 text-cyan-900 border-cyan-300/80';
+
+                    const cederaBadge = isCedera 
+                        ? `<span class="bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-xl text-[10px] font-black flex items-center gap-1.5 w-fit mx-auto shadow-sm"><i class="fa-solid fa-notes-medical"></i> ${escapeHTML(a.cedera)}</span>` 
+                        : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-xl text-[10px] font-black flex items-center gap-1.5 w-fit mx-auto shadow-sm"><i class="fa-solid fa-shield-heart"></i> Bugar</span>`;
+					const acwrStatus = getACWRStatus(a);
+					
+                    return `
+                    <tr class="hover:bg-blue-50/40 transition-all duration-200 group hover:scale-[1.002]">
+                        <td class="py-4 px-5">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-900 via-indigo-800 to-cyan-500 text-white flex items-center justify-center font-black text-xs shadow-md shadow-blue-900/20 shrink-0 font-display ring-2 ring-white">
+                                    ${inisial}
+                                </div>
+                                <div>
+                                    <p onclick="openAtletRadarModal('${a.id}')" class="font-black text-slate-900 text-sm tracking-tight hover:text-amber-500 cursor-pointer transition">${escapeHTML(a.nama)}</p>
+                                    <p class="text-[10px] text-slate-400 font-extrabold mt-0.5">${a.usia} Thn • ${escapeHTML(a.gender)}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <span class="${posColor} font-black px-3 py-1.5 rounded-xl border shadow-sm text-[10px] inline-block min-w-[42px]">
+                                ${escapeHTML(a.posisi)}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <div class="bg-slate-50 px-2 py-1 rounded-xl border border-slate-200/80 shadow-sm text-center min-w-[40px]">
+                                    <span class="block text-[8px] text-slate-400 font-black uppercase">TB</span>
+                                    <span class="font-black text-slate-800 text-xs">${a.tb}</span>
+                                </div>
+                                <div class="bg-slate-50 px-2 py-1 rounded-xl border border-slate-200/80 shadow-sm text-center min-w-[40px]">
+                                    <span class="block text-[8px] text-slate-400 font-black uppercase">BB</span>
+                                    <span class="font-black text-slate-800 text-xs">${a.bb}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <div class="bg-rose-50/80 px-2.5 py-1 rounded-xl border border-rose-200/80 w-fit mx-auto shadow-sm">
+                                <span class="font-mono font-black text-rose-700 text-xs">${hrMaxEst}</span>
+                                <span class="text-[8px] font-black text-rose-500 block -mt-0.5">BPM</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <div class="bg-slate-950 text-slate-100 px-3 py-1.5 rounded-xl border border-slate-800 w-fit mx-auto shadow-inner flex items-center gap-1.5 font-mono font-black text-xs">
+                                <i class="fa-solid fa-key text-[9px] text-cyan-400"></i>
+                                <span>${escapeHTML(a.pin)}</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 text-center">
+    <div class="flex items-center justify-center gap-1.5 flex-wrap">
+        ${cederaBadge}
+        <span class="${acwrStatus.color} border px-2.5 py-1 rounded-xl text-[10px] font-black uppercase inline-block">
+            ACWR: ${acwrStatus.label} (${acwrStatus.ratio})
+        </span>
+    </div>
+</td>
+                        <td class="py-4 px-5 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="openModalAtlet('${a.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-blue-100 active:scale-90 flex items-center justify-center" title="Edit Data"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                                <button onclick="deleteAtletOptimistic('${a.id}')" class="text-rose-500 bg-rose-50 hover:bg-rose-500 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-rose-100 active:scale-90 flex items-center justify-center" title="Hapus Atlet"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    </div>
+</div>
     `;
         
             } else if (state.currentMenu === 'menu-2') {
@@ -5898,103 +5802,67 @@ saveStorage('laporanValidasi', state.laporanValidasi);
         </div>
     `;
             } else if (state.currentMenu === 'menu-9') {
-    pageTitle.innerText = "Dashboard EWMA ACWR & Rekomendasi Beban Otomatis";
+    pageTitle.innerText = "Dashboard Monitoring ACWR & Beban RPE Skuad";
+    
+    let countSweet = 0, countRisk = 0, countDanger = 0, countUnder = 0;
+    let totalAcute = 0;
 
-    const acwrSummary = state.atlet.map(at => {
-        const ewma = calculateAtletEWMA_ACWR(at.id);
-        return { atlet: at, ewma };
+    const athleteAcwrList = state.atlet.map(at => {
+        const ac = calculateAtletACWR(at.id);
+        totalAcute += ac.acuteLoad;
+        if (ac.acwrRatio >= 0.8 && ac.acwrRatio <= 1.3) countSweet++;
+        else if (ac.acwrRatio > 1.3 && ac.acwrRatio <= 1.5) countRisk++;
+        else if (ac.acwrRatio > 1.5) countDanger++;
+        else countUnder++;
+        return { atlet: at, acwr: ac };
     });
 
-    const highRiskCount = acwrSummary.filter(item => item.ewma.acwrRatio > 1.3).length;
-    let countSweet = acwrSummary.filter(item => item.ewma.acwrRatio >= 0.8 && item.ewma.acwrRatio <= 1.3).length;
-    let countRisk = acwrSummary.filter(item => item.ewma.acwrRatio > 1.3 && item.ewma.acwrRatio <= 1.5).length;
-    let countDanger = acwrSummary.filter(item => item.ewma.acwrRatio > 1.5).length;
+    const avgAcute = state.atlet.length > 0 ? Math.round(totalAcute / state.atlet.length) : 0;
 
     container.innerHTML = `
-        <!-- KARTU ALERT SISTEM PERINGATAN DINI -->
-        <div class="bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-white p-6 sm:p-8 rounded-[32px] border border-slate-800 shadow-2xl mb-6">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6 flex-wrap gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black text-xl shadow-lg">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <div>
-                        <span class="text-[10px] font-black text-amber-400 uppercase tracking-widest block">Sports Science Monitoring</span>
-                        <h3 class="text-xl font-black font-display text-white">Sistem Peringatan Dini Kelelahan (EWMA ACWR)</h3>
-                    </div>
+        <!-- 1. KARTU RINGKASAN METRIK KPI ACWR SKUAD -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5 mb-6">
+            <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4 hover:shadow-xl transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl shrink-0">
+                    <i class="fa-solid fa-shield-heart"></i>
                 </div>
-                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-4 py-1.5 rounded-full text-xs font-black">
-                    ${highRiskCount} Atlet Memerlukan Penyesuaian Beban
-                </span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl">
-                    <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider block mb-1">Sweet Spot (0.8 - 1.3) : ${countSweet} Atlet</span>
-                    <p class="text-xs text-slate-300 font-semibold">Adaptasi kebugaran ideal. Risiko cedera minimal.</p>
-                </div>
-                <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl">
-                    <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider block mb-1">High Risk (1.3 - 1.5) : ${countRisk} Atlet</span>
-                    <p class="text-xs text-slate-300 font-semibold">Lonjakan kelelahan impulsif. Perlu pengawasan ketat.</p>
-                </div>
-                <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl">
-                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-wider block mb-1">Danger Zone (> 1.5) : ${countDanger} Atlet</span>
-                    <p class="text-xs text-slate-300 font-semibold">Bahaya overuse. Rekomendasi potong volume & tapering.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TABEL REKOMENDASI BEBAN INDIVIDUAL ATLET -->
-        <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mb-6">
-            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-2">
                 <div>
-                    <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                        <i class="fa-solid fa-user-doctor text-blue-900"></i> Rekomendasi Taktis & Beban Kerja Atlet
-                    </h4>
-                    <p class="text-xs font-semibold text-slate-400 mt-0.5">Analisis preskripsi otomatis berdasarkan perhitungan EWMA ACWR.</p>
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Sweet Spot</p>
+                    <h4 class="text-xl font-black text-slate-900 font-display">${countSweet} <span class="text-xs font-bold text-emerald-600">Atlet</span></h4>
                 </div>
-                <button onclick="exportAcwrRpeCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-excel"></i> Ekspor CSV
-                </button>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[750px]">
-                    <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                        <tr>
-                            <th class="p-4">Nama Atlet</th>
-                            <th class="p-4 text-center">Beban Akut (EWMA)</th>
-                            <th class="p-4 text-center">Beban Kronis (EWMA)</th>
-                            <th class="p-4 text-center">Rasio EWMA</th>
-                            <th class="p-4 text-center">Status Risiko</th>
-                            <th class="p-4">Rekomendasi Taktis Pelatih</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                        ${acwrSummary.map(item => `
-                            <tr class="hover:bg-blue-50/40 transition-colors">
-                                <td class="p-4 font-black text-slate-800">
-                                    <div>${escapeHTML(item.atlet.nama)}</div>
-                                    <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block font-bold">${escapeHTML(item.atlet.posisi)}</span>
-                                </td>
-                                <td class="p-4 text-center font-mono font-bold text-slate-700">${item.ewma.acuteLoad} AU</td>
-                                <td class="p-4 text-center font-mono font-bold text-slate-700">${item.ewma.chronicLoad} AU</td>
-                                <td class="p-4 text-center font-mono font-black text-blue-900 text-sm">${item.ewma.acwrRatio}</td>
-                                <td class="p-4 text-center">
-                                    <span class="px-3 py-1 rounded-xl text-[10px] font-black border inline-block ${item.ewma.badgeClass}">
-                                        ${item.ewma.statusRisk}
-                                    </span>
-                                </td>
-                                <td class="p-4 text-slate-600 text-xs leading-relaxed max-w-xs">
-                                ${item.ewma.recommendation}
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+            <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4 hover:shadow-xl transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-xl shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">High Risk</p>
+                    <h4 class="text-xl font-black text-slate-900 font-display">${countRisk} <span class="text-xs font-bold text-amber-600">Atlet</span></h4>
+                </div>
+            </div>
+
+            <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4 hover:shadow-xl transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center font-black text-xl shrink-0">
+                    <i class="fa-solid fa-biohazard"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Danger Zone</p>
+                    <h4 class="text-xl font-black text-slate-900 font-display">${countDanger} <span class="text-xs font-bold text-rose-600">Atlet</span></h4>
+                </div>
+            </div>
+
+            <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4 hover:shadow-xl transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-900 flex items-center justify-center font-black text-xl shrink-0">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Rerata Akut</p>
+                    <h4 class="text-xl font-black text-slate-900 font-display">${avgAcute} <span class="text-xs font-bold text-blue-800">AU</span></h4>
+                </div>
+            </div>
         </div>
-    </div>
-	
+
         <!-- 2. GRID DIAGRAM TREN BEBAN & PARAMETER AMBANG -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
             <!-- GRAFIK TREN SRPE MINGGUAN (LEFT PANEL) -->
