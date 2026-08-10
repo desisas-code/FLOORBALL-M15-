@@ -3647,26 +3647,38 @@ function renderMatchHeatmap() {
 }
 
         async function submitMASLog(e) {
-            e.preventDefault();
-            const atletId = document.getElementById('mas-atlet-id')?.value;
-            const tanggal = document.getElementById('mas-tanggal')?.value;
-            const rep = parseInt(document.getElementById('mas-rep')?.value || 0);
-            const vo2max = getAtletVO2Max(atletId) || '-';
+    e.preventDefault();
+    const atletId = document.getElementById('mas-atlet-id')?.value;
+    const tanggal = document.getElementById('mas-tanggal')?.value;
+    const rep = parseInt(document.getElementById('mas-rep')?.value || 0);
+    const vo2max = getAtletVO2Max(atletId) || '-';
 
-            const walkSec = parseFloat(document.getElementById('mas-walk-sec')?.value || 0);
-            const jogSec = parseFloat(document.getElementById('mas-jog-sec')?.value || 0);
-            const sprintSec = parseFloat(document.getElementById('mas-sprint-sec')?.value || 0);
+    const walkSec = parseFloat(document.getElementById('mas-walk-sec')?.value || 0);
+    const jogSec = parseFloat(document.getElementById('mas-jog-sec')?.value || 0);
+    const sprintSec = parseFloat(document.getElementById('mas-sprint-sec')?.value || 0);
 
-            const sprintDist = parseInt(document.getElementById('mas-sprint-dist-display')?.value) || 0;
-            const jogDist = parseInt(document.getElementById('mas-jog-dist-display')?.value) || 0;
-            const walkDist = parseInt(document.getElementById('mas-walk-dist-display')?.value) || 0;
+    const sprintDist = parseInt(document.getElementById('mas-sprint-dist-display')?.value) || 0;
+    const jogDist = parseInt(document.getElementById('mas-jog-dist-display')?.value) || 0;
+    const walkDist = parseInt(document.getElementById('mas-walk-dist-display')?.value) || 0;
 
-            const newLog = { generateUniqueID('mas') };
-            state.masLogs.unshift(newLog);
-            saveStorage('masLogs', state.masLogs);
-            renderContent();
-            showToast('Preskripsi MAS berhasil disimpan!', 'success');
-        }
+    const newLog = { 
+        id: generateUniqueID('mas'), 
+        atletId, 
+        tanggal, 
+        vo2max, 
+        walkSec, 
+        jogSec, 
+        sprintSec, 
+        walkDist, 
+        jogDist, 
+        sprintDist, 
+        rep 
+    };
+    state.masLogs.unshift(newLog);
+    saveStorage('masLogs', state.masLogs);
+    renderContent();
+    showToast('Preskripsi MAS berhasil disimpan!', 'success');
+}
 
         function updateAtletJoggingCalculations() {
             const atlet = state.activeAtlet;
