@@ -3646,7 +3646,7 @@ function renderMatchHeatmap() {
     showToast('Sesi jogging berhasil dicatat & disinkronkan ke atlet!', 'success');
 }
 
-        async function submitMASLog(e) {
+       async function submitMASLog(e) {
     e.preventDefault();
     const atletId = document.getElementById('mas-atlet-id')?.value;
     const tanggal = document.getElementById('mas-tanggal')?.value;
@@ -3679,7 +3679,6 @@ function renderMatchHeatmap() {
     renderContent();
     showToast('Preskripsi MAS berhasil disimpan!', 'success');
 }
-
         function updateAtletJoggingCalculations() {
             const atlet = state.activeAtlet;
             if (!atlet) return;
