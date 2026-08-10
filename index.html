@@ -2371,15 +2371,112 @@ function initMenu7AutoFill() {
     return 'S';
 }
 
-        function updateMatchScore(team, delta) {
-            if (team === 'team') {
-                state.matchLive.scoreTeam = Math.max(0, (state.matchLive.scoreTeam || 0) + delta);
-            } else {
-                state.matchLive.scoreOpponent = Math.max(0, (state.matchLive.scoreOpponent || 0) + delta);
-            }
-            saveStorage('matchLive', state.matchLive);
-            renderMatchLiveUI();
+        // =========================================================================
+// LOGIKA PEMBARUAN METRIK KIPER (GK ANALYTICS) & LINE RATING
+// =========================================================================
+function recordGKStat(gkId, statType, delta = 1) {
+    if (!gkId) {
+        showToast("Pilih Kiper aktif terlebih dahulu!", "error");
+        return;
+    }
+    
+    if (!state.matchLive.gkStats) state.matchLive.gkStats = {};
+    if (!state.matchLive.gkStats[gkId]) {
+        state.matchLive.gkStats[gkId] = { saves: 0, goalsConceded: 0, outletAcc: 0, outletFail: 0 };
+    }
+
+    const gk = state.matchLive.gkStats[gkId];
+    const gkObj = state.atlet.find(a => String(a.id) === String(gkId));
+    const gkNama = gkObj ? gkObj.nama.split(' ')[0] : 'GK';
+
+    if (statType === 'saves') {
+        gk.saves = Math.max(0, gk.saves + delta);
+    } else if (statType === 'goalsConceded') {
+        gk.goalsConceded = Math.max(0, gk.goalsConceded + delta);
+        if (delta > 0) {
+            updateMatchScore('opponent', 1, false);
         }
+    } else if (statType === 'outletAcc') {
+        gk.outletAcc = Math.max(0, gk.outletAcc + delta);
+    } else if (statType === 'outletFail') {
+        gk.outletFail = Math.max(0, gk.outletFail + delta);
+    }
+
+    if (delta > 0) {
+        const descMap = {
+            saves: `Saves Gemilang!`,
+            goalsConceded: `Kemasukan Gol`,
+            outletAcc: `Lemparan Outlet Akurat`,
+            outletFail: `Lemparan Outlet Gagal`
+        };
+        state.matchLive.logs.unshift({
+            id: 'gk_' + Date.now(),
+            time: new Date().toLocaleTimeString(),
+            playerId: gkId,
+            type: 'gk_action',
+            desc: `[GK ${gkNama}] - ${descMap[statType]}`
+        });
+    }
+
+    saveStorage('matchLive', state.matchLive);
+    renderMatchLiveUI();
+    showToast(`GK ${gkNama}: ${statType} diperbarui`, 'success');
+}
+
+function calculateGKSavePercentage(gkId) {
+    const gk = state.matchLive.gkStats?.[gkId];
+    if (!gk) return 0;
+    const totalShotsOnTarget = gk.saves + gk.goalsConceded;
+    if (totalShotsOnTarget === 0) return 0;
+    return Math.round((gk.saves / totalShotsOnTarget) * 100);
+}
+
+function calculateGKOutletAccuracy(gkId) {
+    const gk = state.matchLive.gkStats?.[gkId];
+    if (!gk) return 0;
+    const totalOutlets = gk.outletAcc + gk.outletFail;
+    if (totalOutlets === 0) return 0;
+    return Math.round((gk.outletAcc / totalOutlets) * 100);
+}
+
+function updateLineStats(isGoalFor) {
+    const activeLine = state.matchLive.activeLine || 'Line 1';
+    if (!state.matchLive.lineStats) state.matchLive.lineStats = {};
+    if (!state.matchLive.lineStats[activeLine]) {
+        state.matchLive.lineStats[activeLine] = { goalsFor: 0, goalsAgainst: 0, plusMinus: 0, shiftsCount: 0 };
+    }
+
+    const line = state.matchLive.lineStats[activeLine];
+    if (isGoalFor) {
+        line.goalsFor += 1;
+    } else {
+        line.goalsAgainst += 1;
+    }
+    line.plusMinus = line.goalsFor - line.goalsAgainst;
+    saveStorage('matchLive', state.matchLive);
+}
+
+// FUNGSI SKOR BARU (MENIMPA BARIS 2374 LAMA)
+function updateMatchScore(team, delta, triggerGKConceded = true) {
+    if (team === 'team') {
+        state.matchLive.scoreTeam = Math.max(0, (state.matchLive.scoreTeam || 0) + delta);
+        if (delta > 0) updateLineStats(true);
+    } else {
+        state.matchLive.scoreOpponent = Math.max(0, (state.matchLive.scoreOpponent || 0) + delta);
+        if (delta > 0) {
+            updateLineStats(false);
+            if (triggerGKConceded && state.matchLive.activeGKId) {
+                if (!state.matchLive.gkStats) state.matchLive.gkStats = {};
+                if (!state.matchLive.gkStats[state.matchLive.activeGKId]) {
+                    state.matchLive.gkStats[state.matchLive.activeGKId] = { saves: 0, goalsConceded: 0, outletAcc: 0, outletFail: 0 };
+                }
+                state.matchLive.gkStats[state.matchLive.activeGKId].goalsConceded += 1;
+            }
+        }
+    }
+    saveStorage('matchLive', state.matchLive);
+    renderMatchLiveUI();
+}
 
         function updateMatchFoul(team, delta) {
             if (team === 'team') {
@@ -2688,7 +2785,10 @@ function renderMatchHeatmap() {
     const mSec = matchTimer.elapsedSec || 0;
     const timerMin = Math.floor(mSec / 60).toString().padStart(2, '0');
     const timerSec = (mSec % 60).toString().padStart(2, '0');
-
+	const activeGKId = state.matchLive.activeGKId;
+    const activeGKObj = state.atlet.find(a => String(a.id) === String(activeGKId));
+    const gkStats = state.matchLive.gkStats?.[activeGKId] || { saves: 0, goalsConceded: 0, outletAcc: 0, outletFail: 0 };
+    const savePct = calculateGKSavePercentage(activeGKId);
     container.innerHTML = `
         <!-- KONTROL SHIFT LINEUP (LINE 1, 2, 3) -->
 <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl mb-4 text-center shadow-inner">
@@ -2782,6 +2882,114 @@ function renderMatchHeatmap() {
                     <button onclick="updateMatchFoul('opponent', 1)" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-emerald-400 font-bold">+</button>
                     <button onclick="updateMatchFoul('opponent', -1)" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-rose-400 font-bold">-</button>
                 </div>
+            </div>
+        </div>
+
+<!-- A. ANALISIS KIPER LIVE (GK) -->
+        <div class="bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-white p-6 rounded-[28px] border border-slate-800 shadow-xl mb-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4 flex-wrap gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black text-lg">
+                        <i class="fa-solid fa-hands-capturing"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-black text-amber-400 uppercase tracking-widest block">Analisis Kiper Live (GK)</span>
+                        <h4 class="text-base font-black text-white font-display">${activeGKObj ? escapeHTML(activeGKObj.nama) : 'Pilih Kiper'}</h4>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-xl text-xs font-mono font-black border border-slate-700">
+                        SoT: ${gkStats.saves + gkStats.goalsConceded}
+                    </span>
+                    <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-xl text-xs font-mono font-black">
+                        Save: ${savePct}%
+                    </span>
+                </div>
+            </div>
+
+            <!-- CONTROLLER AKSI KIPER -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col justify-between">
+                    <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider block mb-1">Saves (Penyelamatan)</span>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-2xl font-black text-white font-mono">${gkStats.saves}</span>
+                        <div class="flex gap-1">
+                            <button onclick="recordGKStat('${activeGKId}', 'saves', 1)" class="w-8 h-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-black text-sm active:scale-95">+</button>
+                            <button onclick="recordGKStat('${activeGKId}', 'saves', -1)" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 font-black text-sm text-slate-400 active:scale-95">-</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col justify-between">
+                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-wider block mb-1">Kebobolan (Goal Conceded)</span>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-2xl font-black text-rose-400 font-mono">${gkStats.goalsConceded}</span>
+                        <div class="flex gap-1">
+                            <button onclick="recordGKStat('${activeGKId}', 'goalsConceded', 1)" class="w-8 h-8 rounded-xl bg-rose-600 hover:bg-rose-500 font-black text-sm active:scale-95">+</button>
+                            <button onclick="recordGKStat('${activeGKId}', 'goalsConceded', -1)" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 font-black text-sm text-slate-400 active:scale-95">-</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col justify-between">
+                    <span class="text-[10px] font-black text-cyan-400 uppercase tracking-wider block mb-1">Outlet Pass Sukses</span>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-2xl font-black text-cyan-300 font-mono">${gkStats.outletAcc}</span>
+                        <div class="flex gap-1">
+                            <button onclick="recordGKStat('${activeGKId}', 'outletAcc', 1)" class="w-8 h-8 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-black text-sm active:scale-95">+</button>
+                            <button onclick="recordGKStat('${activeGKId}', 'outletAcc', -1)" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 font-black text-sm text-slate-400 active:scale-95">-</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col justify-between">
+                    <span class="text-[10px] font-black text-amber-400 uppercase tracking-wider block mb-1">Outlet Pass Gagal</span>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-2xl font-black text-amber-400 font-mono">${gkStats.outletFail}</span>
+                        <div class="flex gap-1">
+                            <button onclick="recordGKStat('${activeGKId}', 'outletFail', 1)" class="w-8 h-8 rounded-xl bg-amber-600 hover:bg-amber-500 font-black text-sm active:scale-95">+</button>
+                            <button onclick="recordGKStat('${activeGKId}', 'outletFail', -1)" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 font-black text-sm text-slate-400 active:scale-95">-</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- B. EFISIENSI SHIFT LINEUP (+/- RATING) -->
+        <div class="bg-white/95 backdrop-blur-xl p-6 rounded-[28px] border border-slate-200/80 shadow-md mb-6">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <h4 class="font-black text-slate-900 text-xs font-display flex items-center gap-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-arrows-split-up-and-left text-blue-900"></i> Efisiensi Shift Lineup (+/- Rating)
+                </h4>
+                <span class="text-[10px] font-extrabold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">Net Rating Live</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                ${['Line 1', 'Line 2', 'Line 3', 'Line 4'].map(lineName => {
+                    const lStat = state.matchLive.lineStats?.[lineName] || { goalsFor: 0, goalsAgainst: 0, plusMinus: 0 };
+                    const isCurrentActive = state.matchLive.activeLine === lineName;
+                    
+                    let pmBadge = 'bg-slate-100 text-slate-700 border-slate-300';
+                    if (lStat.plusMinus > 0) pmBadge = 'bg-emerald-500 text-white border-emerald-600';
+                    else if (lStat.plusMinus < 0) pmBadge = 'bg-rose-500 text-white border-rose-600';
+
+                    return `
+                        <div class="p-3.5 rounded-2xl border transition-all ${isCurrentActive ? 'bg-blue-50/80 border-blue-400 shadow-md' : 'bg-slate-50 border-slate-200/80'}">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] font-black uppercase ${isCurrentActive ? 'text-blue-900' : 'text-slate-500'}">${lineName}</span>
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md border ${pmBadge}">
+                                    ${lStat.plusMinus > 0 ? '+' : ''}${lStat.plusMinus}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs font-mono font-bold mt-2">
+                                <span class="text-emerald-600">GF: ${lStat.goalsFor}</span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-rose-600">GA: ${lStat.goalsAgainst}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
             </div>
         </div>
 
