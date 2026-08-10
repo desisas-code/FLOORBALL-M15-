@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+#<!DOCTYPE html>
 <html lang="id" class="h-full">
 <head>
     <meta charset="UTF-8">
@@ -6810,17 +6810,6 @@ if ('serviceWorker' in navigator) {
     measurementId: "G-1GVD9Q56P6"
   };
 
-  // Inisialisasi Firebase & Realtime Database
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Sambungkan fungsi simpan/baca ke window agar bisa dipanggil dari skrip aplikasi Anda
-window.db = db;
-window.dbRef = ref;
-window.dbSet = set;
-window.dbOnValue = onValue;
-window.dbOnValue(window.dbRef(window.db, 'atletData'), (snapshot) => {
-  const data = snapshot.val();
   // Inisialisasi Firebase & Realtime Database
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
