@@ -3653,7 +3653,7 @@ function renderMatchHeatmap() {
                 }
             } else {
                 state.atlet.unshift({ 
-                    id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), 
+                    id: nama.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().substring(0, 3) + Math.floor(10 + Math.random() * 90), 
                     nama, 
                     posisi, 
                     gender, 
