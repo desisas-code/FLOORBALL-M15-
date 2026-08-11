@@ -122,17 +122,18 @@
         }
 
         @media print {
-            aside, header, #toast-container, button, .no-print {
-                display: none !important;
-            }
-            body, main, #main-container {
-                background: white !important;
-                color: black !important;
-                overflow: visible !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-    </style>
+    aside, header, #toast-container, button, .no-print {
+        display: none !important;
+    }
+    body, main, #main-container {
+        background: white !important;
+        color: black !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+} 
+</style>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans antialiased text-slate-700">
 
@@ -141,81 +142,47 @@
       const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrNANp4HQ4MtpUFaAaJcjC9Y3trpB0_q0axM01k25T4sOWvnOhiV8i3rPMNPWdHedp/exec";
 
       async function autoFetchFromSpreadsheet() {
-  try {
-    const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL || SCRIPT_URL}?_t=${new Date().getTime()}`);
-    const data = await res.json();
-    
-    if (data && data.status === "success") {
-      // 1. Update Data Atlet
-      if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
-        state.atlet = data.atlet;
-        saveStorage("atlet", data.atlet);
-      }
+        try {
+          const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL || SCRIPT_URL}?_t=${new Date().getTime()}`);
+          const data = await res.json();
+          
+          if (data && data.status === "success") {
+            // 1. Update Data Atlet
+            if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
+              state.atlet = data.atlet;
+              saveStorage("atlet", data.atlet);
+            }
 
-      // 2. Sinkronisasi Log Jogging (HANYA MERGE JIKA SERVER MEMILIKI DATA)
-      const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
-      const serverJogging = data.joggingLogs || data.programLatihan || [];
-      
-      if (Array.isArray(serverJogging) && serverJogging.length > 0) {
-        const mergedMap = new Map();
-        // Masukkan data lokal dulu
-        localJogging.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
-        // Gabungkan dengan data server
-        serverJogging.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
+            // 2. Sinkronisasi Log Jogging
+            const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
+            const serverJogging = data.joggingLogs || data.programLatihan || [];
+            
+            if (Array.isArray(serverJogging) && serverJogging.length > 0) {
+              const mergedMap = new Map();
+              localJogging.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
+              serverJogging.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
 
-        state.joggingLogs = Array.from(mergedMap.values());
-        saveStorage("joggingLogs", state.joggingLogs);
-      } else {
-        // Jika server kosong, pertahankan data lokal
-        state.joggingLogs = localJogging;
-      }
+              state.joggingLogs = Array.from(mergedMap.values());
+              saveStorage("joggingLogs", state.joggingLogs);
+            } else {
+              state.joggingLogs = localJogging;
+            }
 
-      // 3. Update Laporan Validasi
-      if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
-        state.laporanValidasi = data.laporanValidasi;
-        saveStorage("laporanValidasi", data.laporanValidasi);
-      }
-    }
-  } catch (e) {
-    console.log("Sync otomatis pending connection...");
-  }
-}
+            // 3. Update Laporan Validasi
+            if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
+              state.laporanValidasi = data.laporanValidasi;
+              saveStorage("laporanValidasi", data.laporanValidasi);
+            }
 
-      // 4. Update Laporan Validasi
-      if (data.laporanValidasi && Array.isArray(data.laporanValidasi)) {
-        state.laporanValidasi = data.laporanValidasi;
-        saveStorage("laporanValidasi", data.laporanValidasi);
+            // 4. Render Ulang Tampilan Otomatis
+            if (typeof renderContent === 'function') {
+              renderContent();
+            }
+          }
+        } catch (e) {
+          console.log("Sync otomatis pending connection...");
+        }
       }
-
-      // 5. Render Ulang Tampilan Otomatis (Berlaku untuk Pelatih & Atlet)
-      if (typeof renderContent === 'function') {
-        renderContent();
-      }
-    }
-  } catch (e) {
-    console.log("Background sync pending connection...");
-  }
-}
-
-      // 4. Update Laporan Validasi
-      if (data.laporanValidasi && Array.isArray(data.laporanValidasi)) {
-        state.laporanValidasi = data.laporanValidasi;
-        saveStorage("laporanValidasi", data.laporanValidasi);
-      }
-
-      // 5. Render Ulang Tampilan Otomatis (Berlaku untuk Pelatih & Atlet)
-      if (typeof renderContent === 'function') {
-        renderContent();
-      }
-    }
-  } catch (e) {
-    console.log("Background sync pending connection...");
-  }
-}
-  } catch (e) {
-    console.log("Background sync pending connection...");
-  }
-}
 
 window.addEventListener("DOMContentLoaded", () => {
   autoFetchFromSpreadsheet(); // Jalankan sekali saat pertama dimuat
@@ -5050,62 +5017,6 @@ function generateJoggingSkuad(event) {
                     ${state.tesTeknik.length} Log Tersimpan
                 </span>
             </div>
-
-            <div class="overflow-x-auto relative">
-                <table class="w-full text-left border-collapse min-w-[900px]">
-                    <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                        <tr>
-                            <th class="p-4">Tanggal</th>
-                            <th class="p-4">Nama Atlet</th>
-                            <th class="p-4 text-center">Dual-Gate Sesi 1</th>
-                            <th class="p-4 text-center">Dual-Gate Sesi 2</th>
-                            <th class="p-4 text-center">Slalom 5m</th>
-                            <th class="p-4 text-center">Slalom 7m</th>
-                            <th class="p-4 text-center">Slalom 9m</th>
-                            <th class="p-4 text-center w-20">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                        ${state.tesTeknik.length > 0 ? state.tesTeknik.map(t => {
-                            const pObj = state.atlet.find(a => String(a.id) === String(t.atletId));
-                            const p1Obj = state.atlet.find(a => String(a.id) === String(t.dualGate?.sesi1?.partnerId));
-                            const p2Obj = state.atlet.find(a => String(a.id) === String(t.dualGate?.sesi2?.partnerId));
-
-                            const s1Txt = t.dualGate?.sesi1?.rep ? `${t.dualGate.sesi1.rep} Rep (${t.dualGate.sesi1.waktu}s) ${p1Obj ? 'vs ' + escapeHTML(p1Obj.nama.split(' ')[0]) : ''}` : '-';
-                            const s2Txt = t.dualGate?.sesi2?.rep ? `${t.dualGate.sesi2.rep} Rep (${t.dualGate.sesi2.waktu}s) ${p2Obj ? 'vs ' + escapeHTML(p2Obj.nama.split(' ')[0]) : ''}` : '-';
-
-                            const s5m = t.slalomShoot?.s5m?.waktu ? `${t.slalomShoot.s5m.waktu}s` : '-';
-                            const s7m = t.slalomShoot?.s7m?.waktu ? `${t.slalomShoot.s7m.waktu}s` : '-';
-                            const s9m = t.slalomShoot?.s9m?.waktu ? `${t.slalomShoot.s9m.waktu}s` : '-';
-
-                            return `
-                                <tr class="hover:bg-emerald-50/40 transition-colors">
-                                    <td class="p-4 font-mono font-bold text-slate-500">${t.tanggal || '-'}</td>
-                                    <td class="p-4">
-                                        <div class="font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : 'Atlet'}</div>
-                                        <span class="text-[9px] bg-emerald-50 text-emerald-900 border border-emerald-200 px-2 py-0.5 rounded-md mt-0.5 inline-block font-bold">${pObj ? escapeHTML(pObj.posisi) : '-'}</span>
-                                    </td>
-                                    <td class="p-4 text-center font-mono"><span class="bg-slate-100 text-slate-800 px-2.5 py-1 rounded-xl border font-bold text-[11px]">${s1Txt}</span></td>
-                                    <td class="p-4 text-center font-mono"><span class="bg-slate-100 text-slate-800 px-2.5 py-1 rounded-xl border font-bold text-[11px]">${s2Txt}</span></td>
-                                    <td class="p-4 text-center font-mono font-black text-blue-900">${s5m}</td>
-                                    <td class="p-4 text-center font-mono font-black text-emerald-800">${s7m}</td>
-                                    <td class="p-4 text-center font-mono font-black text-teal-800">${s9m}</td>
-                                    <td class="p-4 text-center">
-                                        <button onclick="deleteTesTeknikLog('${t.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus Log">
-                                            <i class="fa-solid fa-trash-can text-xs"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('') : `
-                            <tr>
-                                <td colspan="8" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada riwayat tes teknik yang dicatat.</td>
-                            </tr>
-                        `}
-                    </tbody>
-                </table>
-            </div>
-        </div>
             <div class="overflow-x-auto relative">
                 <table class="w-full text-left border-collapse min-w-[1200px]">
                     <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
@@ -6833,26 +6744,34 @@ function generateJoggingSkuad(event) {
     setInterval(autoFetchFromSpreadsheet, 30000);
   });
 
-  window.addEventListener("focus", () => {
-    autoFetchFromSpreadsheet();
-  });
-    modalEl.innerHTML = `
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm text-white relative shadow-2xl">
-        <button onclick="document.getElementById('atlet-radar-modal').remove()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">&times;</button>
-        <h3 class="text-lg font-black text-amber-400 text-center mb-1">${escapeHTML(atlet.nama)}</h3>
-        <p class="text-xs text-slate-400 text-center mb-4">${escapeHTML(atlet.posisi || 'Pemain')} • ${escapeHTML(atlet.gender)}</p>
-        
-        <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
-          <canvas id="atletRadarChart"></canvas>
-        </div>
-      </div>
-    `;
+ function openAtletRadarModal(atletId) {
+  const atlet = state.atlet.find(a => String(a.id) === String(atletId));
+  if (!atlet) return;
 
-    setTimeout(() => {
-      renderAtletRadarChart(atlet);
-    }, 50);
+  let modalEl = document.getElementById('atlet-radar-modal');
+  if (!modalEl) {
+    modalEl = document.createElement('div');
+    modalEl.id = 'atlet-radar-modal';
+    modalEl.className = 'fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
+    document.body.appendChild(modalEl);
   }
 
+  modalEl.innerHTML = `
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm text-white relative shadow-2xl">
+      <button onclick="document.getElementById('atlet-radar-modal').remove()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">&times;</button>
+      <h3 class="text-lg font-black text-amber-400 text-center mb-1">${escapeHTML(atlet.nama)}</h3>
+      <p class="text-xs text-slate-400 text-center mb-4">${escapeHTML(atlet.posisi || 'Pemain')} • ${escapeHTML(atlet.gender)}</p>
+      
+      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+        <canvas id="atletRadarChart"></canvas>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    renderAtletRadarChart(atlet);
+  }, 50);
+}
   let atletRadarChartInstance = null;
   function renderAtletRadarChart(atlet) {
     const ctx = document.getElementById('atletRadarChart');
