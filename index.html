@@ -4106,13 +4106,24 @@ function generateJoggingSkuad(event) {
     };
   });
 
-  // KUNCI PERBAIKAN: Ambil log lama dari LocalStorage, lalu gabungkan dengan log baru
+  /// KUNCI PERBAIKAN: Gunakan Map agar log tidak menumpuk ganda untuk atlet dan tanggal yang sama
   const currentLogs = loadStorage("joggingLogs") || state.joggingLogs || [];
-  
-  // Gabungkan (Simpan log baru di paling atas)
-  state.joggingLogs = [...newLogs, ...currentLogs];
-  
-  // Simpan secara permanen ke LocalStorage
+  const logMap = new Map();
+
+  // 1. Masukkan log lama dulu
+  currentLogs.forEach(item => {
+    if (item && item.id) {
+      logMap.set(`${item.atletId}_${item.tanggal}`, item);
+    }
+  });
+
+  // 2. Timpa/update dengan log baru
+  newLogs.forEach(item => {
+    logMap.set(`${item.atletId}_${item.tanggal}`, item);
+  });
+
+  // 3. Simpan hasil bersih tanpa duplikat
+  state.joggingLogs = Array.from(logMap.values());
   saveStorage("joggingLogs", state.joggingLogs);
 
   // Sync ke Google Sheets jika fungsi tersedia
