@@ -3981,7 +3981,7 @@ function generateJoggingSkuad(event) {
 
   const selectedId = document.getElementById('jogging-atlet-id')?.value;
   const zona = document.getElementById('jogging-zona')?.value || "0.75";
-  const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 30;
+  const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 25;
   const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
 
   let targetAthletes = [];
@@ -3997,6 +3997,7 @@ function generateJoggingSkuad(event) {
     return;
   }
 
+  // Buat log untuk atlet yang dipilih
   const newLogs = targetAthletes.map(atlet => {
     const vo2 = getAtletVO2Max(atlet.id) || 45;
     const masKmh = vo2 / 3.5;
@@ -4021,21 +4022,24 @@ function generateJoggingSkuad(event) {
     };
   });
 
-  // Ambil log lama dari storage dulu agar tidak menimpa data yang sudah ada
-  const existingLogs = loadStorage("joggingLogs") || state.joggingLogs || [];
-  state.joggingLogs = [...newLogs, ...existingLogs];
+  // KUNCI PERBAIKAN: Ambil log lama dari LocalStorage, lalu gabungkan dengan log baru
+  const currentLogs = loadStorage("joggingLogs") || state.joggingLogs || [];
   
-  // SIMPAN PERMANEN KE LOCALSTORAGE
+  // Gabungkan (Simpan log baru di paling atas)
+  state.joggingLogs = [...newLogs, ...currentLogs];
+  
+  // Simpan secara permanen ke LocalStorage
   saveStorage("joggingLogs", state.joggingLogs);
 
+  // Sync ke Google Sheets jika fungsi tersedia
   if (typeof syncDataToSpreadsheet === 'function') {
     syncDataToSpreadsheet();
   }
   
+  // Render ulang UI
   renderContent();
-  showToast(`Berhasil menyimpan sesi jogging untuk ${newLogs.length} atlet!`, "success");
+  showToast(`Berhasil menambahkan ${newLogs.length} log jogging!`, "success");
 }
-
         function renderContent() {
 			if (!state.joggingLogs || state.joggingLogs.length === 0) {
         state.joggingLogs = loadStorage("joggingLogs") || [];
