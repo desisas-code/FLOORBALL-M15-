@@ -3968,13 +3968,11 @@ function generateJoggingSkuad(event) {
     return;
   }
 
-  // 1. Ambil ID Atlet dari Dropdown
   const selectedId = document.getElementById('jogging-atlet-id')?.value;
   const zona = document.getElementById('jogging-zona')?.value || "0.75";
   const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 30;
   const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
 
-  // 2. Tentukan Target Atlet (Semua 41 Atlet atau 1 Atlet Terpilih)
   let targetAthletes = [];
   if (selectedId === 'semua' || !selectedId) {
     targetAthletes = state.atlet;
@@ -3988,7 +3986,6 @@ function generateJoggingSkuad(event) {
     return;
   }
 
-  // 3. Generate Log Jogging
   const newLogs = targetAthletes.map(atlet => {
     const vo2 = getAtletVO2Max(atlet.id) || 45;
     const masKmh = vo2 / 3.5;
@@ -4013,19 +4010,28 @@ function generateJoggingSkuad(event) {
     };
   });
 
-  // 4. Simpan ke State & LocalStorage
-  state.joggingLogs = [...newLogs, ...(state.joggingLogs || [])];
+  // Ambil log lama dari storage dulu agar tidak menimpa data yang sudah ada
+  const existingLogs = loadStorage("joggingLogs") || state.joggingLogs || [];
+  state.joggingLogs = [...newLogs, ...existingLogs];
+  
+  // SIMPAN PERMANEN KE LOCALSTORAGE
   saveStorage("joggingLogs", state.joggingLogs);
 
-  // 5. Sync & Render Ulang
   if (typeof syncDataToSpreadsheet === 'function') {
     syncDataToSpreadsheet();
   }
+  
   renderContent();
   showToast(`Berhasil menyimpan sesi jogging untuk ${newLogs.length} atlet!`, "success");
 }
 
         function renderContent() {
+			if (!state.joggingLogs || state.joggingLogs.length === 0) {
+        state.joggingLogs = loadStorage("joggingLogs") || [];
+    }
+    if (!state.masLogs || state.masLogs.length === 0) {
+        state.masLogs = loadStorage("masLogs") || [];
+    }
             const container = document.getElementById('main-container');
             const pageTitle = document.getElementById('page-title');
             if (!container || !pageTitle) return;
