@@ -6664,10 +6664,15 @@ if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
                 <td class="p-4 text-center">
                     <button onclick="deleteRiwayatValidasi('${l.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus Permanen">
                         <i class="fa-solid fa-trash-can text-xs"></i>
-                   </td>
+                    </button>
+                </td>
             </tr>
         `;
-    }).join('')}
+    }).join('') : `
+        <tr>
+            <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada riwayat laporan tersimpan.</td>
+        </tr>
+    `}
     </tbody>
 </table>
 </div>
