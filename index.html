@@ -6866,16 +6866,13 @@ if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
     setTimeout(updateRealtimeSRPE, 50);
             } else {
                 if(pageTitle) pageTitle.innerText = "Modul";
-                if(container) container.innerHTML = `<div class="bg-white p-12 rounded-[28px] border text-center"><h3 class="text-base font-black text-slate-800">Modul Siap Digunakan</h3></div>`;
-            }
+                if (container) container.innerHTML = `<div class="bg-white p-12 rounded-[28px] border text-center">...</div>`;
+}
         setTimeout(() => {
                 renderChartsForMenu(state.currentMenu);
             }, 50);
 
         }
-    </script>
-	<!-- SINKRONISASI OTOMATIS REALTIME & FUNGSI PENDUKUNG (FIXED) -->
-<script>
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", () => {
     // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
