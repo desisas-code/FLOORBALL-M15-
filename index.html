@@ -6985,39 +6985,30 @@ if (savedAtlet) {
         });
       });
     }
-  </script> <!-- TULIS TAG PENUTUP SCRIPT DI SINI -->
+    </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD6VNv0Sh60G0ys0IpR1_xPISFCQKo8LwM",
-      authDomain: "floorball-6559c.firebaseapp.com",
-      databaseURL: "https://floorball-6559c-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "floorball-6559c",
-      storageBucket: "floorball-6559c.firebasestorage.app",
-      messagingSenderId: "1098308865312",
-      appId: "1:1098308865312:web:fa497aa067d60bc0d05b41",
-      measurementId: "G-1GVD9Q56P6"
-    };
-
+    const firebaseConfig = { ... };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // BIND KE WINDOW AGAR BISA DIBACA SKRIP UTAMA
     window.db = db;
     window.dbRef = ref;
     window.dbSet = set;
     window.dbOnValue = onValue;
 
-    // Sinkronisasi data dari Firebase saat aplikasi dibuka
-    window.dbOnValue(window.dbRef(window.db, 'atletData'), (snapshot) => {
+    // SINKRONISASI DATA DARI FIREBASE
+    onValue(ref(db, 'atletData'), (snapshot) => {
       const data = snapshot.val();
-      if (data && Array.isArray(data)) {
-        state.atlet = data;
-        saveStorage("atlet", data);
-        renderSidebar();
-        renderContent();
+      if (data && Array.isArray(data) && window.state) {
+        window.state.atlet = data;
+        if (typeof saveStorage === 'function') saveStorage("atlet", data);
+        if (typeof renderSidebar === 'function') renderSidebar();
+        if (typeof renderContent === 'function') renderContent();
       }
     });
   </script>
