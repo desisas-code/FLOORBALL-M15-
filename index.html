@@ -200,7 +200,7 @@
             if (typeof renderContent === 'function') {
               renderContent();
             }
-          }
+        
         } catch (e) {
           console.log("Sync otomatis pending connection...");
         }
@@ -6668,7 +6668,6 @@ if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
                 </td>
             </tr>
         `;
-            </tbody>
         </table>
     </div>
 </div>
@@ -6873,7 +6872,7 @@ if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", () => {
     // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
-    const savedAtlet = loadStorage("activeAtlet");
+    const savedAtlet = loadStorage
     if (savedAtlet) {
       state.activeAtlet = savedAtlet;
     }
