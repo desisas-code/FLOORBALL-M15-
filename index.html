@@ -4106,24 +4106,24 @@ function generateJoggingSkuad(event) {
     };
   });
 
-  /// KUNCI PERBAIKAN: Gunakan Map agar log tidak menumpuk ganda untuk atlet dan tanggal yang sama
-  const currentLogs = loadStorage("joggingLogs") || state.joggingLogs || [];
-  const logMap = new Map();
+  // 1. Ambil tanggal yang sedang dipilih di form (misal: "2026-08-11")
+  const selectedDate = tanggal;
 
-  // 1. Masukkan log lama dulu
-  currentLogs.forEach(item => {
-    if (item && item.id) {
-      logMap.set(`${item.atletId}_${item.tanggal}`, item);
+  // 2. Buat Map baru KHUSUS untuk tanggal yang sedang dipilih
+  const dailyLogMap = new Map();
+
+  // 3. Masukkan 41 data baru untuk tanggal hari ini
+  newLogs.forEach(item => {
+    if (item && item.atletId) {
+      // Kunci hanya berdasarkan atletId agar 1 atlet tepat memiliki 1 log di hari tersebut
+      dailyLogMap.set(String(item.atletId), item);
     }
   });
 
-  // 2. Timpa/update dengan log baru
-  newLogs.forEach(item => {
-    logMap.set(`${item.atletId}_${item.tanggal}`, item);
-  });
-
-  // 3. Simpan hasil bersih tanpa duplikat
-  state.joggingLogs = Array.from(logMap.values());
+  // 4. Set state HANYA berisi 41 log hari ini (riwayat hari lain tidak ditumpuk di tabel ini)
+  state.joggingLogs = Array.from(dailyLogMap.values());
+  
+  // 5. Simpan ke LocalStorage
   saveStorage("joggingLogs", state.joggingLogs);
 
   // Sync ke Google Sheets jika fungsi tersedia
