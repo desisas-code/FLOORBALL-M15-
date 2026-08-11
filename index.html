@@ -6606,34 +6606,44 @@ const myReports = (state.laporanValidasi || []).filter(l => {
                     <th class="p-3.5 text-center">Pace Target</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 text-xs font-semibold bg-white text-slate-800">
-                ${myPreskripsi.length > 0 ? myPreskripsi.map(p => {
-                    const zonaVal = p.zona ? Math.round(parseFloat(p.zona) * 100) : 75;
-                    const tanggalVal = p.tanggal || '-';
-                    const jarakVal = p.jarak ? p.jarak + ' km' : '-';
-                    const waktuVal = p.waktu ? p.waktu + ' mnt' : '-';
-                    const paceVal = p.pace || '-';
+            <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+    ${allReports.filter(l => l && l.status && l.status !== 'Menunggu').length > 0 ? 
+    allReports.filter(l => l && l.status && l.status !== 'Menunggu').map(l => {
+        const pObj = state.atlet.find(a => String(a.id) === String(l.atletId));
+        const isApproved = l.status === 'Disetujui';
 
-                    return `
-                        <tr class="hover:bg-blue-50/50 transition-colors">
-                            <td class="p-3.5 font-mono font-bold text-slate-700">${escapeHTML(tanggalVal)}</td>
-                            <td class="p-3.5 text-center font-bold">
-                                <span class="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1 rounded-lg text-[10px] font-black inline-block">
-                                    ${zonaVal}% MAS
-                                </span>
-                            </td>
-                            <td class="p-3.5 text-center text-blue-900 font-mono font-black">${escapeHTML(jarakVal)}</td>
-                            <td class="p-3.5 text-center font-mono font-bold text-slate-700">${escapeHTML(waktuVal)}</td>
-                            <td class="p-3.5 text-center font-mono font-black text-emerald-700">${escapeHTML(paceVal)}</td>
-                        </tr>
-                    `;
-                }).join('') : `
-                    <tr>
-                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">
-                            Belum ada preskripsi latihan dari Pelatih.
-                        </td>
-                    </tr>
-                `}
+        let tanggalTampil = l.tanggal || '-';
+        if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
+            try {
+                const d = new Date(tanggalTampil);
+                tanggalTampil = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            } catch(e) {}
+        }
+
+        const jarakVal = l.jarak ? l.jarak + ' km' : '-';
+        const waktuVal = l.waktu ? l.waktu + ' mnt' : '-';
+        const speedVal = l.speedKmh ? l.speedKmh + ' km/h' : '-';
+
+        return `
+            <tr class="hover:bg-blue-50/40 transition-colors">
+                <td class="p-4 font-mono font-bold text-slate-500">${tanggalTampil}</td>
+                <td class="p-4 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : (l.namaAtlet ? escapeHTML(l.namaAtlet) : 'Atlet Skuad')}</td>
+                <td class="p-4 text-center font-mono font-black text-blue-900">${jarakVal}</td>
+                <td class="p-4 text-center font-mono font-bold text-slate-600">${waktuVal}</td>
+                <td class="p-4 text-center font-mono font-bold text-emerald-700">${speedVal}</td>
+                <td class="p-4 text-center">
+                    <span class="px-3 py-1.5 rounded-xl text-[10px] font-black border inline-flex items-center gap-1.5 ${isApproved ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300'}">
+                        <i class="fa-solid ${isApproved ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-rose-600'}"></i>
+                        ${l.status}
+                    </span>
+                </td>
+                <td class="p-4 text-center">
+                    <button onclick="deleteRiwayatValidasi('${l.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus Permanen">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
             </tbody>
         </table>
     </div>
