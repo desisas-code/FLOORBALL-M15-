@@ -6628,25 +6628,28 @@ const myReports = (state.laporanValidasi || []).filter(l => {
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-    ${allReports.filter(l => l && l.status && l.status !== 'Menunggu').length > 0 ? 
-    allReports.filter(l => l && l.status && l.status !== 'Menunggu').map(l => {
+    // GANTI allReports MENJADI myReports untuk Mode Atlet:
+${myReports.filter(l => l && l.status && l.status !== 'Menunggu').length > 0 ? 
+    myReports.filter(l => l && l.status && l.status !== 'Menunggu').map(l => {
         const pObj = state.atlet.find(a => String(a.id) === String(l.atletId));
         const isApproved = l.status === 'Disetujui';
 
         let tanggalTampil = l.tanggal || '-';
-        if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
-            try {
-                const d = new Date(tanggalTampil);
-                tanggalTampil = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            } catch(e) {}
-        }
+if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
+    try {
+        const d = new Date(tanggalTampil);
+        tanggalTampil = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (e) {
+        console.error(e);
+    }
+}
 
-        const jarakVal = l.jarak ? l.jarak + ' km' : '-';
-        const waktuVal = l.waktu ? l.waktu + ' mnt' : '-';
-        const speedVal = l.speedKmh ? l.speedKmh + ' km/h' : '-';
+		const jarakVal = l.jarak ? l.jarak + ' km' : '-';
+		const waktuVal = l.waktu ? l.waktu + ' mnt' : '-';
+		const speedVal = l.speedKmh ? l.speedKmh + ' km/h' : '-';
 
-        return `
-            <tr class="hover:bg-blue-50/40 transition-colors">
+			return `
+    			<tr class="hover:bg-blue-50/40 transition-colors">
                 <td class="p-4 font-mono font-bold text-slate-500">${tanggalTampil}</td>
                 <td class="p-4 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : (l.namaAtlet ? escapeHTML(l.namaAtlet) : 'Atlet Skuad')}</td>
                 <td class="p-4 text-center font-mono font-black text-blue-900">${jarakVal}</td>
