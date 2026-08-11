@@ -3955,6 +3955,50 @@ saveStorage('laporanValidasi', state.laporanValidasi);
             renderContent();
         }
 
+function generateJoggingSkuad(event) {
+  if (event) event.preventDefault();
+
+  if (!state.atlet || state.atlet.length === 0) {
+    showToast("Data atlet belum dimuat!", "error");
+    return;
+  }
+
+  const zona = document.getElementById('input-zona')?.value || "75% MAS";
+  const waktu = parseFloat(document.getElementById('input-waktu')?.value) || 25;
+  const tanggal = document.getElementById('input-tanggal')?.value || new Date().toISOString().split('T')[0];
+
+  const newLogs = state.atlet.map(atlet => {
+    const vo2 = parseFloat(atlet.vo2max || 45);
+    const masKmh = vo2 / 3.5;
+    const factor = zona.includes("85") ? 0.85 : zona.includes("100") ? 1.0 : 0.75;
+    const speedKmh = masKmh * factor;
+    const jarak = parseFloat(((speedKmh * waktu) / 60).toFixed(2));
+    
+    const paceMin = Math.floor(60 / speedKmh);
+    const paceSec = Math.round(((60 / speedKmh) - paceMin) * 60);
+    const paceStr = `${paceMin}'${paceSec < 10 ? '0' : ''}${paceSec}" /km`;
+
+    return {
+      id: 'j_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      atletId: String(atlet.id),
+      namaAtlet: atlet.nama,
+      tanggal: tanggal,
+      vo2max: String(vo2),
+      zona: zona,
+      jarak: jarak,
+      waktu: waktu,
+      pace: paceStr
+    };
+  });
+
+  state.joggingLogs = [...newLogs, ...(state.joggingLogs || [])];
+  saveStorage("joggingLogs", state.joggingLogs);
+
+  syncToSpreadsheetBatch();
+  renderContent();
+  showToast(`Berhasil membuat target jogging untuk ${newLogs.length} atlet!`, "success");
+}
+
         function renderContent() {
             const container = document.getElementById('main-container');
             const pageTitle = document.getElementById('page-title');
@@ -5455,12 +5499,12 @@ saveStorage('laporanValidasi', state.laporanValidasi);
                 </div>
 
                 <!-- SUBMIT BUTTON -->
-                <div class="flex justify-end pt-2">
-                    <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-800 hover:to-indigo-900 text-white font-black py-4 px-8 rounded-2xl text-xs shadow-xl shadow-blue-900/30 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus text-cyan-400"></i> Simpan Sesi Jogging
-                    </button>
-                </div>
-            </form>
+<div class="flex justify-end pt-2">
+  <button type="submit" onclick="generateJoggingSkuad(event)" class="w-full sm:w-auto bg-gradient-to-r from-blue-900 via-indigo-900">
+    <i class="fa-solid fa-plus text-cyan-400"></i> Simpan Sesi Jogging
+  </button>
+</div>
+</form>
         </div>
 
         <!-- 3. FORM PRESKRIPSI & RECORD INTERVAL MAS INDIVIDUAL -->
