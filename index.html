@@ -1000,7 +1000,7 @@ if (menuId === 'menu-4') {
 
     const loadingToast = showToast("Menarik data atlet dari Spreadsheet...", "loading");
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     try {
         let response = await fetch(GOOGLE_SHEET_WEB_APP_URL, {
