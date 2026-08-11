@@ -6872,10 +6872,9 @@ if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", () => {
     // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
-    const savedAtlet = loadStorage
-    if (savedAtlet) {
-      state.activeAtlet = savedAtlet;
-    }
+const savedAtlet = loadStorage('activeAtlet');
+if (savedAtlet) {
+    state.activeAtlet = savedAtlet;    }
 
     const savedUser = loadStorage("currentUser");
     if (savedUser) {
