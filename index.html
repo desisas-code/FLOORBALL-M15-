@@ -6616,117 +6616,117 @@ const myReports = (state.laporanValidasi || []).filter(l => {
             </div>
 
             <!-- 2. DUA TABEL DI BAWAH (SIDE-BY-SIDE / DUA KOLOM) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">  
-                <!-- TABEL KIRI: RIWAYAT PRESKRIPSI LATIHAN DARI MENU 7 -->
-<div class="bg-white rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden">
-    <!-- HEADER KARTU -->
-    <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-        <div>
-            <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                <i class="fa-solid fa-clipboard-list text-blue-900"></i> Target Latihan dari Pelatih (Menu 7)
-            </h4>
-            <p class="text-[11px] font-semibold text-slate-400 mt-0.5">Daftar preskripsi jogging/MAS yang ditugaskan Pelatih Kepala.</p>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">   
+    <!-- TABEL KIRI: RIWAYAT PRESKRIPSI LATIHAN DARI MENU 7 -->
+    <div class="bg-white rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
+        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <div>
+                <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-list text-blue-900"></i> Target Latihan dari Pelatih (Menu 7)
+                </h4>
+                <p class="text-[11px] font-semibold text-slate-400 mt-0.5">Daftar preskripsi jogging/MAS yang ditugaskan Pelatih Kepala.</p>
+            </div>
+            <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
+                ${myPreskripsi.length} Target
+            </span>
         </div>
-        <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
-            ${myPreskripsi.length} Target
-        </span>
-    </div>
-
-    <!-- AREA TABEL REKAP -->
-    <div class="overflow-x-auto w-full min-h-[150px]">
-        <table class="w-full text-left border-collapse min-w-[480px]">
-            <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                <tr>
-                    <th class="p-3.5">Tanggal</th>
-                    <th class="p-3.5 text-center">Zona</th>
-                    <th class="p-3.5 text-center">Target Jarak</th>
-                    <th class="p-3.5 text-center">Durasi</th>
-                    <th class="p-3.5 text-center">Pace Target</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-${myPreskripsi.length > 0 ? myPreskripsi.map(j => {
-    return `
-        <tr class="hover:bg-blue-50/40 transition-colors">
-            <td class="p-3.5 font-mono font-bold text-slate-600">${j.tanggal || '-'}</td>
-            <td class="p-3.5 text-center font-bold text-purple-700"><span class="bg-purple-50 px-2 py-0.5 rounded border border-purple-200">${Math.round(parseFloat(j.zona || '0.75') * 100)}% MAS</span></td>
-            <td class="p-3.5 text-center font-mono font-black text-blue-900">${j.jarak || 0} km</td>
-            <td class="p-3.5 text-center font-mono font-bold text-slate-600">${j.waktu || 0} mnt</td>
-            <td class="p-3.5 text-center font-mono font-black text-emerald-700">${escapeHTML(j.pace || '-')}</td>
-        </tr>
-    `;
-}).join('') : `
-    <tr>
-        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada preskripsi latihan dari pelatih.</td>
-    </tr>
-`}
-</tbody>
-</table>
-</div>
-</div>
-
-<!-- TABEL KANAN: HISTORI STATUS LAPORAN VALIDASI PELATIH -->
-<div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
-    <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-        <div>
-            <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                <i class="fa-solid fa-shield-check text-blue-900"></i> Histori Status Laporan Validasi Pelatih
-            </h4>
-            <p class="text-[11px] font-semibold text-slate-400 mt-0.5">Status verifikasi bukti lari Anda oleh Pelatih Kepala.</p>
-        </div>
-        <span class="bg-emerald-50 text-emerald-900 border border-emerald-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
-            ${myReports.length} Laporan Dikirim
-        </span>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[450px]">
-            <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                <tr>
-                    <th class="p-3.5">Tanggal</th>
-                    <th class="p-3.5 text-center">Jarak</th>
-                    <th class="p-3.5 text-center">Durasi</th>
-                    <th class="p-3.5 text-center">Speed</th>
-                    <th class="p-3.5 text-center">Status Pelatih</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                ${myReports.length > 0 ? myReports.map(r => {
-                    let badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
-                    let icon = 'fa-clock text-amber-600';
-                    let statusText = r.status || 'Menunggu';
-
-                    if (statusText === 'Disetujui') {
-                        badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-                        icon = 'fa-circle-check text-emerald-600';
-                    } else if (statusText === 'Ditolak') {
-                        badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
-                        icon = 'fa-circle-xmark text-rose-600';
-                    }
-
-                    return `
-                        <tr class="hover:bg-blue-50/40 transition-colors">
-                            <td class="p-3.5 font-mono font-bold text-slate-600">${r.tanggal || '-'}</td>
-                            <td class="p-3.5 text-center font-mono font-black text-blue-900">${r.jarak || 0} km</td>
-                            <td class="p-3.5 text-center font-mono font-bold text-slate-600">${r.waktu || 0} mnt</td>
-                            <td class="p-3.5 text-center font-mono font-black text-emerald-700">${r.speedKmh || 0} km/h</td>
-                            <td class="p-3.5 text-center">
-                                <span class="px-3 py-1 rounded-xl text-[10px] font-black border inline-flex items-center gap-1.5 ${badgeColor}">
-                                    <i class="fa-solid ${icon}"></i> ${statusText}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                }).join('') : `
+        <div class="overflow-x-auto w-full">
+            <table class="w-full text-left border-collapse min-w-[480px]">
+                <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
                     <tr>
-                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada riwayat laporan yang dikirimkan.</td>
+                        <th class="p-3.5">Tanggal</th>
+                        <th class="p-3.5 text-center">Zona</th>
+                        <th class="p-3.5 text-center">Target Jarak</th>
+                        <th class="p-3.5 text-center">Durasi</th>
+                        <th class="p-3.5 text-center">Pace Target</th>
                     </tr>
-                `}
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+                    ${myPreskripsi.length > 0 ? myPreskripsi.map(j => {
+                        const tglShort = j.tanggal ? String(j.tanggal).split('T')[0] : '-';
+                        return `
+                            <tr class="hover:bg-blue-50/40 transition-colors">
+                                <td class="p-3.5 font-mono font-bold text-slate-600">${tglShort}</td>
+                                <td class="p-3.5 text-center font-bold text-purple-700"><span class="bg-purple-50 px-2 py-0.5 rounded border border-purple-200">${Math.round(parseFloat(j.zona || '0.75') * 100)}% MAS</span></td>
+                                <td class="p-3.5 text-center font-mono font-black text-blue-900">${j.jarak || 0} km</td>
+                                <td class="p-3.5 text-center font-mono font-bold text-slate-600">${j.waktu || 0} mnt</td>
+                                <td class="p-3.5 text-center font-mono font-black text-emerald-700">${escapeHTML(j.pace || '-')}</td>
+                            </tr>
+                        `;
+                    }).join('') : `
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada preskripsi latihan dari pelatih.</td>
+                        </tr>
+                    `}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TABEL KANAN: STATUS VERIFIKASI / VALIDASI LAPORAN (TIDAK DUPLIKAT lagi) -->
+    <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
+        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <div>
+                <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                    <i class="fa-solid fa-shield-check text-blue-900"></i> Histori Status Laporan Validasi Pelatih
+                </h4>
+                <p class="text-[11px] font-semibold text-slate-400 mt-0.5">Status verifikasi bukti lari Anda oleh Pelatih Kepala.</p>
+            </div>
+            <span class="bg-emerald-50 text-emerald-900 border border-emerald-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
+                ${myReports.length} Laporan Dikirim
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[450px]">
+                <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                    <tr>
+                        <th class="p-3.5">Tanggal</th>
+                        <th class="p-3.5 text-center">Jarak</th>
+                        <th class="p-3.5 text-center">Durasi</th>
+                        <th class="p-3.5 text-center">Speed</th>
+                        <th class="p-3.5 text-center">Status Pelatih</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+                    ${myReports.length > 0 ? myReports.map(r => {
+                        let badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                        let icon = 'fa-clock text-amber-600';
+                        let statusText = r.status || 'Menunggu';
+
+                        if (statusText === 'Disetujui') {
+                            badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                            icon = 'fa-circle-check text-emerald-600';
+                        } else if (statusText === 'Ditolak') {
+                            badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                            icon = 'fa-circle-xmark text-rose-600';
+                        }
+
+                        const tglShort = r.tanggal ? String(r.tanggal).split('T')[0] : '-';
+
+                        return `
+                            <tr class="hover:bg-blue-50/40 transition-colors">
+                                <td class="p-3.5 font-mono font-bold text-slate-600">${tglShort}</td>
+                                <td class="p-3.5 text-center font-mono font-black text-blue-900">${r.jarak || 0} km</td>
+                                <td class="p-3.5 text-center font-mono font-bold text-slate-600">${r.waktu || 0} mnt</td>
+                                <td class="p-3.5 text-center font-mono font-black text-emerald-700">${r.speedKmh || 0} km/h</td>
+                                <td class="p-3.5 text-center">
+                                    <span class="px-3 py-1 rounded-xl text-[10px] font-black border inline-flex items-center gap-1.5 ${badgeColor}">
+                                        <i class="fa-solid ${icon}"></i> ${statusText}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('') : `
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada riwayat laporan yang dikirimkan.</td>
+                        </tr>
+                    `}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-
                 // TABEL KANAN: STATUS VERIFIKASI / VALIDASI LAPORAN
 <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
     <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
