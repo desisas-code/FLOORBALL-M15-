@@ -144,7 +144,7 @@
   try {
     const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
     const data = await res.json();
-
+    
     if (data && data.status === "success") {
       // 1. Update Data Atlet
       if (data.atlet && Array.isArray(data.atlet)) {
@@ -152,22 +152,33 @@
         saveStorage("atlet", data.atlet);
       }
 
-      // 2. Update Program Latihan / Target dari Pelatih (PENTING untuk Menu Atlet)
+      // 2. Update Program Latihan / Target dari Pelatih
       if (data.programLatihan && Array.isArray(data.programLatihan)) {
         state.programLatihan = data.programLatihan;
         saveStorage("programLatihan", data.programLatihan);
       }
 
-      // 3. Update & Merge Data Jogging (Cegah Tertimpa)
+      // 3. Update & Merge Data Jogging (Mengutamakan data lokal agar 41 log tidak terhapus)
       if (data.joggingLogs && Array.isArray(data.joggingLogs)) {
-        const existingLogs = state.joggingLogs || [];
+        const localLogs = loadStorage("joggingLogs") || state.joggingLogs || [];
         const mergedMap = new Map();
-        [...data.joggingLogs, ...existingLogs].forEach(item => {
-          if (item && item.id) mergedMap.set(String(item.id), item);
-        });
+        
+        localLogs.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
+        data.joggingLogs.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
+
         state.joggingLogs = Array.from(mergedMap.values());
         saveStorage("joggingLogs", state.joggingLogs);
       }
+
+      if (data.laporanValidasi && Array.isArray(data.laporanValidasi)) {
+        state.laporanValidasi = data.laporanValidasi;
+        saveStorage("laporanValidasi", data.laporanValidasi);
+      }
+    }
+  } catch (e) {
+    console.log("Sync otomatis pending connection...");
+  }
+}
 
       // 4. Update Laporan Validasi
       if (data.laporanValidasi && Array.isArray(data.laporanValidasi)) {
@@ -6415,12 +6426,18 @@ function generateJoggingSkuad(event) {
 
     // 1. Ambil data preskripsi latihan dari Pelatih (Menu 7) khusus untuk atlet ini
     const myPreskripsi = (state.joggingLogs || []).filter(j => {
-  if (!j) return false;
-  const targetId = String(j.atletId || '').trim().toLowerCase();
-  const currentId = String(at.id || '').trim().toLowerCase();
-  
-  return targetId === currentId || targetId === 'semua' || targetId === '' || targetId === 'all';
-});
+      if (!j) return false;
+      const targetId = String(j.atletId || '').trim().toLowerCase();
+      const currentId = String(at.id || '').trim().toLowerCase();
+      const currentName = String(at.nama || '').trim().toLowerCase();
+      const logName = String(j.namaAtlet || '').trim().toLowerCase();
+      
+      return targetId === currentId || 
+             targetId === 'semua' || 
+             targetId === '' || 
+             targetId === 'all' ||
+             (logName && currentName && logName === currentName);
+    });
     
     // 2. Ambil data status laporan validasi (Menu 8) khusus untuk atlet ini
     const myReports = (state.laporanValidasi || []).filter(l => {
