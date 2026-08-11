@@ -3927,23 +3927,44 @@ saveStorage('laporanValidasi', state.laporanValidasi);
         }
 
         async function submitAtletRPE(e) {
-            e.preventDefault();
-            const atlet = state.activeAtlet;
-            if (!atlet) return;
+    e.preventDefault();
+    const atlet = state.activeAtlet;
+    if (!atlet) return;
 
-            const tanggal = document.getElementById('rpe-tanggal')?.value;
-            const rpeVal = parseInt(document.getElementById('rpe-scale')?.value || 5);
-            const durasi = parseInt(document.getElementById('rpe-durasi')?.value || 90);
-            const hrMax = parseInt(document.getElementById('rpe-hrmax')?.value) || 0;
-            const sRPE = rpeVal * durasi;
+    const tanggal = document.getElementById('rpe-tanggal')?.value || new Date().toISOString().split('T')[0];
+const rpeVal = parseInt(document.getElementById('rpe-scale')?.value || 5);
+const durasi = parseInt(document.getElementById('rpe-durasi')?.value || 90);
+const hrMax = parseInt(document.getElementById('rpe-hrmax')?.value) || 0;
+const sRPE = rpeVal * durasi;
 
-            const newRpe = { id: 'rpe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), atletId: atlet.id, tanggal, rpeVal, durasi, hrMax, sRPE };
-            state.rpeLogs.unshift(newRpe);
-            saveStorage('rpeLogs', state.rpeLogs);
-            renderSidebar(); 
-            renderContent();
-            showToast('Catatan beban latihan RPE berhasil disimpan!', 'success');
-        }
+const newRpe = { 
+    id: 'rpe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), 
+    atletId: String(atlet.id), 
+    namaAtlet: atlet.nama,
+    tanggal: tanggal, 
+    rpe: rpeVal,
+    rpeVal: rpeVal,
+    durasi: durasi, 
+    hrMax: hrMax, 
+    sRPE: sRPE 
+};
+
+    if (!state.rpeLogs) state.rpeLogs = [];
+    state.rpeLogs.unshift(newRpe);
+    saveStorage('rpeLogs', state.rpeLogs);
+
+    // Kirim langsung ke Google Spreadsheet & Firebase
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
+    }
+    if (window.db && window.dbSet && window.dbRef) {
+        window.dbSet(window.dbRef(window.db, 'rpeLogs/' + newRpe.id), newRpe);
+    }
+
+    renderSidebar(); 
+    renderContent();
+    showToast('Catatan RPE berhasil dikirim ke Pelatih!', 'success');
+}
 
         function exportDataAtletCSV() {
             const headers = ['Nama', 'Posisi', 'Gender', 'Usia', 'Tinggi (cm)', 'Berat (kg)', 'PIN', 'Cedera'];
