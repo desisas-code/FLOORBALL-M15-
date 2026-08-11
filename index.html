@@ -5744,11 +5744,15 @@ function generateJoggingSkuad(event) {
             } else if (state.currentMenu === 'menu-8') {
     pageTitle.innerText = "Validasi Laporan Bukti Jogging (GPS & PAP)";
 
-    // Filter laporan berdasarkan status
-    const pendingLogs = state.laporanValidasi.filter(l => l.status === 'Menunggu');
-    const approvedLogs = state.laporanValidasi.filter(l => l.status === 'Disetujui');
-    const rejectedLogs = state.laporanValidasi.filter(l => l.status === 'Ditolak');
-    const totalLogs = state.laporanValidasi.length;
+    // 1. Ambil seluruh laporan dari state atau memori lokal
+    const allReports = state.laporanValidasi || loadStorage("laporanValidasi") || [];
+    
+    // 2. Filter laporan berdasarkan status (Aman dari null/undefined)
+    const pendingLogs = allReports.filter(l => l && (!l.status || l.status.toLowerCase() === 'menunggu' || l.status.toLowerCase() === 'pending'));
+    const approvedLogs = allReports.filter(l => l && l.status && l.status.toLowerCase() === 'disetujui');
+    const rejectedLogs = allReports.filter(l => l && l.status && l.status.toLowerCase() === 'ditolak');
+    
+    const totalLogs = allReports.length;
     const accPct = totalLogs > 0 ? Math.round((approvedLogs.length / totalLogs) * 100) : 0;
 
     container.innerHTML = `
