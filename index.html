@@ -6471,12 +6471,21 @@ function generateJoggingSkuad(event) {
              (logName && currentName && (logName.includes(currentName) || currentName.includes(logName)));
     });
     
-    // 2. Ambil data status laporan validasi (Menu 8) khusus untuk atlet ini
-    const myReports = (state.laporanValidasi || []).filter(l => {
+    // 2. Ambil data status laporan validasi (Menu 8) khusus untuk atlet ini (Filter pintar: ID atau Nama)
+const myReports = (state.laporanValidasi || []).filter(l => {
   if (!l) return false;
-  const reportAtletId = String(l.atletId || '').trim().toLowerCase();
-  const currentAtletId = String(at.id || '').trim().toLowerCase();
-  return reportAtletId === currentAtletId;
+  
+  const reportId = String(l.atletId || '').trim().toLowerCase();
+  const currentId = String(at.id || '').trim().toLowerCase();
+  
+  const reportNama = String(l.namaAtlet || l.nama || '').trim().toLowerCase();
+  const currentNama = String(at.nama || '').trim().toLowerCase();
+
+  // Cocokkan berdasarkan ID atlet ATAU Nama Atlet yang sedang login
+  const isMatchId = reportId && currentId && (reportId === currentId);
+  const isMatchNama = reportNama && currentNama && (reportNama.includes(currentNama) || currentNama.includes(reportNama));
+
+  return isMatchId || isMatchNama;
 });
     container.innerHTML = `
         <div class="space-y-6">
@@ -6645,10 +6654,10 @@ function generateJoggingSkuad(event) {
     </div>
 
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[500px]">
+        <table class="w-full text-left border-collapse min-w-[450px]">
             <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
                 <tr>
-                    <th class="p-3.5">Tanggal Lapor</th>
+                    <th class="p-3.5">Tanggal</th>
                     <th class="p-3.5 text-center">Jarak</th>
                     <th class="p-3.5 text-center">Durasi</th>
                     <th class="p-3.5 text-center">Speed</th>
@@ -6659,12 +6668,12 @@ function generateJoggingSkuad(event) {
                 ${myReports.length > 0 ? myReports.map(r => {
                     let badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
                     let icon = 'fa-clock text-amber-600';
-                    let statusLabel = r.status || 'Menunggu';
+                    let statusText = r.status || 'Menunggu';
 
-                    if (statusLabel === 'Disetujui') {
+                    if (statusText === 'Disetujui') {
                         badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
                         icon = 'fa-circle-check text-emerald-600';
-                    } else if (statusLabel === 'Ditolak') {
+                    } else if (statusText === 'Ditolak') {
                         badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
                         icon = 'fa-circle-xmark text-rose-600';
                     }
@@ -6677,14 +6686,14 @@ function generateJoggingSkuad(event) {
                             <td class="p-3.5 text-center font-mono font-black text-emerald-700">${r.speedKmh || 0} km/h</td>
                             <td class="p-3.5 text-center">
                                 <span class="px-3 py-1 rounded-xl text-[10px] font-black border inline-flex items-center gap-1.5 ${badgeColor}">
-                                    <i class="fa-solid ${icon}"></i> ${statusLabel}
+                                    <i class="fa-solid ${icon}"></i> ${statusText}
                                 </span>
                             </td>
                         </tr>
                     `;
                 }).join('') : `
                     <tr>
-                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan lari yang Anda kirimkan.</td>
+                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada riwayat laporan yang dikirimkan.</td>
                     </tr>
                 `}
             </tbody>
