@@ -6797,39 +6797,6 @@ function generateJoggingSkuad(event) {
     </script>
 	<!-- SINKRONISASI OTOMATIS REALTIME & FUNGSI PENDUKUNG (FIXED) -->
 <script>
-  // 1. KONSOLIDASI SYNC SPREADSHEET & AUTO-POLLING
-  async function autoFetchFromSpreadsheet() {
-    try {
-      const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL}?_t=${new Date().getTime()}`);
-      const data = await res.json();
-      
-      if (data && data.status === "success") {
-        if (data.atlet) {
-          state.atlet = data.atlet;
-          saveStorage("atlet", data.atlet);
-        }
-        if (data.programLatihan) {
-          state.joggingLogs = data.programLatihan;
-          saveStorage("joggingLogs", data.programLatihan);
-        }
-        if (data.laporanValidasi) {
-          state.laporanValidasi = data.laporanValidasi;
-          saveStorage("laporanValidasi", data.laporanValidasi);
-        }
-
-        // Re-render jika sedang membuka menu terkait
-        if (typeof updateAtletJoggingCalculations === "function" && state.currentRole === 'Atlet') {
-          updateAtletJoggingCalculations();
-        }
-        if (state.currentMenu === 'menu-atlet-4' || state.currentMenu === 'menu-8') {
-          renderContent();
-        }
-      }
-    } catch (e) {
-      console.log("Sync otomatis pending connection...");
-    }
-  }
-
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", () => {
     autoFetchFromSpreadsheet();
