@@ -153,21 +153,22 @@
               saveStorage("atlet", data.atlet);
             }
 
-            // 2. Sinkronisasi Log Jogging
-            const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
-            const serverJogging = data.joggingLogs || data.programLatihan || [];
-            
-            if (Array.isArray(serverJogging) && serverJogging.length > 0) {
-              const mergedMap = new Map();
-              localJogging.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
-              serverJogging.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
+            // 2. Sinkronisasi Log Jogging (Hanya Simpan 1 Log Unik Per Atlet)
+const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
+const serverJogging = data.joggingLogs || data.programLatihan || [];
+const dailyMap = new Map();
 
-              state.joggingLogs = Array.from(mergedMap.values());
-              saveStorage("joggingLogs", state.joggingLogs);
-            } else {
-              state.joggingLogs = localJogging;
-            }
+// Masukkan data server & lokal berdasarkan atletId (Otomatis membuang duplikat)
+[...localJogging, ...serverJogging].forEach(item => {
+  if (item && item.atletId) {
+    dailyMap.set(String(item.atletId), item);
+  }
+});
 
+// Ambil maksimal 41 data unik
+state.joggingLogs = Array.from(dailyMap.values()).slice(0, 41);
+saveStorage("joggingLogs", state.joggingLogs);
+}
             // 3. Update Laporan Validasi (Smart Merge: Utamakan status Disetujui/Ditolak dari lokal)
             if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
               const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
@@ -4136,12 +4137,6 @@ function generateJoggingSkuad(event) {
   showToast(`Berhasil menambahkan ${newLogs.length} log jogging!`, "success");
 }
         function renderContent() {
-    // PAKSA LOAD MEMORI LOKAL JIKA STATE KOSONG
-    const savedJogging = loadStorage("joggingLogs");
-    if (savedJogging && Array.isArray(savedJogging) && savedJogging.length > 0) {
-        state.joggingLogs = savedJogging;
-    }
-
     const container = document.getElementById('main-container');
     const pageTitle = document.getElementById('page-title');
     if (!container || !pageTitle) return;
