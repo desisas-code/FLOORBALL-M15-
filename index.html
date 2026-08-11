@@ -1099,7 +1099,7 @@ if (menuId === 'menu-4') {
         tesFisik: state.tesFisik || [],
         tesTeknik: state.tesTeknik || [],
         periodisasiConfig: state.periodisasiConfig || null,
-        programLatihan: state.programLatihan || [],
+        programLatihan: (state.programLatihan && state.programLatihan.length > 0) ? state.programLatihan : (state.joggingLogs || []),
         matchLive: state.matchLive || {},
         joggingLogs: state.joggingLogs || [],
         masLogs: state.masLogs || [],
