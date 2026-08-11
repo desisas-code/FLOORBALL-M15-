@@ -146,29 +146,60 @@
     const data = await res.json();
 
     if (data && data.status === "success") {
-      // 1. Update data Atlet
+      // 1. Update Data Atlet
       if (data.atlet && Array.isArray(data.atlet)) {
         state.atlet = data.atlet;
         saveStorage("atlet", data.atlet);
       }
 
-      // 2. Update data Jogging & MAS Logs
-      if (data.joggingLogs && Array.isArray(data.joggingLogs)) {
-        state.joggingLogs = data.joggingLogs;
-        saveStorage("joggingLogs", data.joggingLogs);
+      // 2. Update Program Latihan / Target dari Pelatih (PENTING untuk Menu Atlet)
+      if (data.programLatihan && Array.isArray(data.programLatihan)) {
+        state.programLatihan = data.programLatihan;
+        saveStorage("programLatihan", data.programLatihan);
       }
 
-      // 3. Update Laporan Validasi
+      // 3. Update & Merge Data Jogging (Cegah Tertimpa)
+      if (data.joggingLogs && Array.isArray(data.joggingLogs)) {
+        const existingLogs = state.joggingLogs || [];
+        const mergedMap = new Map();
+        [...data.joggingLogs, ...existingLogs].forEach(item => {
+          if (item && item.id) mergedMap.set(String(item.id), item);
+        });
+        state.joggingLogs = Array.from(mergedMap.values());
+        saveStorage("joggingLogs", state.joggingLogs);
+      }
+
+      // 4. Update Laporan Validasi
       if (data.laporanValidasi && Array.isArray(data.laporanValidasi)) {
         state.laporanValidasi = data.laporanValidasi;
         saveStorage("laporanValidasi", data.laporanValidasi);
       }
 
-      // 4. Render ulang tampilan jika pengguna sedang di menu Jogging (menu-7)
-      if (state.currentMenu === 'menu-7' && typeof renderContent === 'function') {
+      // 5. Render Ulang Tampilan Otomatis (Berlaku untuk Pelatih & Atlet)
+      if (typeof renderContent === 'function') {
         renderContent();
       }
     }
+  } catch (e) {
+    console.log("Background sync pending connection...");
+  }
+}
+
+      // 4. Update Laporan Validasi
+      if (data.laporanValidasi && Array.isArray(data.laporanValidasi)) {
+        state.laporanValidasi = data.laporanValidasi;
+        saveStorage("laporanValidasi", data.laporanValidasi);
+      }
+
+      // 5. Render Ulang Tampilan Otomatis (Berlaku untuk Pelatih & Atlet)
+      if (typeof renderContent === 'function') {
+        renderContent();
+      }
+    }
+  } catch (e) {
+    console.log("Background sync pending connection...");
+  }
+}
   } catch (e) {
     console.log("Background sync pending connection...");
   }
@@ -6306,11 +6337,21 @@ saveStorage('laporanValidasi', state.laporanValidasi);
     if (!at) return;
 
     // 1. Ambil data preskripsi latihan dari Pelatih (Menu 7) khusus untuk atlet ini
-    const myPreskripsi = (state.joggingLogs || []).filter(j => String(j.atletId) === String(at.id));
+    const myPreskripsi = (state.joggingLogs || []).filter(j => {
+  if (!j) return false;
+  const targetId = String(j.atletId || '').trim().toLowerCase();
+  const currentId = String(at.id || '').trim().toLowerCase();
+  
+  return targetId === currentId || targetId === 'semua' || targetId === '' || targetId === 'all';
+});
     
     // 2. Ambil data status laporan validasi (Menu 8) khusus untuk atlet ini
-    const myReports = (state.laporanValidasi || []).filter(l => String(l.atletId) === String(at.id));
-
+    const myReports = (state.laporanValidasi || []).filter(l => {
+  if (!l) return false;
+  const reportAtletId = String(l.atletId || '').trim().toLowerCase();
+  const currentAtletId = String(at.id || '').trim().toLowerCase();
+  return reportAtletId === currentAtletId;
+});
     container.innerHTML = `
         <div class="space-y-6">
             <!-- 1. FORM INPUT LAPORAN (BAGIAN ATAS) -->
