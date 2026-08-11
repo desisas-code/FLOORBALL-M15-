@@ -5437,9 +5437,10 @@ function generateJoggingSkuad(event) {
                             Pilih Atlet <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
-                            <select id="jogging-atlet-id" onchange="autoFillJoggingVO2(this.value)" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer shadow-sm appearance-none">
-                                ${optionsAtlet}
-                            </select>
+                            <select id="jogging-atlet-id" onchange="autoFillJoggingVO2(this.value)" required class="...">
+    <option value="semua">-- SEMUA ATLET (41 ATLET) --</option>
+    ${optionsAtlet}
+</select>
                             <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                         </div>
                     </div>
