@@ -6991,9 +6991,16 @@ if (savedAtlet) {
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    const firebaseConfig = { ... };
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const firebaseConfig = {
+  apiKey: "AIzaSyD6VNv0Sh60G0ys0IpR1_xPISFCQKo8LwM",
+  authDomain: "floorball-6559c.firebaseapp.com",
+  databaseURL: "https://floorball-6559c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "floorball-6559c",
+  storageBucket: "floorball-6559c.firebasestorage.app",
+  messagingSenderId: "1098308865312",
+  appId: "1:1098308865312:web:fa497aa067d60bc0d05b45",
+  measurementId: "G-1GVD9Q56P6"
+};
 
     // BIND KE WINDOW AGAR BISA DIBACA SKRIP UTAMA
     window.db = db;
