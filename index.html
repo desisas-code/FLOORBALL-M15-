@@ -3839,11 +3839,16 @@ if (state.laporanValidasi.length > 10) {
 
 saveStorage('laporanValidasi', state.laporanValidasi);
 
-            if (toast) toast.remove();
-            renderSidebar();
-            renderContent();
-            showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
-        }
+    // BARIS TAMBAHAN (Baris 3841): Langsung kirim ke Google Sheets
+    if (typeof syncDataToSpreadsheet === 'function') {
+      syncDataToSpreadsheet();
+    }
+
+    if (toast) toast.remove();
+    renderSidebar();
+    renderContent();
+    showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
+  }
 
         function setStatusLaporanValidasi(id, statusTarget) {
             const idx = state.laporanValidasi.findIndex(l => l.id === id);
