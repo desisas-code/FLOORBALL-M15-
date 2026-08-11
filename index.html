@@ -168,10 +168,32 @@
               state.joggingLogs = localJogging;
             }
 
-            // 3. Update Laporan Validasi
+            // 3. Update Laporan Validasi (Smart Merge: Utamakan status Disetujui/Ditolak dari lokal)
             if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
-              state.laporanValidasi = data.laporanValidasi;
-              saveStorage("laporanValidasi", data.laporanValidasi);
+              const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
+              const mergedVal = new Map();
+
+              // 1. Masukkan data lokal terlebih dahulu
+              localVal.forEach(item => { 
+                if (item && item.id) mergedVal.set(String(item.id), item); 
+              });
+              
+              // 2. Gabungkan data server, tetapi jika di lokal statusnya sudah diproses (bukan Menunggu), tetap pertahankan status lokal
+              data.laporanValidasi.forEach(serverItem => {
+                if (serverItem && serverItem.id) {
+                  const localItem = mergedVal.get(String(serverItem.id));
+                  if (!localItem || localItem.status === 'Menunggu') {
+                    mergedVal.set(String(serverItem.id), serverItem);
+                  }
+                }
+              });
+
+              state.laporanValidasi = Array.from(mergedVal.values());
+              saveStorage("laporanValidasi", state.laporanValidasi);
+            }
+
+              state.laporanValidasi = Array.from(mergedVal.values());
+              saveStorage("laporanValidasi", state.laporanValidasi);
             }
 
             // 4. Render Ulang Tampilan Otomatis
@@ -3873,22 +3895,24 @@ saveStorage('laporanValidasi', state.laporanValidasi);
     showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
   }
 
-        function setStatusLaporanValidasi(id, statusTarget) {
+        async function setStatusLaporanValidasi(id, statusTarget) {
     const idx = state.laporanValidasi.findIndex(l => String(l.id) === String(id));
     if (idx !== -1) {
+        // 1. Update status di memori lokal
         state.laporanValidasi[idx].status = statusTarget;
         
-        // Simpan ke LocalStorage agar histori tidak hilang saat refresh
+        // 2. Simpan permanen di LocalStorage
         saveStorage('laporanValidasi', state.laporanValidasi);
 
-        // Kirim sinkronisasi ke Google Sheets / Firebase jika terhubung
-        if (typeof syncDataToSpreadsheet === 'function') {
-            syncDataToSpreadsheet();
-        }
-
+        // 3. Render ulang tampilan seketika
         renderSidebar();
         renderContent();
         showToast(`Laporan berhasil diubah ke status: ${statusTarget}`, 'success');
+
+        // 4. Minta server Google Spreadsheet melakukan backup seketika
+        if (typeof syncDataToSpreadsheet === 'function') {
+            await syncDataToSpreadsheet();
+        }
     }
 }
 
