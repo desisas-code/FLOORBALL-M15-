@@ -6664,13 +6664,15 @@ if (tanggalTampil.includes('GMT') || tanggalTampil.length > 15) {
                 <td class="p-4 text-center">
                     <button onclick="deleteRiwayatValidasi('${l.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus Permanen">
                         <i class="fa-solid fa-trash-can text-xs"></i>
-                    </button>
-                </td>
+                   </td>
             </tr>
         `;
-        </table>
-    </div>
+    }).join('')}
+    </tbody>
+</table>
 </div>
+</div>
+`;
 
                 <!-- TABEL KANAN: STATUS VERIFIKASI / VALIDASI LAPORAN (SINKRON DENGAN MENU 8) -->
 <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden flex flex-col justify-between">
