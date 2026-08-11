@@ -186,13 +186,12 @@
         });
 
         state.laporanValidasi = Array.from(mergedVal.values());
-        saveStorage("laporanValidasi", state.laporanValidasi);
-      }
+      saveStorage("laporanValidasi", state.laporanValidasi);
+    }
 
-      // 4. Render Ulang Tampilan Otomatis
-      if (typeof renderContent === 'function') {
-        renderContent();
-      }
+    // 4. Render Ulang Tampilan Otomatis
+    if (typeof renderContent === 'function') {
+      renderContent();
     }
   } catch (e) {
     console.log("Sync otomatis pending connection...");
