@@ -1154,64 +1154,65 @@ if (menuId === 'menu-4') {
             }
         }
 function getAtletGpsLocation() {
-    if (!navigator.geolocation) {
-        showToast('Browser/Perangkat Anda tidak mendukung Geolocation GPS.', 'error');
-        return;
-    }
-
-    const badge = document.getElementById('gps-status-badge');
+  const badge = document.getElementById('gps-status-badge');
+  
+  if (!navigator.geolocation) {
+    if (typeof showToast === 'function') showToast('Perangkat tidak mendukung GPS.', 'error');
     if (badge) {
-        badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-blue-50 text-blue-900 border border-blue-200/90 rounded-2xl text-xs font-bold text-center flex items-center justify-center gap-2 animate-pulse';
-        badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600"></i> Mengambil Koordinat GPS Presisi...`;
+      badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-900 border border-rose-200 rounded-2xl';
+      badge.innerHTML = `<span class="font-bold text-xs"><i class="fa-solid fa-circle-xmark text-rose-600"></i> GPS tidak didukung browser ini.</span>`;
     }
+    return;
+  }
 
-    showToast('Mengambil titik koordinat GPS...', 'loading');
+  if (badge) {
+    badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-2xl';
+    badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600 mr-1"></i> Mengambil titik koordinat GPS...`;
+  }
 
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const lat = position.coords.latitude.toFixed(5);
-            const lng = position.coords.longitude.toFixed(5);
-            const accuracy = Math.round(position.coords.accuracy);
+  if (typeof showToast === 'function') showToast('Mengambil titik koordinat GPS...', 'loading');
 
-            state.currentGpsLocation = `${lat}, ${lng} (Akurasi: ±${accuracy}m)`;
+  // SETTING KUNCI: Mati kan highAccuracy & pasang timeout 6000ms (6 detik) agar tidak muter terus
+  const options = {
+    enableHighAccuracy: false, // Mempercepat penguncian lokasi via BTS/Wi-Fi/Cellular
+    timeout: 6000,             // Maksimal menunggu 6 detik
+    maximumAge: 30000          // Gunakan cache lokasi terakhir jika ada
+  };
 
-            if (badge) {
-                badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-emerald-50/90 text-emerald-900 border border-emerald-300/80 rounded-2xl text-xs font-black flex items-center justify-between shadow-sm';
-                badge.innerHTML = `
-                    <span class="flex items-center gap-2">
-                        <span class="relative flex h-2.5 w-2.5">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                        </span>
-                        <span class="font-mono text-[11px]">${lat}, ${lng}</span>
-                    </span>
-                    <span class="text-[9px] bg-emerald-200/60 text-emerald-900 px-2 py-0.5 rounded-lg border border-emerald-300">±${accuracy}m</span>
-                `;
-            }
-            showToast('Titik Lokasi GPS Berhasil Diuji & Terkunci!', 'success');
-        },
-        (error) => {
-            let errorMsg = 'Gagal mengambil lokasi GPS.';
-            if (error.code === error.PERMISSION_DENIED) {
-                errorMsg = 'Izin Akses Lokasi Ditolak. Harap aktifkan GPS browser Anda!';
-            } else if (error.code === error.POSITION_UNAVAILABLE) {
-                errorMsg = 'Sinyal GPS tidak ditemukan.';
-            } else if (error.code === error.TIMEOUT) {
-                errorMsg = 'Waktu pengambilan GPS habis (Timeout).';
-            }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude.toFixed(5);
+      const lng = position.coords.longitude.toFixed(5);
+      const accuracy = Math.round(position.coords.accuracy);
 
-            if (badge) {
-                badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-800 border border-rose-200 rounded-2xl text-xs font-bold text-center flex items-center justify-center gap-2';
-                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i> ${errorMsg}`;
-            }
-            showToast(errorMsg, 'error');
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        }
-    );
+      state.currentGpsLocation = `${lat}, ${lng} (Akurasi: ±${accuracy}m)`;
+
+      if (badge) {
+        badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-2xl';
+        badge.innerHTML = `
+          <span class="flex items-center gap-2">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span class="font-bold text-xs sm:text-sm">GPS Terkunci: ${lat}, ${lng}</span>
+          </span>`;
+      }
+      if (typeof showToast === 'function') showToast('Koordinat GPS berhasil dikunci!', 'success');
+    },
+    (error) => {
+      console.warn("GPS Error / Rejected / Timeout:", error);
+      // Fallback otomatis agar tidak stuck muter
+      state.currentGpsLocation = "Lokasi Manual (GPS Off/Timeout)";
+
+      if (badge) {
+        badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-2xl';
+        badge.innerHTML = `<span class="font-bold text-xs"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i> GPS Mati / Izin Ditolak (Lokasi dikunci manual)</span>`;
+      }
+      if (typeof showToast === 'function') showToast('Gagal ambil GPS. Aktifkan Lokasi HP & Izin Browser.', 'error');
+    },
+    options
+  );
 }
         function escapeHTML(str) {
             if (str === null || str === undefined) return '';
@@ -6429,19 +6430,27 @@ function generateJoggingSkuad(event) {
     const at = state.activeAtlet;
     if (!at) return;
 
-    // 1. Ambil data preskripsi latihan dari Pelatih (Menu 7) khusus untuk atlet ini
-    const myPreskripsi = (state.joggingLogs || []).filter(j => {
+    // 1. Ambil gabungan data target dari joggingLogs, programLatihan, dan LocalStorage
+    const rawTargets = [...(state.joggingLogs || []), ...(state.programLatihan || []), ...(loadStorage("joggingLogs") || [])];
+    
+    // Hilangkan duplikasi data berdasarkan ID
+    const targetMap = new Map();
+    rawTargets.forEach(item => { if (item && item.id) targetMap.set(String(item.id), item); });
+    const allTargets = Array.from(targetMap.values());
+
+    // Filter target latihan yang sangat fleksibel
+    const myPreskripsi = allTargets.filter(j => {
       if (!j) return false;
       const targetId = String(j.atletId || '').trim().toLowerCase();
       const currentId = String(at.id || '').trim().toLowerCase();
       const currentName = String(at.nama || '').trim().toLowerCase();
-      const logName = String(j.namaAtlet || '').trim().toLowerCase();
-      
+      const logName = String(j.namaAtlet || j.nama || '').trim().toLowerCase();
+
       return targetId === currentId || 
              targetId === 'semua' || 
              targetId === '' || 
              targetId === 'all' ||
-             (logName && currentName && logName === currentName);
+             (logName && currentName && (logName.includes(currentName) || currentName.includes(logName)));
     });
     
     // 2. Ambil data status laporan validasi (Menu 8) khusus untuk atlet ini
