@@ -142,35 +142,36 @@
 
       async function autoFetchFromSpreadsheet() {
   try {
-    const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
+    const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL || SCRIPT_URL}?_t=${new Date().getTime()}`);
     const data = await res.json();
     
     if (data && data.status === "success") {
       // 1. Update Data Atlet
-      if (data.atlet && Array.isArray(data.atlet)) {
+      if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
         state.atlet = data.atlet;
         saveStorage("atlet", data.atlet);
       }
 
-      // 2. Update Program Latihan / Target dari Pelatih
-      if (data.programLatihan && Array.isArray(data.programLatihan)) {
-        state.programLatihan = data.programLatihan;
-        saveStorage("programLatihan", data.programLatihan);
-      }
-
-      // 3. Update & Merge Data Jogging (Mengutamakan data lokal agar 41 log tidak terhapus)
-      if (data.joggingLogs && Array.isArray(data.joggingLogs)) {
-        const localLogs = loadStorage("joggingLogs") || state.joggingLogs || [];
+      // 2. Sinkronisasi Log Jogging (HANYA MERGE JIKA SERVER MEMILIKI DATA)
+      const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
+      const serverJogging = data.joggingLogs || data.programLatihan || [];
+      
+      if (Array.isArray(serverJogging) && serverJogging.length > 0) {
         const mergedMap = new Map();
-        
-        localLogs.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
-        data.joggingLogs.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
+        // Masukkan data lokal dulu
+        localJogging.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
+        // Gabungkan dengan data server
+        serverJogging.forEach(item => { if (item && item.id) mergedMap.set(String(item.id), item); });
 
         state.joggingLogs = Array.from(mergedMap.values());
         saveStorage("joggingLogs", state.joggingLogs);
+      } else {
+        // Jika server kosong, pertahankan data lokal
+        state.joggingLogs = localJogging;
       }
 
-      if (data.laporanValidasi && Array.isArray(data.laporanValidasi)) {
+      // 3. Update Laporan Validasi
+      if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
         state.laporanValidasi = data.laporanValidasi;
         saveStorage("laporanValidasi", data.laporanValidasi);
       }
@@ -4041,15 +4042,15 @@ function generateJoggingSkuad(event) {
   showToast(`Berhasil menambahkan ${newLogs.length} log jogging!`, "success");
 }
         function renderContent() {
-			if (!state.joggingLogs || state.joggingLogs.length === 0) {
-        state.joggingLogs = loadStorage("joggingLogs") || [];
+    // PAKSA LOAD MEMORI LOKAL JIKA STATE KOSONG
+    const savedJogging = loadStorage("joggingLogs");
+    if (savedJogging && Array.isArray(savedJogging) && savedJogging.length > 0) {
+        state.joggingLogs = savedJogging;
     }
-    if (!state.masLogs || state.masLogs.length === 0) {
-        state.masLogs = loadStorage("masLogs") || [];
-    }
-            const container = document.getElementById('main-container');
-            const pageTitle = document.getElementById('page-title');
-            if (!container || !pageTitle) return;
+
+    const container = document.getElementById('main-container');
+    const pageTitle = document.getElementById('page-title');
+    if (!container || !pageTitle) return;
 
             if (state.currentMenu === 'menu-1') {
     pageTitle.innerText = "Data Atlet & Autentikasi PIN";
