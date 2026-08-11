@@ -3963,14 +3963,31 @@ function generateJoggingSkuad(event) {
     return;
   }
 
-  const zona = document.getElementById('input-zona')?.value || "75% MAS";
-  const waktu = parseFloat(document.getElementById('input-waktu')?.value) || 25;
-  const tanggal = document.getElementById('input-tanggal')?.value || new Date().toISOString().split('T')[0];
+  // 1. Ambil ID Atlet dari Dropdown
+  const selectedId = document.getElementById('jogging-atlet-id')?.value;
+  const zona = document.getElementById('jogging-zona')?.value || "0.75";
+  const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 30;
+  const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
 
-  const newLogs = state.atlet.map(atlet => {
-    const vo2 = parseFloat(atlet.vo2max || 45);
+  // 2. Tentukan Target Atlet (Semua 41 Atlet atau 1 Atlet Terpilih)
+  let targetAthletes = [];
+  if (selectedId === 'semua' || !selectedId) {
+    targetAthletes = state.atlet;
+  } else {
+    const found = state.atlet.find(a => String(a.id) === String(selectedId));
+    if (found) targetAthletes = [found];
+  }
+
+  if (targetAthletes.length === 0) {
+    showToast("Atlet tidak ditemukan!", "error");
+    return;
+  }
+
+  // 3. Generate Log Jogging
+  const newLogs = targetAthletes.map(atlet => {
+    const vo2 = getAtletVO2Max(atlet.id) || 45;
     const masKmh = vo2 / 3.5;
-    const factor = zona.includes("85") ? 0.85 : zona.includes("100") ? 1.0 : 0.75;
+    const factor = parseFloat(zona) || 0.75;
     const speedKmh = masKmh * factor;
     const jarak = parseFloat(((speedKmh * waktu) / 60).toFixed(2));
     
@@ -3991,12 +4008,16 @@ function generateJoggingSkuad(event) {
     };
   });
 
+  // 4. Simpan ke State & LocalStorage
   state.joggingLogs = [...newLogs, ...(state.joggingLogs || [])];
   saveStorage("joggingLogs", state.joggingLogs);
 
-  syncToSpreadsheetBatch();
+  // 5. Sync & Render Ulang
+  if (typeof syncDataToSpreadsheet === 'function') {
+    syncDataToSpreadsheet();
+  }
   renderContent();
-  showToast(`Berhasil membuat target jogging untuk ${newLogs.length} atlet!`, "success");
+  showToast(`Berhasil menyimpan sesi jogging untuk ${newLogs.length} atlet!`, "success");
 }
 
         function renderContent() {
