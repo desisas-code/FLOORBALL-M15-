@@ -142,66 +142,68 @@
       const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8yriN-6Hd8qHuHOHGwbSUExTZZsH_D1tgiTCBlwJSQ2r5_T3i7A2XGk5Dnb3vREKU/exec";
 
       async function autoFetchFromSpreadsheet() {
-  try {
-    const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL || SCRIPT_URL}?_t=${new Date().getTime()}`);
-    const data = await res.json();
-    
-    if (data && data.status === "success") {
-      // 1. Update Data Atlet
-      if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
-        state.atlet = data.atlet;
-        saveStorage("atlet", data.atlet);
-      }
-
-      // 2. Sinkronisasi Log Jogging (Hanya Simpan 1 Log Unik Per Atlet)
-      const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
-      const serverJogging = data.joggingLogs || data.programLatihan || [];
-      const dailyMap = new Map();
-
-      [...localJogging, ...serverJogging].forEach(item => {
-        if (item && item.atletId) {
-          dailyMap.set(String(item.atletId), item);
-        }
-      });
-
-      state.joggingLogs = Array.from(dailyMap.values()).slice(0, 41);
-      saveStorage("joggingLogs", state.joggingLogs);
-
-      // 3. Update Laporan Validasi
-      if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
-        const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
-        const mergedVal = new Map();
-
-        localVal.forEach(item => { 
-          if (item && item.id) mergedVal.set(String(item.id), item); 
-        });
+      try {
+        const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL || SCRIPT_URL}?_t=${new Date().getTime()}`);
+        const data = await res.json();
         
-        data.laporanValidasi.forEach(serverItem => {
-          if (serverItem && serverItem.id) {
-            const localItem = mergedVal.get(String(serverItem.id));
-            if (!localItem || localItem.status === 'Menunggu') {
-              mergedVal.set(String(serverItem.id), serverItem);
-            }
+        if (data && data.status === "success") {
+          // 1. Update Data Atlet
+          if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
+            state.atlet = data.atlet;
+            saveStorage("atlet", data.atlet);
           }
-        });
 
-        state.laporanValidasi = Array.from(mergedVal.values());
-      saveStorage("laporanValidasi", state.laporanValidasi);
+          // 2. Sinkronisasi Log Jogging
+          const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
+          const serverJogging = data.joggingLogs || data.programLatihan || [];
+          const dailyMap = new Map();
+
+          [...localJogging, ...serverJogging].forEach(item => {
+            if (item && item.atletId) {
+              dailyMap.set(String(item.atletId), item);
+            }
+          });
+
+          state.joggingLogs = Array.from(dailyMap.values()).slice(0, 41);
+          saveStorage("joggingLogs", state.joggingLogs);
+
+          // 3. Update Laporan Validasi
+          if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
+            const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
+            const mergedVal = new Map();
+
+            localVal.forEach(item => { 
+              if (item && item.id) mergedVal.set(String(item.id), item); 
+            });
+            
+            data.laporanValidasi.forEach(serverItem => {
+              if (serverItem && serverItem.id) {
+                const localItem = mergedVal.get(String(serverItem.id));
+                if (!localItem || localItem.status === 'Menunggu') {
+                  mergedVal.set(String(serverItem.id), serverItem);
+                }
+              }
+            });
+
+            state.laporanValidasi = Array.from(mergedVal.values());
+            saveStorage("laporanValidasi", state.laporanValidasi);
+          }
+
+          // 4. Render Ulang Tampilan Otomatis
+          if (typeof renderContent === 'function') {
+            renderContent();
+          }
+        }
+      } catch (e) {
+        console.log("Sync otomatis pending connection...");
+      }
     }
 
-    // 4. Render Ulang Tampilan Otomatis
-    if (typeof renderContent === 'function') {
-      renderContent();
-    
-  } catch (e) {
-    console.log("Sync otomatis pending connection...");
-  }
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  autoFetchFromSpreadsheet(); // Jalankan sekali saat pertama dimuat
-  setInterval(autoFetchFromSpreadsheet, 30000); // Polling setiap 30 detik
-});
+    window.addEventListener("DOMContentLoaded", () => {
+      autoFetchFromSpreadsheet(); // Jalankan sekali saat pertama dimuat
+      setInterval(autoFetchFromSpreadsheet, 30000); // Polling setiap 30 detik
+    });
+		
     </script>
 
     <div id="toast-container"></div>
