@@ -1157,10 +1157,9 @@ function getAtletGpsLocation() {
   const badge = document.getElementById('gps-status-badge');
   
   if (!navigator.geolocation) {
-    if (typeof showToast === 'function') showToast('Perangkat tidak mendukung GPS.', 'error');
     if (badge) {
       badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-900 border border-rose-200 rounded-2xl';
-      badge.innerHTML = `<span class="font-bold text-xs"><i class="fa-solid fa-circle-xmark text-rose-600"></i> GPS tidak didukung browser ini.</span>`;
+      badge.innerHTML = `<span class="font-bold text-xs"><i class="fa-solid fa-circle-xmark text-rose-600"></i> GPS tidak didukung browser HP ini.</span>`;
     }
     return;
   }
@@ -1170,13 +1169,11 @@ function getAtletGpsLocation() {
     badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600 mr-1"></i> Mengambil titik koordinat GPS...`;
   }
 
-  if (typeof showToast === 'function') showToast('Mengambil titik koordinat GPS...', 'loading');
-
-  // SETTING KUNCI: Mati kan highAccuracy & pasang timeout 6000ms (6 detik) agar tidak muter terus
+  // Setting timeout 5000ms (5 detik) agar tidak loading selamanya
   const options = {
-    enableHighAccuracy: false, // Mempercepat penguncian lokasi via BTS/Wi-Fi/Cellular
-    timeout: 6000,             // Maksimal menunggu 6 detik
-    maximumAge: 30000          // Gunakan cache lokasi terakhir jika ada
+    enableHighAccuracy: false,
+    timeout: 5000,
+    maximumAge: 60000
   };
 
   navigator.geolocation.getCurrentPosition(
@@ -1198,18 +1195,15 @@ function getAtletGpsLocation() {
             <span class="font-bold text-xs sm:text-sm">GPS Terkunci: ${lat}, ${lng}</span>
           </span>`;
       }
-      if (typeof showToast === 'function') showToast('Koordinat GPS berhasil dikunci!', 'success');
     },
     (error) => {
-      console.warn("GPS Error / Rejected / Timeout:", error);
-      // Fallback otomatis agar tidak stuck muter
+      console.warn("GPS Timeout/Error:", error);
       state.currentGpsLocation = "Lokasi Manual (GPS Off/Timeout)";
 
       if (badge) {
         badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-2xl';
-        badge.innerHTML = `<span class="font-bold text-xs"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i> GPS Mati / Izin Ditolak (Lokasi dikunci manual)</span>`;
+        badge.innerHTML = `<span class="font-bold text-xs"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i> GPS Mati / Izin Ditolak (Kunci Manual)</span>`;
       }
-      if (typeof showToast === 'function') showToast('Gagal ambil GPS. Aktifkan Lokasi HP & Izin Browser.', 'error');
     },
     options
   );
@@ -6434,15 +6428,20 @@ function generateJoggingSkuad(event) {
     const at = state.activeAtlet;
     if (!at) return;
 
-    // 1. Ambil gabungan data target dari joggingLogs, programLatihan, dan LocalStorage
-    const rawTargets = [...(state.joggingLogs || []), ...(state.programLatihan || []), ...(loadStorage("joggingLogs") || [])];
+    // Ambil seluruh sumber target (programLatihan + joggingLogs + localStorage)
+    const allRawTargets = [
+      ...(state.programLatihan || []), 
+      ...(state.joggingLogs || []), 
+      ...(loadStorage("programLatihan") || []),
+      ...(loadStorage("joggingLogs") || [])
+    ];
     
-    // Hilangkan duplikasi data berdasarkan ID
+    // Filter duplikat berdasarkan ID
     const targetMap = new Map();
-    rawTargets.forEach(item => { if (item && item.id) targetMap.set(String(item.id), item); });
+    allRawTargets.forEach(item => { if (item && item.id) targetMap.set(String(item.id), item); });
     const allTargets = Array.from(targetMap.values());
 
-    // Filter target latihan yang sangat fleksibel
+    // Filter khusus atlet yang sedang login
     const myPreskripsi = allTargets.filter(j => {
       if (!j) return false;
       const targetId = String(j.atletId || '').trim().toLowerCase();
@@ -6813,27 +6812,25 @@ function generateJoggingSkuad(event) {
 <script>
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", () => {
+    // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
+    const savedAtlet = loadStorage("activeAtlet");
+    if (savedAtlet) {
+      state.activeAtlet = savedAtlet;
+    }
+
+    const savedUser = loadStorage("currentUser");
+    if (savedUser) {
+      state.currentUser = savedUser;
+    }
+
+    renderContent();
     autoFetchFromSpreadsheet();
-    setInterval(autoFetchFromSpreadsheet, 30000); 
+    setInterval(autoFetchFromSpreadsheet, 30000);
   });
 
   window.addEventListener("focus", () => {
     autoFetchFromSpreadsheet();
   });
-
-  // 2. MODAL RADAR ATLET (MEMBACA DATA TES FISIK ASLI)
-  function openAtletRadarModal(atletId) {
-    const atlet = state.atlet.find(a => String(a.id) === String(atletId));
-    if (!atlet) return;
-
-    let modalEl = document.getElementById('atlet-radar-modal');
-    if (!modalEl) {
-      modalEl = document.createElement('div');
-      modalEl.id = 'atlet-radar-modal';
-      modalEl.className = 'fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
-      document.body.appendChild(modalEl);
-    }
-
     modalEl.innerHTML = `
       <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm text-white relative shadow-2xl">
         <button onclick="document.getElementById('atlet-radar-modal').remove()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">&times;</button>
