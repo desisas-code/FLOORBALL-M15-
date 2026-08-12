@@ -3920,77 +3920,94 @@ function renderMatchHeatmap() {
         }
 
         async function submitAtletLaporanJogging(e) {
-            e.preventDefault();
-            const at = state.activeAtlet;
-            if (!at) return;
-
-            const selfieFile = document.getElementById('run-file-selfie')?.files[0];
-            const buktiFile = document.getElementById('run-file-bukti')?.files[0];
-
-            const toast = showToast('Memproses & Mengunggah Laporan...', 'loading');
-
-            let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
-            let stravaUrl = 'https://picsum.photos/500/500?sports';
-
-            if (selfieFile) {
-                try { 
-                    selfieUrl = await compressImage(selfieFile, 600, 600, 0.6); 
-                } catch(err) {
-                    console.warn("Gagal kompresi selfie:", err);
-                }
-            }
-
-            if (buktiFile) {
-                try { 
-                    stravaUrl = await compressImage(buktiFile, 800, 800, 0.6); 
-                } catch(err) {
-                    console.warn("Gagal kompresi bukti strava:", err);
-                }
-            }
-
-            // ... kode baris 3830 - 3835 ...
-
-const durasiVal = matchLog ? parseFloat(matchLog.waktu) : 30;
-const jarakVal = matchLog ? parseFloat(matchLog.jarak) : 4.31;
-const speedVal = (durasiVal > 0 && jarakVal > 0) ? parseFloat((jarakVal / (durasiVal / 60)).toFixed(1)) : 8.6;
-const kaloriVal = Math.round(jarakVal * (at.bb || 65) * 0.75);
-
-const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
-const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) ? parseFloat(totalDistanceKm.toFixed(2)) : jarakVal;
-
-const newReport = {
-    id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-    atletId: at.id,
-    tanggal: matchLog ? matchLog.tanggal : new Date().toISOString().split('T')[0],
-    jarak: finalJarak,
-    waktu: durasiVal,
-    speedKmh: durasiVal > 0 ? parseFloat((finalJarak / (durasiVal / 60)).toFixed(1)) : 0,
-    kalori: Math.round(finalJarak * (at.bb || 65) * 0.75),
-    gpsLoc: state.currentGpsLocation || 'Lokasi Terdeteksi',
-    imgSelfieUrl: selfieUrl,
-    imgStravaUrl: stravaUrl,
-    detectedMotor: isMotorDetected,
-    detectedLowHR: false,
-    detectedEdit: false,
-    softwareDetected: isMotorDetected ? 'Terindikasi Naik Kendaraan (GPS Speed)' : 'Validasi Live GPS Tracker',
-    status: 'Menunggu'
-};
-
-state.laporanValidasi.unshift(newReport);
-
-// Simpan seluruh data tanpa membatasi jumlah histori
-saveStorage('laporanValidasi', state.laporanValidasi);
-
-    // BARIS TAMBAHAN (Baris 3841): Langsung kirim ke Google Sheets
-    if (typeof syncDataToSpreadsheet === 'function') {
-      syncDataToSpreadsheet();
+    e.preventDefault();
+    const at = state.activeAtlet;
+    if (!at) {
+        showToast("Error: Sesi atlet tidak ditemukan. Silakan login ulang.", "error");
+        return;
     }
 
+    const toast = showToast('Memproses & Mengunggah Laporan...', 'loading');
+
+    const selfieFile = document.getElementById('run-file-selfie')?.files[0];
+    const buktiFile = document.getElementById('run-file-bukti')?.files[0];
+    const durasiInput = parseFloat(document.getElementById('run-durasi')?.value) || 30;
+
+    let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
+    let stravaUrl = 'https://picsum.photos/500/500?sports';
+
+    // 1. Kompresi Foto dengan Ukuran Lebih Ringan (Mencegah Lag/Crash)
+    if (selfieFile) {
+        try { 
+            selfieUrl = await compressImage(selfieFile, 500, 500, 0.5); 
+        } catch(err) {
+            console.warn("Gagal kompresi selfie, menggunakan default:", err);
+        }
+    }
+
+    if (buktiFile) {
+        try { 
+            stravaUrl = await compressImage(buktiFile, 600, 600, 0.5); 
+        } catch(err) {
+            console.warn("Gagal kompresi bukti strava, menggunakan default:", err);
+        }
+    }
+
+    // 2. Hitung Parameter Jarak, Speed, dan Kalori
+    const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) 
+        ? parseFloat(totalDistanceKm.toFixed(2)) 
+        : parseFloat((durasiInput * 0.14).toFixed(2)); // Estimasi jika GPS tidak aktif
+
+    const speedVal = durasiInput > 0 ? parseFloat((finalJarak / (durasiInput / 60)).toFixed(1)) : 0;
+    const kaloriVal = Math.round(finalJarak * (at.bb || 65) * 0.75);
+    const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
+
+    // 3. Buat Objek Laporan Baru
+    const newReport = {
+        id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        atletId: String(at.id),
+        namaAtlet: at.nama,
+        tanggal: new Date().toISOString().split('T')[0],
+        jarak: finalJarak,
+        waktu: durasiInput,
+        speedKmh: speedVal,
+        kalori: kaloriVal,
+        gpsLoc: state.currentGpsLocation || 'Lokasi Terdeteksi',
+        imgSelfieUrl: selfieUrl,
+        imgStravaUrl: stravaUrl,
+        detectedMotor: isMotorDetected,
+        detectedLowHR: false,
+        detectedEdit: false,
+        softwareDetected: isMotorDetected ? 'Terindikasi Naik Kendaraan (GPS Speed)' : 'Validasi Live GPS Tracker',
+        status: 'Menunggu'
+    };
+
+    // 4. Simpan ke LocalStorage & State Laporan Validasi
+    if (!state.laporanValidasi) state.laporanValidasi = [];
+    state.laporanValidasi.unshift(newReport);
+    saveStorage('laporanValidasi', state.laporanValidasi);
+
+    // 5. Cadangan ke allReports
+    let allReports = loadStorage('allReports') || [];
+    allReports.unshift(newReport);
+    saveStorage('allReports', allReports);
+
+    // 6. Sync Async ke Firebase & Google Sheets tanpa memblokir UI
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet().catch(err => console.warn("Spreadsheet Sync Pending:", err));
+    }
+    
+    if (window.db && window.dbSet && window.dbRef) {
+        window.dbSet(window.dbRef(window.db, 'laporanValidasi/' + newReport.id), newReport);
+    }
+
+    // 7. Hapus Toast Loading & Render Ulang
     if (toast) toast.remove();
+    showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
+    
     renderSidebar();
     renderContent();
-    showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
-  }
+}
 
         async function setStatusLaporanValidasi(id, statusTarget) {
     const idx = state.laporanValidasi.findIndex(l => String(l.id) === String(id));
