@@ -4043,48 +4043,58 @@ function renderMatchHeatmap() {
         async function submitAtletRPE(e) {
     e.preventDefault();
     const atlet = state.activeAtlet;
-    if (!atlet) return;
+    if (!atlet) {
+        showToast("Error: Sesi atlet tidak ditemukan. Silakan login ulang.", "error");
+        return;
+    }
 
     const tanggal = document.getElementById('rpe-tanggal')?.value || new Date().toISOString().split('T')[0];
     const rpeVal = parseInt(document.getElementById('rpe-scale')?.value || 5);
     const durasi = parseInt(document.getElementById('rpe-durasi')?.value || 90);
     const hrMax = parseInt(document.getElementById('rpe-hrmax')?.value) || 0;
-    const sRPE = rpeVal * durasi;
+    const sRPEVal = rpeVal * durasi;
 
-    // Buat objek laporan RPE yang konsisten untuk State & Menu 9 Pelatih
+    // Objek RPE dengan properti lengkap agar terbaca di Menu 9 Pelatih
     const newRpe = {
         id: 'rpe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         atletId: String(atlet.id),
         namaAtlet: atlet.nama,
         tanggal: tanggal,
         rpeVal: rpeVal,
+        skalaRpe: rpeVal,
+        rpe: rpeVal,
         durasi: durasi,
         hrMax: hrMax,
-        sRPE: sRPE,
-        status: 'Disetujui' // Otomatis disetujui agar langsung terhitung di ACWR Menu 9
+        sRPE: sRPEVal,
+        srpe: sRPEVal,
+        status: 'Disetujui' // Otomatis disetujui agar langsung masuk ke perhitungan ACWR
     };
 
-    // 1. Simpan ke rpeLogs (State Utama)
+    // 1. Simpan ke state.rpeLogs
     if (!state.rpeLogs) state.rpeLogs = [];
     state.rpeLogs.unshift(newRpe);
     saveStorage('rpeLogs', state.rpeLogs);
 
-    // 2. Simpan juga ke allReports untuk fallback sinkronisasi
+    // 2. Simpan cadangan ke LocalStorage allReports untuk sinkronisasi Menu 9
     let allReports = loadStorage('allReports') || [];
     allReports.unshift(newRpe);
     saveStorage('allReports', allReports);
 
-    // 3. Kirim langsung ke Google Spreadsheet & Firebase
-    if (typeof syncDataToSpreadsheet === 'function') {
-        syncDataToSpreadsheet();
-    }
+    // 3. Kirim ke Firebase jika terhubung
     if (window.db && window.dbSet && window.dbRef) {
         window.dbSet(window.dbRef(window.db, 'rpeLogs/' + newRpe.id), newRpe);
     }
 
-    renderSidebar(); 
-    renderContent();
+    // 4. Trigger Sync ke Spreadsheet
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet().catch(err => console.warn("Spreadsheet Sync Pending:", err));
+    }
+
     showToast('Catatan RPE berhasil dikirim ke Pelatih!', 'success');
+
+    // Render ulang tampilan agar angka ACWR & tabel Menu 9 langsung terbarui
+    renderSidebar();
+    renderContent();
 }
 
         function exportDataAtletCSV() {
