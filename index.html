@@ -6976,51 +6976,49 @@ if (savedAtlet) {
   }
 
   // ... baris service worker sebelumnya ...
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for (let registration of registrations) {
-            registration.unregister();
-          }
-        });
-      });
-    }
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+            });
+        }
     </script>
 
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD6VNv0Sh60G0ys0IpR1_xPISFCQKo8LwM",
-    authDomain: "floorball-6559c.firebaseapp.com",
-    databaseURL: "https://floorball-6559c-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "floorball-6559c",
-    storageBucket: "floorball-6559c.firebasestorage.app",
-    messagingSenderId: "1098308865312",
-    appId: "1:1098308865312:web:fa497aa067d60bc0d05b45",
-    measurementId: "G-1GVD9Q56P6"
-  };
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6VNv0Sh60G0ys0IpR1_xPISFCQKo8LwM",
+            authDomain: "floorball-6559c.firebaseapp.com",
+            databaseURL: "https://floorball-6559c-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "floorball-6559c",
+            storageBucket: "floorball-6559c.firebasestorage.app",
+            messagingSenderId: "1098308865312",
+            appId: "1:1098308865312:web:fa497aa067d60bc0d05b45",
+            measurementId: "G-1GVD9Q56P6"
+        };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-  // Bind ke window agar bisa diakses oleh skrip utama aplikasi
-  window.db = db;
-  window.dbRef = ref;
-  window.dbSet = set;
-  window.dbOnValue = onValue;
+        window.db = db;
+        window.dbRef = ref;
+        window.dbSet = set;
+        window.dbOnValue = onValue;
 
-  // SINKRONISASI DATA DARI FIREBASE REALTIME DATABASE
-  onValue(ref(db, 'atletData'), (snapshot) => {
-    const data = snapshot.val();
-    if (data && Array.isArray(data) && window.state) {
-      window.state.atlet = data;
-      if (typeof saveStorage === 'function') saveStorage('atlet', data);
-      if (typeof renderSidebar === 'function') renderSidebar();
-      if (typeof renderContent === 'function') renderContent();
-    }
-  });
-</script>
+        onValue(ref(db, 'atletData'), (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data) && window.state) {
+                window.state.atlet = data;
+                if (typeof saveStorage === 'function') saveStorage('atlet', data);
+                if (typeof renderSidebar === 'function') renderSidebar();
+                if (typeof renderContent === 'function') renderContent();
+            }
+        });
+    </script>
 </body>
 </html>
