@@ -313,12 +313,13 @@
                     </div>
                 </div>
 
-                <button onclick="logout()" class="w-full text-left text-xs font-extrabold text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 p-3 rounded-2xl transition-all flex items-center gap-3 overflow-hidden whitespace-nowrap border border-transparent hover:border-rose-900/40 active:scale-95">
-                    <i class="fa-solid fa-right-from-bracket text-base w-5 text-center shrink-0"></i>
-                    <span class="sidebar-text truncate">Keluar / Ganti Akun</span>
-                </button>
-            </div>
-        </aside>
+                    <div class="pt-4 mt-auto border-t border-slate-800/80">
+        <button type="button" onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 hover:text-rose-300 font-bold text-sm transition-all active:scale-95 border border-rose-500/20">
+            <i class="fa-solid fa-right-from-bracket text-base"></i>
+            <span>Keluar / Log Out</span>
+        </button>
+    </div>
+</aside>
 
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
             <header class="h-16 sm:h-20 bg-white border-b border-slate-200/80 flex items-center justify-between px-5 sm:px-8 shadow-sm shrink-0">
@@ -1069,11 +1070,42 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
         await loadAtletFromSheet();
     }
     
+    // FUNGSI LOG OUT / KELUAR APLIKASI
+function handleLogout() {
+    if (confirm("Apakah Anda yakin ingin keluar dari aplikasi?")) {
+        if (typeof selectLoginRole === 'function') {
+            selectLoginRole('pelatih');
+        }
+        const appScreen = document.getElementById('app-screen');
+        const loginScreen = document.getElementById('login-screen');
+        if (appScreen) appScreen.classList.add('hidden');
+        if (loginScreen) loginScreen.classList.remove('hidden');
+
+        showToast("Berhasil keluar dari akun.", "info");
+    }
+}
+
     // 3. Set tampilan login
-    selectLoginRole('pelatih');
-});// FUNGSI REMINDER WA KHUSUS ATLET YANG BELUM LAPOR JOGGING HARI INI
+selectLoginRole('pelatih');
+}); // <-- Penutup DOMContentLoaded ditaruh di sini!
+
+// FUNGSI LOG OUT / KELUAR APLIKASI
+function handleLogout() {
+    if (confirm("Apakah Anda yakin ingin keluar dari aplikasi?")) {
+        if (typeof selectLoginRole === 'function') {
+            selectLoginRole('pelatih');
+        }
+        const appScreen = document.getElementById('app-screen');
+        const loginScreen = document.getElementById('login-screen');
+        if (appScreen) appScreen.classList.add('hidden');
+        if (loginScreen) loginScreen.classList.remove('hidden');
+
+        showToast("Berhasil keluar dari akun.", "info");
+    }
+}
+
+// FUNGSI REMINDER WA KHUSUS ATLET YANG BELUM LAPOR JOGGING HARI INI
 function sendWAReminderUnsubmitted() {
-    if (!state.atlet || state.atlet.length === 0) {
         showToast("Data atlet belum dimuat!", "error");
         return;
     }
