@@ -1075,7 +1075,7 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
         async function syncDataToSpreadsheet() {
     const toast = showToast("Menyinkronkan SELURUH data ke Google Spreadsheet...", "loading");
     
-    // Kirim seluruh objek state dari semua menu ke Apps Script Backend
+    // Payload lengkap mengambil seluruh state aplikasi
     const payload = {
         atlet: state.atlet || [],
         absensi: state.absensi || [],
@@ -1092,7 +1092,7 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik untuk batch data besar
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik
 
     try {
         await fetch(GOOGLE_SHEET_WEB_APP_URL, {
@@ -1105,17 +1105,64 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
 
         clearTimeout(timeoutId);
         if (toast) toast.remove();
-        showToast("Seluruh histori dari semua menu berhasil ter-backup ke Spreadsheet!", "success");
+        showToast("Seluruh histori berhasil ter-backup ke Spreadsheet!", "success");
         
-        processPendingSyncQueue();
+        // Memproses antrean jika ada data offline sebelumnya
+        if (typeof processPendingSyncQueue === 'function') {
+            processPendingSyncQueue();
+        }
     } catch (err) {
         clearTimeout(timeoutId);
         if (toast) toast.remove();
         
+        // Simpan ke antrean offline jika gagal koneksi
         queueFailedSync(payload);
         showToast("Koneksi terganggu. Data disimpan lokal & dikirim saat online.", "error");
     }
 }
+function queueFailedSync(payload) {
+    let pendingQueue = loadStorage('pendingSyncQueue', []);
+    pendingQueue.push({
+        timestamp: new Date().toISOString(),
+        payload: payload
+    });
+    saveStorage('pendingSyncQueue', pendingQueue);
+}
+
+async function processPendingSyncQueue() {
+    let pendingQueue = loadStorage('pendingSyncQueue', []);
+    if (pendingQueue.length === 0) return;
+
+    const remainingQueue = [];
+
+    for (const item of pendingQueue) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+            await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(item.payload),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+        } catch (err) {
+            remainingQueue.push(item);
+        }
+    }
+
+    saveStorage('pendingSyncQueue', remainingQueue);
+    if (remainingQueue.length === 0) {
+        showToast("Data offline berhasil terintegrasi!", "success");
+    }
+}
+
+window.addEventListener('online', () => {
+    showToast("Koneksi terhubung kembali. Memproses data...", "loading");
+    processPendingSyncQueue();
+});
 
         let autoSyncIntervalId = null;
 
@@ -7114,7 +7161,7 @@ if (savedAtlet) {
   }
 
   // ... baris service worker sebelumnya ...
-        if ('serviceWorker' in navigator) {
+                if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.getRegistrations().then(registrations => {
                     for (let registration of registrations) {
@@ -7123,27 +7170,26 @@ if (savedAtlet) {
                 });
             });
         }
+
         window.addEventListener("DOMContentLoaded", async () => {
- async () => {
-    // 1. Ambil data lokal terlebih dahulu agar UI tidak kosong saat offline
-    state.atlet = loadStorage('atlet', []);
-    
-    // 2. Tarik data terbaru dari spreadsheet atau server
-    if (typeof loadAtletFromSheet === 'function') {
-        await loadAtletFromSheet();
-    }
-    
-    // 3. Inisialisasi tampilan dan role default
-    selectLoginRole('pelatih');
-    renderContent();
-    
-    // 4. Mulai background polling untuk sinkronisasi otomatis (setiap 30 detik)
-    setInterval(() => {
-        if (typeof autoFetchFromSpreadsheet === 'function') {
-            autoFetchFromSpreadsheet();
-        }
-    }, 30000);
-});
+            state.atlet = loadStorage('atlet', []);
+            const savedAtlet = loadStorage('activeAtlet');
+            if (savedAtlet) state.activeAtlet = savedAtlet;
+
+            if (typeof loadAtletFromSheet === 'function') {
+                await loadAtletFromSheet();
+            }
+            
+            selectLoginRole('pelatih');
+            renderSidebar();
+            renderContent();
+            
+            setInterval(() => {
+                if (typeof autoFetchFromSpreadsheet === 'function') {
+                    autoFetchFromSpreadsheet();
+                }
+            }, 30000);
+        });
 
     </script>
 
