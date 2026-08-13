@@ -4524,11 +4524,17 @@ function generateJoggingSkuad(event) {
     </div>
 </td>
                         <td class="py-4 px-5 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="openModalAtlet('${a.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-blue-100 active:scale-90 flex items-center justify-center" title="Edit Data"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
-                                <button onclick="deleteAtletOptimistic('${a.id}')" class="text-rose-500 bg-rose-50 hover:bg-rose-500 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-rose-100 active:scale-90 flex items-center justify-center" title="Hapus Atlet"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                            </div>
-                        </td>
+    <div class="flex items-center justify-center gap-1.5">
+        <!-- Tombol Reminder WA Atlet (Opsi B) -->
+        <button onclick="sendWAReminder('${a.id}', 'all')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-600 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-emerald-100 flex items-center justify-center active:scale-90" title="Kirim Reminder WA">
+            <i class="fa-brands fa-whatsapp text-sm"></i>
+        </button>
+        <!-- Tombol Edit & Hapus Bawaan -->
+        <button onclick="openModalAtlet('${a.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-blue-100 active:scale-90 flex items-center justify-center" title="Edit Data"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+        <button onclick="deleteAtletOptimistic('${a.id}')" class="text-rose-500 bg-rose-50 hover:bg-rose-500 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-rose-100 active:scale-90 flex items-center justify-center" title="Hapus Atlet"><i class="fa-solid fa-trash-can text-xs"></i></button>
+    </div>
+</td>
+
                     </tr>
                     `;
                 }).join('')}
@@ -6069,15 +6075,24 @@ function generateJoggingSkuad(event) {
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-2.5 w-full lg:w-auto justify-end">
-                                    <button onclick="setStatusLaporanValidasi('${l.id}', 'Disetujui')" class="flex-1 lg:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
-                                        <i class="fa-solid fa-check text-sm"></i> Setujui
-                                    </button>
-                                    <button onclick="setStatusLaporanValidasi('${l.id}', 'Ditolak')" class="flex-1 lg:flex-none bg-rose-500 hover:bg-rose-600 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
-                                        <i class="fa-solid fa-xmark text-sm"></i> Tolak
-                                    </button>
-                                </div>
-                            </div>
+                                <div class="flex items-center gap-2">
+    <!-- Tombol Reminder WA Jogging & RPE -->
+    <button type="button" onclick="sendWAReminder('${l.atletId}', 'jogging')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition active:scale-95 flex items-center gap-1" title="Ingatkan Jogging via WA">
+        <i class="fa-brands fa-whatsapp text-sm"></i> Jogging
+    </button>
+    <button type="button" onclick="sendWAReminder('${l.atletId}', 'rpe')" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-md transition active:scale-95 flex items-center gap-1" title="Ingatkan RPE via WA">
+        <i class="fa-brands fa-whatsapp text-sm"></i> RPE
+    </button>
+
+    <!-- Tombol Setujui & Tolak Bawaan -->
+    <button onclick="setStatusLaporanValidasi('${l.id}', 'Disetujui')" class="flex-1 lg:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-check text-sm"></i> Setujui
+    </button>
+    <button onclick="setStatusLaporanValidasi('${l.id}', 'Ditolak')" class="flex-1 lg:flex-none bg-rose-500 hover:bg-rose-600 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-xmark text-sm"></i> Tolak
+    </button>
+</div>
+</div>
 
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                                 <div class="md:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-center">
@@ -7147,6 +7162,29 @@ if (savedAtlet) {
       }
     });
   }
+
+// FUNGSI PENGIRIM REMINDER WHATSAPP JOGGING & RPE
+function sendWAReminder(atletId, jenisReminder) {
+    const atlet = state.atlet.find(a => String(a.id) === String(atletId));
+    if (!atlet) {
+        showToast("Pilih atlet terlebih dahulu!", "error");
+        return;
+    }
+
+    let pesan = "";
+    const nama = atlet.nama;
+
+    if (jenisReminder === 'jogging') {
+        pesan = `Halo *${nama}*! 🏃‍♂️\n\nJangan lupa untuk menyelesaikan sesi *Latihan Jogging / Aerobic Base* hari ini ya.\n\nSetel GPS HP kamu, ambil foto selfie setelah lari & screenshot Strava, lalu upload laporannya melalui aplikasi Coach Floorball Pro.\n\nSemangat latihan! ⚡`;
+    } else if (jenisReminder === 'rpe') {
+        pesan = `Halo *${nama}*! 📊\n\nDiingatkan untuk segera mengisi *Laporan RPE & Heart Rate (Beban Latihan)* untuk sesi hari ini ya.\n\nMasuk ke aplikasi Coach Floorball Pro > Menu *Input RPE & HR*, lalu kirimkan tingkat kelelahanmu.\n\nTerima kasih! 🙏`;
+    } else {
+        pesan = `Halo *${nama}*!\n\nDiingatkan untuk menyelesaikan sesi Latihan Jogging & langsung mengisi Laporan RPE/HR hari ini di aplikasi Coach Floorball Pro. Salam Floorball! 🏑`;
+    }
+
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`;
+    window.open(waUrl, '_blank');
+}
 
   // 3. SHARE WHATSAPP PERTANDINGAN
   function shareMatchToWhatsApp() {
