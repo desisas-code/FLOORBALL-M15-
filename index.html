@@ -7234,13 +7234,12 @@ function sendWAReminder(atletId, jenisReminder) {
 
         // 4. Polling tunggal 30 detik (Hanya 1 timer aktif)
         setInterval(() => {
-            if (typeof autoFetchFromSpreadsheet === 'function') {
-                autoFetchFromSpreadsheet();
-            }
-        }, 30000);
-    });
-			
-</script>
+                if (typeof autoFetchFromSpreadsheet === 'function') {
+                    autoFetchFromSpreadsheet();
+                }
+            }, 30000);
+        });
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
