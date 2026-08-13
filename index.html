@@ -144,9 +144,9 @@
       async function autoFetchFromSpreadsheet() {
       try {
         const targetUrl = (typeof GOOGLE_SHEET_WEB_APP_URL !== 'undefined' && GOOGLE_SHEET_WEB_APP_URL) ? GOOGLE_SHEET_WEB_APP_URL : SCRIPT_URL;
-const res = await fetch(`${targetUrl}?_t=${new Date().getTime()}`);
-        
-        if (data && data.status === "success") {
+		const data = await res.json();
+
+	if (data && data.status === "success") {
           // 1. Update Data Atlet
           if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
             state.atlet = data.atlet;
