@@ -3932,11 +3932,12 @@ function renderMatchHeatmap() {
     const selfieFile = document.getElementById('run-file-selfie')?.files[0];
     const buktiFile = document.getElementById('run-file-bukti')?.files[0];
     const durasiInput = parseFloat(document.getElementById('run-durasi')?.value) || 30;
+    const zonaFactor = parseFloat(document.getElementById('run-zona')?.value) || 0.75;
 
     let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
     let stravaUrl = 'https://picsum.photos/500/500?sports';
 
-    // 1. Kompresi Foto dengan Ukuran Lebih Ringan (Mencegah Lag/Crash)
+    // 1. Kompresi Foto dengan Ukuran Lebih Ringan
     if (selfieFile) {
         try { 
             selfieUrl = await compressImage(selfieFile, 500, 500, 0.5); 
@@ -3953,16 +3954,23 @@ function renderMatchHeatmap() {
         }
     }
 
-    // 2. Hitung Parameter Jarak, Speed, dan Kalori
-    const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) 
-        ? parseFloat(totalDistanceKm.toFixed(2)) 
-        : parseFloat((durasiInput * 0.14).toFixed(2)); // Estimasi jika GPS tidak aktif
+    // 2. Hitung Estimasi Jarak berbasis VO2Max / MAS jika Live GPS Tidak Bergerak (< 0.1 KM)
+    const vo2val = (typeof getAtletVO2Max === 'function') ? (getAtletVO2Max(at.id) || 45) : 45;
+    const masKmh = vo2val / 3.5;
+    const paceMinPerKm = 60 / (masKmh * zonaFactor);
+    const estJarakFromZona = parseFloat((durasiInput / paceMinPerKm).toFixed(2));
 
+    // Jika live GPS aktif dan bergerak > 0.1 KM gunakan GPS, jika diam/kosong gunakan estimasi zona
+    const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0.1) 
+        ? parseFloat(totalDistanceKm.toFixed(2)) 
+        : estJarakFromZona;
+
+    // 3. Hitung Speed dan Kalori
     const speedVal = durasiInput > 0 ? parseFloat((finalJarak / (durasiInput / 60)).toFixed(1)) : 0;
     const kaloriVal = Math.round(finalJarak * (at.bb || 65) * 0.75);
     const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
 
-    // 3. Buat Objek Laporan Baru
+    // 4. Buat Objek Laporan Baru
     const newReport = {
         id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         atletId: String(at.id),
@@ -3982,17 +3990,17 @@ function renderMatchHeatmap() {
         status: 'Menunggu'
     };
 
-    // 4. Simpan ke LocalStorage & State Laporan Validasi
+    // 5. Simpan ke LocalStorage & State Laporan Validasi
     if (!state.laporanValidasi) state.laporanValidasi = [];
     state.laporanValidasi.unshift(newReport);
     saveStorage('laporanValidasi', state.laporanValidasi);
 
-    // 5. Cadangan ke allReports
+    // 6. Cadangan ke allReports
     let allReports = loadStorage('allReports') || [];
     allReports.unshift(newReport);
     saveStorage('allReports', allReports);
 
-    // 6. Sync Async ke Firebase & Google Sheets tanpa memblokir UI
+    // 7. Sync Async ke Firebase & Google Sheets
     if (typeof syncDataToSpreadsheet === 'function') {
         syncDataToSpreadsheet().catch(err => console.warn("Spreadsheet Sync Pending:", err));
     }
@@ -4001,7 +4009,7 @@ function renderMatchHeatmap() {
         window.dbSet(window.dbRef(window.db, 'laporanValidasi/' + newReport.id), newReport);
     }
 
-    // 7. Hapus Toast Loading & Render Ulang
+    // 8. Hapus Toast Loading & Render Ulang
     if (toast) toast.remove();
     showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
     
