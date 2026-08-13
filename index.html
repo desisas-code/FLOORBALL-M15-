@@ -143,8 +143,8 @@
 
       async function autoFetchFromSpreadsheet() {
       try {
-        const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL || SCRIPT_URL}?_t=${new Date().getTime()}`);
-        const data = await res.json();
+        const targetUrl = (typeof GOOGLE_SHEET_WEB_APP_URL !== 'undefined' && GOOGLE_SHEET_WEB_APP_URL) ? GOOGLE_SHEET_WEB_APP_URL : SCRIPT_URL;
+const res = await fetch(`${targetUrl}?_t=${new Date().getTime()}`);
         
         if (data && data.status === "success") {
           // 1. Update Data Atlet
@@ -1070,27 +1070,6 @@ function handleLogout() {
         showToast("Berhasil keluar dari akun.", "info");
     }
 }
-
-// 2. Listener DOMContentLoaded yang rapi (Tanpa fungsi di dalamnya)
-window.addEventListener('DOMContentLoaded', async () => {
-    state.atlet = loadStorage('atlet', []);
-    if (typeof loadAtletFromSheet === 'function') {
-        await loadAtletFromSheet();
-    }
-    selectLoginRole('pelatih');
-});
-        const appScreen = document.getElementById('app-screen');
-        const loginScreen = document.getElementById('login-screen');
-        if (appScreen) appScreen.classList.add('hidden');
-        if (loginScreen) loginScreen.classList.remove('hidden');
-
-        showToast("Berhasil keluar dari akun.", "info");
-    }
-}
-
-    // 3. Set tampilan login
-selectLoginRole('pelatih');
-}); // <-- Penutup DOMContentLoaded ditaruh di sini!
 
 // FUNGSI LOG OUT / KELUAR APLIKASI
 function handleLogout() {
@@ -5985,7 +5964,7 @@ function generateJoggingSkuad(event) {
         </div>
     `;
 
-    setTimeout(initMenu7AutoFill, 50);
+    setTimeout(initMenu7AutoFill, 200);
             } else if (state.currentMenu === 'menu-8') {
     pageTitle.innerText = "Validasi Laporan Bukti Jogging (GPS & PAP)";
 
@@ -6753,11 +6732,11 @@ function generateJoggingSkuad(event) {
       const currentName = String(at.nama || '').trim().toLowerCase();
       const logName = String(j.namaAtlet || j.nama || '').trim().toLowerCase();
 
-      return targetId === currentId || 
-             targetId === 'semua' || 
-             targetId === '' || 
-             targetId === 'all' ||
-             (logName && currentName && (logName.includes(currentName) || currentName.includes(logName)));
+return targetId === currentId || 
+       targetId === 'semua' || 
+       targetId === '' || 
+       targetId === 'all' ||
+       (logName && currentName && logName === currentName); // Menggunakan '===' (persis sama), bukan includes
     });
     
     // 2. Ambil data status laporan validasi (Menu 8) khusus untuk atlet ini (Filter pintar: ID atau Nama)
@@ -6772,7 +6751,7 @@ const myReports = (state.laporanValidasi || []).filter(l => {
 
   // Cocokkan berdasarkan ID atlet ATAU Nama Atlet yang sedang login
   const isMatchId = reportId && currentId && (reportId === currentId);
-  const isMatchNama = reportNama && currentNama && (reportNama.includes(currentNama) || currentNama.includes(reportNama));
+  const const isMatchId = reportId && currentId && (reportId === currentId);
 
   return isMatchId || isMatchNama;
 });
@@ -7106,24 +7085,6 @@ const myReports = (state.laporanValidasi || []).filter(l => {
     renderChartsForMenu(state.currentMenu);
 }, 200);
 
-        }
-  // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
-  window.addEventListener("DOMContentLoaded", () => {
-    // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
-const savedAtlet = loadStorage('activeAtlet');
-if (savedAtlet) {
-    state.activeAtlet = savedAtlet;    }
-
-    const savedUser = loadStorage("currentUser");
-    if (savedUser) {
-      state.currentUser = savedUser;
-    }
-
-    renderContent();
-    autoFetchFromSpreadsheet();
-    setInterval(autoFetchFromSpreadsheet, 30000);
-  });
-
  function openAtletRadarModal(atletId) {
   const atlet = state.atlet.find(a => String(a.id) === String(atletId));
   if (!atlet) return;
@@ -7268,25 +7229,31 @@ function sendWAReminder(atletId, jenisReminder) {
         }
 
         window.addEventListener("DOMContentLoaded", async () => {
-            state.atlet = loadStorage('atlet', []);
-            const savedAtlet = loadStorage('activeAtlet');
-            if (savedAtlet) state.activeAtlet = savedAtlet;
+    // 1. Muat state & restore sesi login
+    state.atlet = loadStorage('atlet', []);
+    const savedAtlet = loadStorage('activeAtlet');
+    if (savedAtlet) state.activeAtlet = savedAtlet;
 
-            if (typeof loadAtletFromSheet === 'function') {
-                await loadAtletFromSheet();
-            }
-            
-            selectLoginRole('pelatih');
-            renderSidebar();
-            renderContent();
-            
-            setInterval(() => {
-                if (typeof autoFetchFromSpreadsheet === 'function') {
-                    autoFetchFromSpreadsheet();
-                }
-            }, 30000);
-        });
+    const savedUser = loadStorage("currentUser");
+    if (savedUser) state.currentUser = savedUser;
 
+    // 2. Tarik data dari Google Sheets
+    if (typeof loadAtletFromSheet === 'function') {
+        await loadAtletFromSheet();
+    }
+
+    // 3. Render Tampilan Aplikasi
+    selectLoginRole('pelatih');
+    renderSidebar();
+    renderContent();
+
+    // 4. Polling tunggal 30 detik (Hanya 1 timer aktif)
+    setInterval(() => {
+        if (typeof autoFetchFromSpreadsheet === 'function') {
+            autoFetchFromSpreadsheet();
+        }
+    }, 30000);
+});
     </script>
 
     <script type="module">
