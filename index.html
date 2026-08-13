@@ -1071,7 +1071,51 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
     
     // 3. Set tampilan login
     selectLoginRole('pelatih');
-});
+});// FUNGSI REMINDER WA KHUSUS ATLET YANG BELUM LAPOR JOGGING HARI INI
+function sendWAReminderUnsubmitted() {
+    if (!state.atlet || state.atlet.length === 0) {
+        showToast("Data atlet belum dimuat!", "error");
+        return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const laporanToday = state.laporanValidasi || loadStorage('allReports', []) || [];
+
+    // Filter atlet yang BELUM mengirim laporan jogging hari ini
+    const belumLapor = state.atlet.filter(at => {
+        const hasReport = laporanToday.some(l => 
+            (String(l.atletId) === String(at.id) || (l.namaAtlet && l.namaAtlet.includes(at.nama))) && 
+            l.tanggal === todayStr
+        );
+        return !hasReport;
+    });
+
+    if (belumLapor.length === 0) {
+        showToast("Luar biasa! Seluruh atlet skuad sudah mengirim laporan jogging hari ini.", "success");
+        return;
+    }
+
+    // Susun format pesan WhatsApp
+    let pesan = `🏑 *PENGINGAT SESI JOGGING & LAPORAN HARI INI*\n`;
+    pesan += `Tanggal: *${todayStr}*\n`;
+    pesan += `===================================\n\n`;
+    pesan += `Halo Rekan-Rekan Skuad!\nDiingatkan bagi atlet yang *BELUM* menyelesaikan sesi Jogging / belum mengunggah bukti GPS & Strava hari ini:\n\n`;
+    pesan += `📋 *DAFTAR ATLET BELUM LAPOR (${belumLapor.length} ATLET):*\n`;
+
+    belumLapor.forEach((at, idx) => {
+        pesan += `${idx + 1}. *${at.nama}* (${at.posisi})\n`;
+    });
+
+    pesan += `\n===================================\n`;
+    pesan += `⚠️ *Instruksi Pelatih Kepala:*\n`;
+    pesan += `- Segera selesaikan sesi lari & upload bukti (Selfie + Strava) ke aplikasi.\n`;
+    pesan += `- Pastikan tidak terdeteksi *Naik Motor* agar laporan tidak ditolak otomatis.\n\n`;
+    pesan += `_Dikirim otomatis via Coach Floorball System_ ⚡`;
+
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`;
+    window.open(waUrl, '_blank');
+}
+
         async function syncDataToSpreadsheet() {
     const toast = showToast("Menyinkronkan SELURUH data ke Google Spreadsheet...", "loading");
     
@@ -5972,6 +6016,22 @@ function generateJoggingSkuad(event) {
     const accPct = totalLogs > 0 ? Math.round((approvedLogs.length / totalLogs) * 100) : 0;
 
     container.innerHTML = `
+            <!-- HEADER JUDUL & TOMBOL REMINDER WA UNTUK ATLET BELUM JOGGING -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm mb-6">
+            <div>
+                <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-shield-check text-blue-700"></i> Validasi Laporan Bukti Jogging (GPS & PAP)
+                </h3>
+                <p class="text-xs font-semibold text-slate-500 mt-0.5">Verifikasi dan setujui bukti laporan fisik serta pemantauan aktivitas atlet</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <!-- TOMBOL INGATKAN ATLET BELUM LAPOR JOGGING VIA WA -->
+                <button type="button" onclick="sendWAReminderUnsubmitted()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/80 px-4 py-2.5 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2 transition-all active:scale-95" title="Ingatkan Atlet Belum Laporan Jogging">
+                    <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i> <span>Ingatkan Belum Lapor</span>
+                </button>
+            </div>
+        </div>
+
         <!-- 1. GRID CHART & METRIK SUMMARY -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
             
