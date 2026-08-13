@@ -1056,21 +1056,6 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
     }
 }
 
-       // 1. Deklarasi fungsi di luar (Global Scope) agar bisa dipanggil HTML onclick
-function handleLogout() {
-    if (confirm("Apakah Anda yakin ingin keluar dari aplikasi?")) {
-        if (typeof selectLoginRole === 'function') {
-            selectLoginRole('pelatih');
-        }
-        const appScreen = document.getElementById('app-screen');
-        const loginScreen = document.getElementById('login-screen');
-        if (appScreen) appScreen.classList.add('hidden');
-        if (loginScreen) loginScreen.classList.remove('hidden');
-
-        showToast("Berhasil keluar dari akun.", "info");
-    }
-}
-
 // FUNGSI LOG OUT / KELUAR APLIKASI
 function handleLogout() {
     if (confirm("Apakah Anda yakin ingin keluar dari aplikasi?")) {
@@ -6750,10 +6735,10 @@ const myReports = (state.laporanValidasi || []).filter(l => {
   const currentNama = String(at.nama || '').trim().toLowerCase();
 
   // Cocokkan berdasarkan ID atlet ATAU Nama Atlet yang sedang login
-  const isMatchId = reportId && currentId && (reportId === currentId);
-  const const isMatchId = reportId && currentId && (reportId === currentId);
+const isMatchId = reportId && currentId && (reportId === currentId);
+const isMatchNama = reportNama && currentNama && (reportNama === currentNama);
 
-  return isMatchId || isMatchNama;
+return isMatchId || isMatchNama;
 });
     container.innerHTML = `
         <div class="space-y-6">
