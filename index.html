@@ -7115,6 +7115,28 @@ if (savedAtlet) {
                 });
             });
         }
+        window.addEventListener("DOMContentLoaded", async () => {
+ async () => {
+    // 1. Ambil data lokal terlebih dahulu agar UI tidak kosong saat offline
+    state.atlet = loadStorage('atlet', []);
+    
+    // 2. Tarik data terbaru dari spreadsheet atau server
+    if (typeof loadAtletFromSheet === 'function') {
+        await loadAtletFromSheet();
+    }
+    
+    // 3. Inisialisasi tampilan dan role default
+    selectLoginRole('pelatih');
+    renderContent();
+    
+    // 4. Mulai background polling untuk sinkronisasi otomatis (setiap 30 detik)
+    setInterval(() => {
+        if (typeof autoFetchFromSpreadsheet === 'function') {
+            autoFetchFromSpreadsheet();
+        }
+    }, 30000);
+});
+
     </script>
 
     <script type="module">
