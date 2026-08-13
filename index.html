@@ -7228,18 +7228,20 @@ function sendWAReminder(atletId, jenisReminder) {
     }
 
     // 3. Render Tampilan Aplikasi
-    selectLoginRole('pelatih');
-    renderSidebar();
-    renderContent();
+        selectLoginRole('pelatih');
+        renderSidebar();
+        renderContent();
 
-    // 4. Polling tunggal 30 detik (Hanya 1 timer aktif)
-    setInterval(() => {
-        if (typeof autoFetchFromSpreadsheet === 'function') {
-            autoFetchFromSpreadsheet();
-        }
-    }, 30000);
-});
-    </script>
+        // 4. Polling tunggal 30 detik (Hanya 1 timer aktif)
+        setInterval(() => {
+            if (typeof autoFetchFromSpreadsheet === 'function') {
+                autoFetchFromSpreadsheet();
+            }
+        }, 30000);
+    // HAPUS BARIS 7241 '});' LALU GANTI DENGAN DUA KURUNG DI BAWAH INI:
+    }
+}
+</script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -7273,6 +7275,6 @@ function sendWAReminder(atletId, jenisReminder) {
                 if (typeof renderContent === 'function') renderContent();
             }
         });
-    </script>
-</body>
-</html>
+    	</script>
+		</body>
+		</html>
