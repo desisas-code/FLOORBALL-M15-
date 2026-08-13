@@ -143,10 +143,10 @@
 
       async function autoFetchFromSpreadsheet() {
       try {
-        const targetUrl = (typeof GOOGLE_SHEET_WEB_APP_URL !== 'undefined' && GOOGLE_SHEET_WEB_APP_URL) ? GOOGLE_SHEET_WEB_APP_URL : SCRIPT_URL;
-		const data = await res.json();
-
-	if (data && data.status === "success") {
+        const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL || SCRIPT_URL}?_t=${new Date().getTime()}`);
+        const data = await res.json();
+        
+        if (data && data.status === "success") {
           // 1. Update Data Atlet
           if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
             state.atlet = data.atlet;
@@ -198,7 +198,12 @@
         console.log("Sync otomatis pending connection...");
       }
     }
-	
+
+    window.addEventListener("DOMContentLoaded", () => {
+      autoFetchFromSpreadsheet(); // Jalankan sekali saat pertama dimuat
+      setInterval(autoFetchFromSpreadsheet, 30000); // Polling setiap 30 detik
+    });
+		
     </script>
 
     <div id="toast-container"></div>
@@ -308,13 +313,12 @@
                     </div>
                 </div>
 
-                    <div class="pt-4 mt-auto border-t border-slate-800/80">
-        <button type="button" onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 hover:text-rose-300 font-bold text-sm transition-all active:scale-95 border border-rose-500/20">
-            <i class="fa-solid fa-right-from-bracket text-base"></i>
-            <span>Keluar / Log Out</span>
-        </button>
-    </div>
-</aside>
+                <button onclick="logout()" class="w-full text-left text-xs font-extrabold text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 p-3 rounded-2xl transition-all flex items-center gap-3 overflow-hidden whitespace-nowrap border border-transparent hover:border-rose-900/40 active:scale-95">
+                    <i class="fa-solid fa-right-from-bracket text-base w-5 text-center shrink-0"></i>
+                    <span class="sidebar-text truncate">Keluar / Ganti Akun</span>
+                </button>
+            </div>
+        </aside>
 
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
             <header class="h-16 sm:h-20 bg-white border-b border-slate-200/80 flex items-center justify-between px-5 sm:px-8 shadow-sm shrink-0">
@@ -1056,70 +1060,22 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
     }
 }
 
-// FUNGSI LOG OUT / KELUAR APLIKASI
-function handleLogout() {
-    if (confirm("Apakah Anda yakin ingin keluar dari aplikasi?")) {
-        if (typeof selectLoginRole === 'function') {
-            selectLoginRole('pelatih');
-        }
-        const appScreen = document.getElementById('app-screen');
-        const loginScreen = document.getElementById('login-screen');
-        if (appScreen) appScreen.classList.add('hidden');
-        if (loginScreen) loginScreen.classList.remove('hidden');
-
-        showToast("Berhasil keluar dari akun.", "info");
+       window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Muat data lokal jika ada
+    state.atlet = loadStorage('atlet', []); 
+    
+    // 2. Langsung tarik data terbaru dari Google Apps Script / Firebase
+    if (typeof loadAtletFromSheet === 'function') {
+        await loadAtletFromSheet();
     }
-}
-
-// FUNGSI REMINDER WA KHUSUS ATLET YANG BELUM LAPOR JOGGING HARI INI
-function sendWAReminderUnsubmitted() {
-    if (!state.atlet || state.atlet.length === 0) {
-        showToast("Data atlet belum dimuat!", "error");
-        return;
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const laporanToday = state.laporanValidasi || loadStorage('allReports', []) || [];
-
-    // Filter atlet yang BELUM mengirim laporan jogging hari ini
-    const belumLapor = state.atlet.filter(at => {
-        const hasReport = laporanToday.some(l => 
-            (String(l.atletId) === String(at.id) || (l.namaAtlet && l.namaAtlet.includes(at.nama))) && 
-            l.tanggal === todayStr
-        );
-        return !hasReport;
-    });
-
-    if (belumLapor.length === 0) {
-        showToast("Luar biasa! Seluruh atlet skuad sudah mengirim laporan jogging hari ini.", "success");
-        return;
-    }
-
-    // Susun format pesan WhatsApp
-    let pesan = `🏑 *PENGINGAT SESI JOGGING & LAPORAN HARI INI*\n`;
-    pesan += `Tanggal: *${todayStr}*\n`;
-    pesan += `===================================\n\n`;
-    pesan += `Halo Rekan-Rekan Skuad!\nDiingatkan bagi atlet yang *BELUM* menyelesaikan sesi Jogging / belum mengunggah bukti GPS & Strava hari ini:\n\n`;
-    pesan += `📋 *DAFTAR ATLET BELUM LAPOR (${belumLapor.length} ATLET):*\n`;
-
-    belumLapor.forEach((at, idx) => {
-        pesan += `${idx + 1}. *${at.nama}* (${at.posisi})\n`;
-    });
-
-    pesan += `\n===================================\n`;
-    pesan += `⚠️ *Instruksi Pelatih Kepala:*\n`;
-    pesan += `- Segera selesaikan sesi lari & upload bukti (Selfie + Strava) ke aplikasi.\n`;
-    pesan += `- Pastikan tidak terdeteksi *Naik Motor* agar laporan tidak ditolak otomatis.\n\n`;
-    pesan += `_Dikirim otomatis via Coach Floorball System_ ⚡`;
-
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`;
-    window.open(waUrl, '_blank');
-}
-
+    
+    // 3. Set tampilan login
+    selectLoginRole('pelatih');
+});
         async function syncDataToSpreadsheet() {
     const toast = showToast("Menyinkronkan SELURUH data ke Google Spreadsheet...", "loading");
     
-    // Payload lengkap mengambil seluruh state aplikasi
+    // Kirim seluruh objek state dari semua menu ke Apps Script Backend
     const payload = {
         atlet: state.atlet || [],
         absensi: state.absensi || [],
@@ -1136,11 +1092,12 @@ function sendWAReminderUnsubmitted() {
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik untuk batch data besar
 
     try {
         await fetch(GOOGLE_SHEET_WEB_APP_URL, {
             method: 'POST',
+            mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload),
             signal: controller.signal
@@ -1148,64 +1105,17 @@ function sendWAReminderUnsubmitted() {
 
         clearTimeout(timeoutId);
         if (toast) toast.remove();
-        showToast("Data telah dikirimkan ke Google Sheets", "success");
+        showToast("Seluruh histori dari semua menu berhasil ter-backup ke Spreadsheet!", "success");
         
-        // Memproses antrean jika ada data offline sebelumnya
-        if (typeof processPendingSyncQueue === 'function') {
-            processPendingSyncQueue();
-        }
+        processPendingSyncQueue();
     } catch (err) {
         clearTimeout(timeoutId);
         if (toast) toast.remove();
         
-        // Simpan ke antrean offline jika gagal koneksi
         queueFailedSync(payload);
         showToast("Koneksi terganggu. Data disimpan lokal & dikirim saat online.", "error");
     }
 }
-function queueFailedSync(payload) {
-    let pendingQueue = loadStorage('pendingSyncQueue', []);
-    pendingQueue.push({
-        timestamp: new Date().toISOString(),
-        payload: payload
-    });
-    saveStorage('pendingSyncQueue', pendingQueue);
-}
-
-async function processPendingSyncQueue() {
-    let pendingQueue = loadStorage('pendingSyncQueue', []);
-    if (pendingQueue.length === 0) return;
-
-    const remainingQueue = [];
-
-    for (const item of pendingQueue) {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-            await fetch(GOOGLE_SHEET_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(item.payload),
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-        } catch (err) {
-            remainingQueue.push(item);
-        }
-    }
-
-    saveStorage('pendingSyncQueue', remainingQueue);
-    if (remainingQueue.length === 0) {
-        showToast("Data offline berhasil terintegrasi!", "success");
-    }
-}
-
-window.addEventListener('online', () => {
-    showToast("Koneksi terhubung kembali. Memproses data...", "loading");
-    processPendingSyncQueue();
-});
 
         let autoSyncIntervalId = null;
 
@@ -1899,59 +1809,6 @@ function deleteRiwayatValidasi(id) {
     renderContent();
     renderChartsForMenu(state.currentMenu);
 }
-
-function getAtletGpsLocation() {
-    const badge = document.getElementById('gps-status-badge');
-    
-    if (!navigator.geolocation) {
-        showToast("Browser Anda tidak mendukung fitur GPS!", "error");
-        if (badge) badge.innerText = "GPS tidak didukung browser";
-        return;
-    }
-
-    if (badge) {
-        badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-2xl text-xs font-semibold text-center shadow-inner";
-        badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600 mr-1.5"></i> Mengunci Sinyal GPS...`;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const { latitude, longitude, accuracy } = position.coords;
-            const locString = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-            
-            // Simpan ke state aplikasi
-            state.currentGpsLocation = locString;
-
-            if (badge) {
-                badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-2xl text-xs font-black text-center shadow-sm";
-                badge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Terkunci: ${locString} (Akurasi: ±${Math.round(accuracy)}m)`;
-            }
-
-            showToast("Koordinat GPS berhasil dikunci!", "success");
-
-            // Jika ingin mengaktifkan live tracking berjalan secara otomatis setelah dikunci
-            if (typeof startLiveGpsTracking === 'function') {
-                startLiveGpsTracking();
-            }
-        },
-        (error) => {
-            console.warn("GPS Error:", error);
-            let errMsg = "Gagal mengambil lokasi GPS.";
-            if (error.code === 1) errMsg = "Izin lokasi (GPS) ditolak di HP Anda.";
-            else if (error.code === 2) errMsg = "Sinyal GPS tidak ditemukan.";
-            else if (error.code === 3) errMsg = "Waktu permintaan GPS habis (Timeout).";
-
-            if (badge) {
-                badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-800 border border-rose-200 rounded-2xl text-xs font-bold text-center";
-                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600 mr-1.5"></i> ${errMsg}`;
-            }
-
-            showToast(errMsg, "error");
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-}
-
         function closeModalAtlet() {
             const modal = document.getElementById('modal-atlet');
             if(modal) modal.classList.add('hidden');
@@ -3796,7 +3653,7 @@ function renderMatchHeatmap() {
                 }
             } else {
                 state.atlet.unshift({ 
-                    id: nama.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().substring(0, 3) + Math.floor(10 + Math.random() * 90), 
+                    id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), 
                     nama, 
                     posisi, 
                     gender, 
@@ -3960,102 +3817,77 @@ function renderMatchHeatmap() {
         }
 
         async function submitAtletLaporanJogging(e) {
-    e.preventDefault();
-    const at = state.activeAtlet;
-    if (!at) {
-        showToast("Error: Sesi atlet tidak ditemukan. Silakan login ulang.", "error");
-        return;
-    }
+            e.preventDefault();
+            const at = state.activeAtlet;
+            if (!at) return;
 
-    const toast = showToast('Memproses & Mengunggah Laporan...', 'loading');
+            const selfieFile = document.getElementById('run-file-selfie')?.files[0];
+            const buktiFile = document.getElementById('run-file-bukti')?.files[0];
 
-    const selfieFile = document.getElementById('run-file-selfie')?.files[0];
-    const buktiFile = document.getElementById('run-file-bukti')?.files[0];
-    const durasiInput = parseFloat(document.getElementById('run-durasi')?.value) || 30;
-    const zonaFactor = parseFloat(document.getElementById('run-zona')?.value) || 0.75;
+            const toast = showToast('Memproses & Mengunggah Laporan...', 'loading');
 
-    let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
-    let stravaUrl = 'https://picsum.photos/500/500?sports';
+            let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
+            let stravaUrl = 'https://picsum.photos/500/500?sports';
 
-    // 1. Kompresi Foto dengan Ukuran Lebih Ringan
-    if (selfieFile) {
-        try { 
-            selfieUrl = await compressImage(selfieFile, 500, 500, 0.5); 
-        } catch(err) {
-            console.warn("Gagal kompresi selfie, menggunakan default:", err);
-        }
-    }
+            if (selfieFile) {
+                try { 
+                    selfieUrl = await compressImage(selfieFile, 600, 600, 0.6); 
+                } catch(err) {
+                    console.warn("Gagal kompresi selfie:", err);
+                }
+            }
 
-    if (buktiFile) {
-        try { 
-            stravaUrl = await compressImage(buktiFile, 600, 600, 0.5); 
-        } catch(err) {
-            console.warn("Gagal kompresi bukti strava, menggunakan default:", err);
-        }
-    }
+            if (buktiFile) {
+                try { 
+                    stravaUrl = await compressImage(buktiFile, 800, 800, 0.6); 
+                } catch(err) {
+                    console.warn("Gagal kompresi bukti strava:", err);
+                }
+            }
 
-    // 2. Hitung Estimasi Jarak berbasis VO2Max / MAS jika Live GPS Tidak Bergerak (< 0.1 KM)
-    const vo2val = (typeof getAtletVO2Max === 'function') ? (getAtletVO2Max(at.id) || 45) : 45;
-    const masKmh = vo2val / 3.5;
-    const paceMinPerKm = 60 / (masKmh * zonaFactor);
-    const estJarakFromZona = parseFloat((durasiInput / paceMinPerKm).toFixed(2));
+            // ... kode baris 3830 - 3835 ...
 
-    // Jika live GPS aktif dan bergerak > 0.1 KM gunakan GPS, jika diam/kosong gunakan estimasi zona
-    const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0.1) 
-        ? parseFloat(totalDistanceKm.toFixed(2)) 
-        : estJarakFromZona;
+const durasiVal = matchLog ? parseFloat(matchLog.waktu) : 30;
+const jarakVal = matchLog ? parseFloat(matchLog.jarak) : 4.31;
+const speedVal = (durasiVal > 0 && jarakVal > 0) ? parseFloat((jarakVal / (durasiVal / 60)).toFixed(1)) : 8.6;
+const kaloriVal = Math.round(jarakVal * (at.bb || 65) * 0.75);
 
-    // 3. Hitung Speed dan Kalori
-    const speedVal = durasiInput > 0 ? parseFloat((finalJarak / (durasiInput / 60)).toFixed(1)) : 0;
-    const kaloriVal = Math.round(finalJarak * (at.bb || 65) * 0.75);
-    const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
+const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
+const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) ? parseFloat(totalDistanceKm.toFixed(2)) : jarakVal;
 
-    // 4. Buat Objek Laporan Baru
-    const newReport = {
-        id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        atletId: String(at.id),
-        namaAtlet: at.nama,
-        tanggal: new Date().toISOString().split('T')[0],
-        jarak: finalJarak,
-        waktu: durasiInput,
-        speedKmh: speedVal,
-        kalori: kaloriVal,
-        gpsLoc: state.currentGpsLocation || 'Lokasi Terdeteksi',
-        imgSelfieUrl: selfieUrl,
-        imgStravaUrl: stravaUrl,
-        detectedMotor: isMotorDetected,
-        detectedLowHR: false,
-        detectedEdit: false,
-        softwareDetected: isMotorDetected ? 'Terindikasi Naik Kendaraan (GPS Speed)' : 'Validasi Live GPS Tracker',
-        status: 'Menunggu'
-    };
+const newReport = {
+    id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    atletId: at.id,
+    tanggal: matchLog ? matchLog.tanggal : new Date().toISOString().split('T')[0],
+    jarak: finalJarak,
+    waktu: durasiVal,
+    speedKmh: durasiVal > 0 ? parseFloat((finalJarak / (durasiVal / 60)).toFixed(1)) : 0,
+    kalori: Math.round(finalJarak * (at.bb || 65) * 0.75),
+    gpsLoc: state.currentGpsLocation || 'Lokasi Terdeteksi',
+    imgSelfieUrl: selfieUrl,
+    imgStravaUrl: stravaUrl,
+    detectedMotor: isMotorDetected,
+    detectedLowHR: false,
+    detectedEdit: false,
+    softwareDetected: isMotorDetected ? 'Terindikasi Naik Kendaraan (GPS Speed)' : 'Validasi Live GPS Tracker',
+    status: 'Menunggu'
+};
 
-    // 5. Simpan ke LocalStorage & State Laporan Validasi
-    if (!state.laporanValidasi) state.laporanValidasi = [];
-    state.laporanValidasi.unshift(newReport);
-    saveStorage('laporanValidasi', state.laporanValidasi);
+state.laporanValidasi.unshift(newReport);
 
-    // 6. Cadangan ke allReports
-    let allReports = loadStorage('allReports') || [];
-    allReports.unshift(newReport);
-    saveStorage('allReports', allReports);
+// Simpan seluruh data tanpa membatasi jumlah histori
+saveStorage('laporanValidasi', state.laporanValidasi);
 
-    // 7. Sync Async ke Firebase & Google Sheets
+    // BARIS TAMBAHAN (Baris 3841): Langsung kirim ke Google Sheets
     if (typeof syncDataToSpreadsheet === 'function') {
-        syncDataToSpreadsheet().catch(err => console.warn("Spreadsheet Sync Pending:", err));
-    }
-    
-    if (window.db && window.dbSet && window.dbRef) {
-        window.dbSet(window.dbRef(window.db, 'laporanValidasi/' + newReport.id), newReport);
+      syncDataToSpreadsheet();
     }
 
-    // 8. Hapus Toast Loading & Render Ulang
     if (toast) toast.remove();
-    showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
-    
     renderSidebar();
     renderContent();
-}
+    showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
+  }
 
         async function setStatusLaporanValidasi(id, statusTarget) {
     const idx = state.laporanValidasi.findIndex(l => String(l.id) === String(id));
@@ -4091,58 +3923,48 @@ function renderMatchHeatmap() {
         async function submitAtletRPE(e) {
     e.preventDefault();
     const atlet = state.activeAtlet;
-    if (!atlet) {
-        showToast("Error: Sesi atlet tidak ditemukan. Silakan login ulang.", "error");
-        return;
-    }
+    if (!atlet) return;
 
     const tanggal = document.getElementById('rpe-tanggal')?.value || new Date().toISOString().split('T')[0];
     const rpeVal = parseInt(document.getElementById('rpe-scale')?.value || 5);
     const durasi = parseInt(document.getElementById('rpe-durasi')?.value || 90);
     const hrMax = parseInt(document.getElementById('rpe-hrmax')?.value) || 0;
-    const sRPEVal = rpeVal * durasi;
+    const sRPE = rpeVal * durasi;
 
-    // Objek RPE dengan properti lengkap agar terbaca di Menu 9 Pelatih
+    // Buat objek laporan RPE yang konsisten untuk State & Menu 9 Pelatih
     const newRpe = {
         id: 'rpe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         atletId: String(atlet.id),
         namaAtlet: atlet.nama,
         tanggal: tanggal,
         rpeVal: rpeVal,
-        skalaRpe: rpeVal,
-        rpe: rpeVal,
         durasi: durasi,
         hrMax: hrMax,
-        sRPE: sRPEVal,
-        srpe: sRPEVal,
-        status: 'Disetujui' // Otomatis disetujui agar langsung masuk ke perhitungan ACWR
+        sRPE: sRPE,
+        status: 'Disetujui' // Otomatis disetujui agar langsung terhitung di ACWR Menu 9
     };
 
-    // 1. Simpan ke state.rpeLogs
+    // 1. Simpan ke rpeLogs (State Utama)
     if (!state.rpeLogs) state.rpeLogs = [];
     state.rpeLogs.unshift(newRpe);
     saveStorage('rpeLogs', state.rpeLogs);
 
-    // 2. Simpan cadangan ke LocalStorage allReports untuk sinkronisasi Menu 9
+    // 2. Simpan juga ke allReports untuk fallback sinkronisasi
     let allReports = loadStorage('allReports') || [];
     allReports.unshift(newRpe);
     saveStorage('allReports', allReports);
 
-    // 3. Kirim ke Firebase jika terhubung
+    // 3. Kirim langsung ke Google Spreadsheet & Firebase
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
+    }
     if (window.db && window.dbSet && window.dbRef) {
         window.dbSet(window.dbRef(window.db, 'rpeLogs/' + newRpe.id), newRpe);
     }
 
-    // 4. Trigger Sync ke Spreadsheet
-    if (typeof syncDataToSpreadsheet === 'function') {
-        syncDataToSpreadsheet().catch(err => console.warn("Spreadsheet Sync Pending:", err));
-    }
-
-    showToast('Catatan RPE berhasil dikirim ke Pelatih!', 'success');
-
-    // Render ulang tampilan agar angka ACWR & tabel Menu 9 langsung terbarui
-    renderSidebar();
+    renderSidebar(); 
     renderContent();
+    showToast('Catatan RPE berhasil dikirim ke Pelatih!', 'success');
 }
 
         function exportDataAtletCSV() {
@@ -4517,17 +4339,11 @@ function generateJoggingSkuad(event) {
     </div>
 </td>
                         <td class="py-4 px-5 text-center">
-    <div class="flex items-center justify-center gap-1.5">
-        <!-- Tombol Reminder WA Atlet (Opsi B) -->
-        <button onclick="sendWAReminder('${a.id}', 'all')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-600 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-emerald-100 flex items-center justify-center active:scale-90" title="Kirim Reminder WA">
-            <i class="fa-brands fa-whatsapp text-sm"></i>
-        </button>
-        <!-- Tombol Edit & Hapus Bawaan -->
-        <button onclick="openModalAtlet('${a.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-blue-100 active:scale-90 flex items-center justify-center" title="Edit Data"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
-        <button onclick="deleteAtletOptimistic('${a.id}')" class="text-rose-500 bg-rose-50 hover:bg-rose-500 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-rose-100 active:scale-90 flex items-center justify-center" title="Hapus Atlet"><i class="fa-solid fa-trash-can text-xs"></i></button>
-    </div>
-</td>
-
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="openModalAtlet('${a.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-blue-100 active:scale-90 flex items-center justify-center" title="Edit Data"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                                <button onclick="deleteAtletOptimistic('${a.id}')" class="text-rose-500 bg-rose-50 hover:bg-rose-500 hover:text-white w-8 h-8 rounded-xl transition-all shadow-sm border border-rose-100 active:scale-90 flex items-center justify-center" title="Hapus Atlet"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                            </div>
+                        </td>
                     </tr>
                     `;
                 }).join('')}
@@ -5949,7 +5765,7 @@ function generateJoggingSkuad(event) {
         </div>
     `;
 
-    setTimeout(initMenu7AutoFill, 200);
+    setTimeout(initMenu7AutoFill, 50);
             } else if (state.currentMenu === 'menu-8') {
     pageTitle.innerText = "Validasi Laporan Bukti Jogging (GPS & PAP)";
 
@@ -5965,22 +5781,6 @@ function generateJoggingSkuad(event) {
     const accPct = totalLogs > 0 ? Math.round((approvedLogs.length / totalLogs) * 100) : 0;
 
     container.innerHTML = `
-            <!-- HEADER JUDUL & TOMBOL REMINDER WA UNTUK ATLET BELUM JOGGING -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm mb-6">
-            <div>
-                <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-                    <i class="fa-solid fa-shield-check text-blue-700"></i> Validasi Laporan Bukti Jogging (GPS & PAP)
-                </h3>
-                <p class="text-xs font-semibold text-slate-500 mt-0.5">Verifikasi dan setujui bukti laporan fisik serta pemantauan aktivitas atlet</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <!-- TOMBOL INGATKAN ATLET BELUM LAPOR JOGGING VIA WA -->
-                <button type="button" onclick="sendWAReminderUnsubmitted()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/80 px-4 py-2.5 rounded-2xl font-black text-xs shadow-sm flex items-center gap-2 transition-all active:scale-95" title="Ingatkan Atlet Belum Laporan Jogging">
-                    <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i> <span>Ingatkan Belum Lapor</span>
-                </button>
-            </div>
-        </div>
-
         <!-- 1. GRID CHART & METRIK SUMMARY -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
             
@@ -6084,24 +5884,15 @@ function generateJoggingSkuad(event) {
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-2">
-    <!-- Tombol Reminder WA Jogging & RPE -->
-    <button type="button" onclick="sendWAReminder('${l.atletId}', 'jogging')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition active:scale-95 flex items-center gap-1" title="Ingatkan Jogging via WA">
-        <i class="fa-brands fa-whatsapp text-sm"></i> Jogging
-    </button>
-    <button type="button" onclick="sendWAReminder('${l.atletId}', 'rpe')" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-md transition active:scale-95 flex items-center gap-1" title="Ingatkan RPE via WA">
-        <i class="fa-brands fa-whatsapp text-sm"></i> RPE
-    </button>
-
-    <!-- Tombol Setujui & Tolak Bawaan -->
-    <button onclick="setStatusLaporanValidasi('${l.id}', 'Disetujui')" class="flex-1 lg:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-check text-sm"></i> Setujui
-    </button>
-    <button onclick="setStatusLaporanValidasi('${l.id}', 'Ditolak')" class="flex-1 lg:flex-none bg-rose-500 hover:bg-rose-600 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-xmark text-sm"></i> Tolak
-    </button>
-</div>
-</div>
+                                <div class="flex items-center gap-2.5 w-full lg:w-auto justify-end">
+                                    <button onclick="setStatusLaporanValidasi('${l.id}', 'Disetujui')" class="flex-1 lg:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-check text-sm"></i> Setujui
+                                    </button>
+                                    <button onclick="setStatusLaporanValidasi('${l.id}', 'Ditolak')" class="flex-1 lg:flex-none bg-rose-500 hover:bg-rose-600 text-white px-5 py-3 rounded-2xl font-black text-xs shadow-md shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-xmark text-sm"></i> Tolak
+                                    </button>
+                                </div>
+                            </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                                 <div class="md:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-center">
@@ -6372,38 +6163,25 @@ function generateJoggingSkuad(event) {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-      ${(() => {
-      // Ambil data dari state.rpeLogs atau gabungan LocalStorage
-      const localRpe = loadStorage('rpeLogs', []);
-      const localAll = loadStorage('allReports', []);
-      const listRpe = (state.rpeLogs && state.rpeLogs.length > 0) 
-          ? state.rpeLogs 
-          : (localRpe.length > 0 ? localRpe : localAll.filter(r => r && (r.sRPE || r.rpeVal || r.rpe)));
-
-      if (!listRpe || listRpe.length === 0) {
-          return `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan RPE yang masuk dari atlet.</td></tr>`;
-      }
-
-      return listRpe.map(r => {
-          const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
-          const namaAtlet = pObj ? escapeHTML(pObj.nama) : (r.namaAtlet ? escapeHTML(r.namaAtlet) : 'Atlet Skuad');
-          const valRpe = r.rpeVal || r.skalaRpe || r.rpe || 0;
-          const durasiMnt = r.durasi || 0;
-          const srpeAu = r.sRPE || r.srpe || (valRpe * durasiMnt);
-
-          return `
-              <tr class="hover:bg-blue-50/40 transition-colors">
-                  <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
-                  <td class="p-4 font-black text-slate-800">${namaAtlet}</td>
-                  <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${valRpe}/10</td>
-                  <td class="p-4 text-center font-mono font-bold text-slate-600">${durasiMnt} mnt</td>
-                  <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
-                  <td class="p-4 text-center font-black text-blue-900 font-mono">${srpeAu} AU</td>
-              </tr>
-          `;
-      }).join('');
-  })()}
-
+    ${(() => {
+        const listRpe = (state.rpeLogs && state.rpeLogs.length > 0) ? state.rpeLogs : loadStorage('allReports', []);
+        if (listRpe.length === 0) {
+            return `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan RPE yang masuk dari atlet.</td></tr>`;
+        }
+        return listRpe.map(r => {
+            const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
+            return `
+                <tr class="hover:bg-blue-50/40 transition-colors">
+                    <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
+                    <td class="p-4 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : (r.namaAtlet ? escapeHTML(r.namaAtlet) : 'Atlet Skuad')}</td>
+                    <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${r.rpeVal || 0}/10</td>
+                    <td class="p-4 text-center font-mono font-bold text-slate-600">${r.durasi || 0} mnt</td>
+                    <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
+                    <td class="p-4 text-center font-black text-blue-900 font-mono">${r.sRPE || (r.rpeVal * r.durasi) || 0} AU</td>
+                </tr>
+            `;
+        }).join('');
+    })()}
 					</tbody>
                 </table>
             </div>
@@ -6717,11 +6495,11 @@ function generateJoggingSkuad(event) {
       const currentName = String(at.nama || '').trim().toLowerCase();
       const logName = String(j.namaAtlet || j.nama || '').trim().toLowerCase();
 
-return targetId === currentId || 
-       targetId === 'semua' || 
-       targetId === '' || 
-       targetId === 'all' ||
-       (logName && currentName && logName === currentName); // Menggunakan '===' (persis sama), bukan includes
+      return targetId === currentId || 
+             targetId === 'semua' || 
+             targetId === '' || 
+             targetId === 'all' ||
+             (logName && currentName && (logName.includes(currentName) || currentName.includes(logName)));
     });
     
     // 2. Ambil data status laporan validasi (Menu 8) khusus untuk atlet ini (Filter pintar: ID atau Nama)
@@ -6735,10 +6513,10 @@ const myReports = (state.laporanValidasi || []).filter(l => {
   const currentNama = String(at.nama || '').trim().toLowerCase();
 
   // Cocokkan berdasarkan ID atlet ATAU Nama Atlet yang sedang login
-const isMatchId = reportId && currentId && (reportId === currentId);
-const isMatchNama = reportNama && currentNama && (reportNama === currentNama);
+  const isMatchId = reportId && currentId && (reportId === currentId);
+  const isMatchNama = reportNama && currentNama && (reportNama.includes(currentNama) || currentNama.includes(reportNama));
 
-return isMatchId || isMatchNama;
+  return isMatchId || isMatchNama;
 });
     container.innerHTML = `
         <div class="space-y-6">
@@ -7067,8 +6845,26 @@ return isMatchId || isMatchNama;
                 if (container) container.innerHTML = `<div class="bg-white p-12 rounded-[28px] border text-center">...</div>`;
 }
         setTimeout(() => {
-    renderChartsForMenu(state.currentMenu);
-}, 200);
+                renderChartsForMenu(state.currentMenu);
+            }, 50);
+
+        }
+  // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
+  window.addEventListener("DOMContentLoaded", () => {
+    // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
+const savedAtlet = loadStorage('activeAtlet');
+if (savedAtlet) {
+    state.activeAtlet = savedAtlet;    }
+
+    const savedUser = loadStorage("currentUser");
+    if (savedUser) {
+      state.currentUser = savedUser;
+    }
+
+    renderContent();
+    autoFetchFromSpreadsheet();
+    setInterval(autoFetchFromSpreadsheet, 30000);
+  });
 
  function openAtletRadarModal(atletId) {
   const atlet = state.atlet.find(a => String(a.id) === String(atletId));
@@ -7154,29 +6950,6 @@ return isMatchId || isMatchNama;
     });
   }
 
-// FUNGSI PENGIRIM REMINDER WHATSAPP JOGGING & RPE
-function sendWAReminder(atletId, jenisReminder) {
-    const atlet = state.atlet.find(a => String(a.id) === String(atletId));
-    if (!atlet) {
-        showToast("Pilih atlet terlebih dahulu!", "error");
-        return;
-    }
-
-    let pesan = "";
-    const nama = atlet.nama;
-
-    if (jenisReminder === 'jogging') {
-        pesan = `Halo *${nama}*! 🏃‍♂️\n\nJangan lupa untuk menyelesaikan sesi *Latihan Jogging / Aerobic Base* hari ini ya.\n\nSetel GPS HP kamu, ambil foto selfie setelah lari & screenshot Strava, lalu upload laporannya melalui aplikasi Coach Floorball Pro.\n\nSemangat latihan! ⚡`;
-    } else if (jenisReminder === 'rpe') {
-        pesan = `Halo *${nama}*! 📊\n\nDiingatkan untuk segera mengisi *Laporan RPE & Heart Rate (Beban Latihan)* untuk sesi hari ini ya.\n\nMasuk ke aplikasi Coach Floorball Pro > Menu *Input RPE & HR*, lalu kirimkan tingkat kelelahanmu.\n\nTerima kasih! 🙏`;
-    } else {
-        pesan = `Halo *${nama}*!\n\nDiingatkan untuk menyelesaikan sesi Latihan Jogging & langsung mengisi Laporan RPE/HR hari ini di aplikasi Coach Floorball Pro. Salam Floorball! 🏑`;
-    }
-
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`;
-    window.open(waUrl, '_blank');
-}
-
   // 3. SHARE WHATSAPP PERTANDINGAN
   function shareMatchToWhatsApp() {
     const m = state.matchLive || {};
@@ -7203,76 +6976,41 @@ function sendWAReminder(atletId, jenisReminder) {
   }
 
   // ... baris service worker sebelumnya ...
-                if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    for (let registration of registrations) {
-                        registration.unregister();
-                    }
-                });
-            });
-        }
-
-        window.addEventListener("DOMContentLoaded", async () => {
-    // 1. Muat state & restore sesi login
-    state.atlet = loadStorage('atlet', []);
-    const savedAtlet = loadStorage('activeAtlet');
-    if (savedAtlet) state.activeAtlet = savedAtlet;
-
-    const savedUser = loadStorage("currentUser");
-    if (savedUser) state.currentUser = savedUser;
-
-    // 2. Tarik data dari Google Sheets
-    if (typeof loadAtletFromSheet === 'function') {
-        await loadAtletFromSheet();
-    }
-
-    // 3. Render Tampilan Aplikasi
-        selectLoginRole('pelatih');
-        renderSidebar();
-        renderContent();
-
-        // 4. Polling tunggal 30 detik (Hanya 1 timer aktif)
-        setInterval(() => {
-            if (typeof autoFetchFromSpreadsheet === 'function') {
-                autoFetchFromSpreadsheet();
-            }
-        }, 30000);
-});
-</script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyD6VNv0Sh60G0ys0IpR1_xPISFCQKo8LwM",
-            authDomain: "floorball-6559c.firebaseapp.com",
-            databaseURL: "https://floorball-6559c-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "floorball-6559c",
-            storageBucket: "floorball-6559c.firebasestorage.app",
-            messagingSenderId: "1098308865312",
-            appId: "1:1098308865312:web:fa497aa067d60bc0d05b45",
-            measurementId: "G-1GVD9Q56P6"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        window.db = db;
-        window.dbRef = ref;
-        window.dbSet = set;
-        window.dbOnValue = onValue;
-
-        onValue(ref(db, 'atletData'), (snapshot) => {
-            const data = snapshot.val();
-            if (data && Array.isArray(data) && window.state) {
-                window.state.atlet = data;
-                if (typeof saveStorage === 'function') saveStorage('atlet', data);
-                if (typeof renderSidebar === 'function') renderSidebar();
-                if (typeof renderContent === 'function') renderContent();
-            }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
         });
-    	</script>
-		</body>
-		</html>
+      });
+    }
+    </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = { ... };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // BIND KE WINDOW AGAR BISA DIBACA SKRIP UTAMA
+    window.db = db;
+    window.dbRef = ref;
+    window.dbSet = set;
+    window.dbOnValue = onValue;
+
+    // SINKRONISASI DATA DARI FIREBASE
+    onValue(ref(db, 'atletData'), (snapshot) => {
+      const data = snapshot.val();
+      if (data && Array.isArray(data) && window.state) {
+        window.state.atlet = data;
+        if (typeof saveStorage === 'function') saveStorage("atlet", data);
+        if (typeof renderSidebar === 'function') renderSidebar();
+        if (typeof renderContent === 'function') renderContent();
+      }
+    });
+  </script>
+</body>
+</html>
