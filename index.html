@@ -1106,6 +1106,7 @@ function handleLogout() {
 
 // FUNGSI REMINDER WA KHUSUS ATLET YANG BELUM LAPOR JOGGING HARI INI
 function sendWAReminderUnsubmitted() {
+    if (!state.atlet || state.atlet.length === 0) {
         showToast("Data atlet belum dimuat!", "error");
         return;
     }
