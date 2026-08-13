@@ -6348,25 +6348,38 @@ function generateJoggingSkuad(event) {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-    ${(() => {
-        const listRpe = (state.rpeLogs && state.rpeLogs.length > 0) ? state.rpeLogs : loadStorage('allReports', []);
-        if (listRpe.length === 0) {
-            return `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan RPE yang masuk dari atlet.</td></tr>`;
-        }
-        return listRpe.map(r => {
-            const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
-            return `
-                <tr class="hover:bg-blue-50/40 transition-colors">
-                    <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
-                    <td class="p-4 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : (r.namaAtlet ? escapeHTML(r.namaAtlet) : 'Atlet Skuad')}</td>
-                    <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${r.rpeVal || 0}/10</td>
-                    <td class="p-4 text-center font-mono font-bold text-slate-600">${r.durasi || 0} mnt</td>
-                    <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
-                    <td class="p-4 text-center font-black text-blue-900 font-mono">${r.sRPE || (r.rpeVal * r.durasi) || 0} AU</td>
-                </tr>
-            `;
-        }).join('');
-    })()}
+      ${(() => {
+      // Ambil data dari state.rpeLogs atau gabungan LocalStorage
+      const localRpe = loadStorage('rpeLogs', []);
+      const localAll = loadStorage('allReports', []);
+      const listRpe = (state.rpeLogs && state.rpeLogs.length > 0) 
+          ? state.rpeLogs 
+          : (localRpe.length > 0 ? localRpe : localAll.filter(r => r && (r.sRPE || r.rpeVal || r.rpe)));
+
+      if (!listRpe || listRpe.length === 0) {
+          return `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan RPE yang masuk dari atlet.</td></tr>`;
+      }
+
+      return listRpe.map(r => {
+          const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
+          const namaAtlet = pObj ? escapeHTML(pObj.nama) : (r.namaAtlet ? escapeHTML(r.namaAtlet) : 'Atlet Skuad');
+          const valRpe = r.rpeVal || r.skalaRpe || r.rpe || 0;
+          const durasiMnt = r.durasi || 0;
+          const srpeAu = r.sRPE || r.srpe || (valRpe * durasiMnt);
+
+          return `
+              <tr class="hover:bg-blue-50/40 transition-colors">
+                  <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
+                  <td class="p-4 font-black text-slate-800">${namaAtlet}</td>
+                  <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${valRpe}/10</td>
+                  <td class="p-4 text-center font-mono font-bold text-slate-600">${durasiMnt} mnt</td>
+                  <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
+                  <td class="p-4 text-center font-black text-blue-900 font-mono">${srpeAu} AU</td>
+              </tr>
+          `;
+      }).join('');
+  })()}
+
 					</tbody>
                 </table>
             </div>
