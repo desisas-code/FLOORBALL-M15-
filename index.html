@@ -765,44 +765,43 @@ if (menuId === 'menu-4') {
 
     // 7. JOGGING & MAS (Grafik Volume & Pace)
             if (menuId === 'menu-7') {
-                const ctx = document.getElementById('chart-jogging-mas')?.getContext('2d');
-                if (ctx) {
-                    const logs = state.jogging || [];
-                    const labels = logs.length > 0 ? logs.map((_, i) => `Sesi ${i + 1}`) : ['Sesi 1', 'Sesi 2', 'Sesi 3', 'Sesi 4', 'Sesi 5'];
-                    const dataJarak = logs.length > 0 ? logs.map(j => parseFloat(j.jarak) || 0) : [3, 4, 3.5, 5, 4.2];
+    const ctx = document.getElementById('chart-jogging-mas')?.getContext('2d');
+    if (ctx) {
+        // PERBAIKAN: Gunakan state.joggingLogs
+        const logs = state.joggingLogs || [];
+        const labels = logs.length > 0 ? logs.map((_, i) => `Sesi ${i + 1}`) : ['Sesi 1', 'Sesi 2', 'Sesi 3', 'Sesi 4', 'Sesi 5'];
+        const dataJarak = logs.length > 0 ? logs.map(j => parseFloat(j.jarak) || 0) : [3, 4, 3.5, 5, 4.2];
 
-                    chartInstances['jogging'] = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels,
-                            datasets: [{
-                                label: 'Jarak (KM)',
-                                data: dataJarak,
-                                borderColor: '#0284C7',
-                                backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                                fill: true,
-                                tension: 0.3,
-                                borderWidth: 2.5,
-                                pointRadius: 4
-                            }]
-                        },
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false }
-                            },
-                            scales: {
-                                x: { ticks: { font: { size: 10, weight: 'bold' } } },
-                                y: { 
-                                    beginAtZero: true,
-                                    ticks: { callback: v => v + ' km', font: { size: 10 } } 
-                                }
-                            }
-                        }
-                    });
+        chartInstances['jogging'] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Jarak (KM)',
+                    data: dataJarak,
+                    borderColor: '#0284C7',
+                    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2.5,
+                    pointRadius: 4
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { font: { size: 10, weight: 'bold' } } },
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { callback: v => v + ' km', font: { size: 10 } } 
+                    }
                 }
             }
+        });
+    }
+}
 
     // 8. VALIDASI LAPORAN (Status Keputusan Validasi)
             if (menuId === 'menu-8') {
@@ -1634,8 +1633,11 @@ function restoreDataJSON(event) {
                     }
 
                     state.activeAtlet = targetAtlet;
-                    state.currentRole = 'Atlet';
-                    state.currentMenu = 'menu-atlet-1';
+state.currentRole = 'Atlet';
+state.currentMenu = 'menu-atlet-1';
+
+// PERBAIKAN: Simpan ke storage agar persist saat refresh
+saveStorage('activeAtlet', targetAtlet);
 
                     const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                     if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
@@ -1654,20 +1656,34 @@ function restoreDataJSON(event) {
         }
 
         function logout() {
-            if (state.matchLive.dribbleTimer.intervalId) {
-                clearInterval(state.matchLive.dribbleTimer.intervalId);
-                state.matchLive.dribbleTimer.isRunning = false;
-            }
-            if (state.matchLive.matchTimer && state.matchLive.matchTimer.intervalId) {
-                clearInterval(state.matchLive.matchTimer.intervalId);
-                state.matchLive.matchTimer.isRunning = false;
-            }
-            if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.add('hidden');
-            if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.remove('hidden');
-            state.activeAtlet = null;
-            selectLoginRole('pelatih');
-            showToast('Anda telah keluar dari aplikasi.', 'success');
-        }
+    // 1. Matikan GPS live jika aktif
+    if (typeof stopLiveGpsTracking === 'function') {
+        stopLiveGpsTracking();
+    }
+
+    // 2. Hentikan semua timer match & dribble
+    if (state.matchLive?.dribbleTimer?.intervalId) {
+        clearInterval(state.matchLive.dribbleTimer.intervalId);
+        state.matchLive.dribbleTimer.isRunning = false;
+        state.matchLive.dribbleTimer.elapsedSec = 0;
+    }
+    if (state.matchLive?.matchTimer?.intervalId) {
+        clearInterval(state.matchLive.matchTimer.intervalId);
+        state.matchLive.matchTimer.isRunning = false;
+    }
+
+    // 3. Hapus sesi aktif dari state dan storage
+    state.activeAtlet = null;
+    localStorage.removeItem('cf_activeAtlet');
+    localStorage.removeItem('cf_currentUser');
+
+    // 4. Alihkan layar kembali ke Login Pelatih
+    document.getElementById('app-screen')?.classList.add('hidden');
+    document.getElementById('login-screen')?.classList.remove('hidden');
+    selectLoginRole('pelatih');
+    
+    showToast('Anda telah keluar dari aplikasi.', 'success');
+}
 
         function showToast(message, type = 'loading') {
             const container = document.getElementById('toast-container');
@@ -1797,6 +1813,18 @@ function restoreDataJSON(event) {
         }
 function deleteRiwayatValidasi(id) {
     if (!confirm("Apakah Anda yakin ingin menghapus riwayat validasi ini?")) return;
+
+    if (state.laporanValidasi) {
+        state.laporanValidasi = state.laporanValidasi.filter(item => String(item.id) !== String(id));
+    }
+
+    // PERBAIKAN: Gunakan helper saveStorage agar prefix 'cf_' konsisten
+    saveStorage('laporanValidasi', state.laporanValidasi);
+
+    renderContent();
+    renderChartsForMenu(state.currentMenu);
+    showToast("Riwayat validasi berhasil dihapus permanen!", "success");
+}
 
     // Filter hapus data dari state
     if (state.laporanValidasi) {
@@ -5156,58 +5184,64 @@ function generateJoggingSkuad(event) {
                     14 Parameter Fisik
                 </span>
             </div>
-<!-- 5. HISTORI RIWAYAT TES TEKNIK SKUAD (LETAKKAN DI SINI) -->
-        <div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mt-8">
-            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-2">
-                <div>
-                    <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Histori Riwayat Tes Teknik Skuad
-                    </h4>
-                    <p class="text-xs font-semibold text-slate-400 mt-0.5">Catatan kronologis hasil tes Dual-Gate Passing dan Slalom Dribble yang telah diinput.</p>
-                </div>
-                <span class="bg-emerald-50 text-emerald-900 border border-emerald-200 font-black px-3.5 py-1.5 rounded-xl text-xs shadow-sm">
-                    ${state.tesTeknik.length} Log Tersimpan
-                </span>
-            </div>
-            <div class="overflow-x-auto relative">
-                <table class="w-full text-left border-collapse min-w-[1200px]">
-                    <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                        <tr>
-                            <th class="p-4 sticky left-0 bg-slate-950 z-20 border-r border-slate-800 min-w-[160px]">Profil Atlet</th>
-                            <th class="p-4 border-r border-slate-800 text-center">Tgl Terakhir</th>
-                            ${listFieldTes.map(f => `<th class="p-3 text-center border-r border-slate-800 min-w-[70px]">${escapeHTML(f.shortLabel)}</th>`).join('')}
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                        ${state.atlet.map(at => {
-                            const records = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
-                            const lastDate = records.length > 0 ? records[0].tanggal : '-';
-                            return `
-                                <tr class="hover:bg-blue-50/40 transition-colors">
-                                    <td class="p-3 font-black text-slate-800 sticky left-0 bg-white border-r z-10">
-                                        <div class="truncate max-w-[120px]">${escapeHTML(at.nama)}</div>
-                                        <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block">${escapeHTML(at.posisi)}</span>
-                                    </td>
-                                    <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>
-                                    ${listFieldTes.map(f => {
-                                        const item = records.find(t => t.keyTes === f.key);
-                                        if (!item) return `<td class="p-2 text-center border-r align-middle"><div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div></td>`;
-                                        const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
-                                        let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
-                                        if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600 shadow-sm';
-                                        else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600 shadow-sm';
-                                        else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500 shadow-sm';
-                                        else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600 shadow-sm';
-                                        else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600 shadow-sm';
-
-                                        return `<td class="p-2 text-center border-r align-middle"><div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full"><span class="font-mono font-black text-sm leading-none">${item.skor}</span><span class="text-[8px] font-extrabold mt-1">${kat}</span></div></td>`;
-                                    }).join('')}
-                                </tr>`;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
+<!-- 5. HISTORI RIWAYAT TES TEKNIK SKUAD -->
+<div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mt-8">
+    <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-2">
+        <div>
+            <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Histori Riwayat Tes Teknik Skuad
+            </h4>
+            <p class="text-xs font-semibold text-slate-400 mt-0.5">Catatan kronologis hasil tes Dual-Gate Passing dan Slalom Dribble & Shoot.</p>
         </div>
+        <span class="bg-emerald-50 text-emerald-900 border border-emerald-200 font-black px-3.5 py-1.5 rounded-xl text-xs shadow-sm">
+            ${state.tesTeknik.length} Log Tersimpan
+        </span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[700px]">
+            <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                <tr>
+                    <th class="p-4">Tanggal</th>
+                    <th class="p-4">Nama Atlet</th>
+                    <th class="p-4 text-center">Dual-Gate (S1 / S2)</th>
+                    <th class="p-4 text-center">Slalom 5m</th>
+                    <th class="p-4 text-center">Slalom 7m</th>
+                    <th class="p-4 text-center">Slalom 9m</th>
+                    <th class="p-4 text-center w-16">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+                ${state.tesTeknik.length > 0 ? state.tesTeknik.map(t => {
+                    const atObj = state.atlet.find(a => String(a.id) === String(t.atletId));
+                    const dg1 = t.dualGate?.sesi1 ? `${t.dualGate.sesi1.rep} Rep (${t.dualGate.sesi1.waktu}s)` : '-';
+                    const dg2 = t.dualGate?.sesi2 ? `${t.dualGate.sesi2.rep} Rep (${t.dualGate.sesi2.waktu}s)` : '-';
+                    const s5 = t.slalomShoot?.s5m?.waktu ? `${t.slalomShoot.s5m.waktu}s` : '-';
+                    const s7 = t.slalomShoot?.s7m?.waktu ? `${t.slalomShoot.s7m.waktu}s` : '-';
+                    const s9 = t.slalomShoot?.s9m?.waktu ? `${t.slalomShoot.s9m.waktu}s` : '-';
+
+                    return `
+                    <tr class="hover:bg-blue-50/40 transition-colors">
+                        <td class="p-4 font-mono font-bold text-slate-500">${t.tanggal || '-'}</td>
+                        <td class="p-4 font-black text-slate-800">${atObj ? escapeHTML(atObj.nama) : 'Atlet'}</td>
+                        <td class="p-4 text-center font-mono font-bold text-blue-900">${dg1} | ${dg2}</td>
+                        <td class="p-4 text-center font-mono font-bold text-emerald-700">${s5}</td>
+                        <td class="p-4 text-center font-mono font-bold text-emerald-700">${s7}</td>
+                        <td class="p-4 text-center font-mono font-bold text-emerald-700">${s9}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="deleteTesTeknikLog('${t.id}')" class="text-rose-500 bg-rose-50 w-7 h-7 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-lg transition-all shadow-sm border border-rose-100" title="Hapus">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('') : `
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada data riwayat tes teknik yang tersimpan.</td>
+                    </tr>
+                `}
+            </tbody>
+        </table>
+    </div>
+</div>
     `;
             } else if (state.currentMenu === 'menu-4') {
     pageTitle.innerText = "Periodisasi Latihan & Makrosiklus (Bompa Model)";
