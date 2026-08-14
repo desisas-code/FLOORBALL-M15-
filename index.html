@@ -1195,7 +1195,6 @@ function calculateHaversineDistance(lat1, lon1, lat2, lng2) {
     return R * c;
 }
 
-// Fungsi Mulai Tracking Live dengan Deteksi Aktivitas
 function startLiveGpsTracking() {
     const badge = document.getElementById('gps-status-badge');
     if (!navigator.geolocation) {
@@ -1855,6 +1854,7 @@ function restoreDataJSON(event) {
             
             if (modal) modal.classList.remove('hidden');
         }
+
 function deleteRiwayatValidasi(id) {
     if (!confirm("Apakah Anda yakin ingin menghapus riwayat validasi ini?")) return;
 
@@ -1863,28 +1863,25 @@ function deleteRiwayatValidasi(id) {
     }
 
     saveStorage('laporanValidasi', state.laporanValidasi);
-
     renderContent();
     renderChartsForMenu(state.currentMenu);
     showToast("Riwayat validasi berhasil dihapus permanen!", "success");
 }
-
-    // Filter hapus data dari state
+  
     if (state.laporanValidasi) {
         state.laporanValidasi = state.laporanValidasi.filter(item => String(item.id) !== String(id));
     }
 
-    // Simpan ke LocalStorage
     if (typeof saveStateToLocalStorage === 'function') {
         saveStateToLocalStorage();
     } else {
         localStorage.setItem('floorball_state', JSON.stringify(state));
     }
 
-    // Re-render tampilan halaman dan update grafik
     renderContent();
     renderChartsForMenu(state.currentMenu);
-}
+} 
+		
 		// Fungsi trigger sekali klik dari tombol Form Atlet
 function getAtletGpsLocation() {
     const badge = document.getElementById('gps-status-badge');
@@ -7186,6 +7183,7 @@ const myReports = (state.laporanValidasi || []).filter(l => {
       onValue(ref(db, 'atletData'), (snapshot) => {
         const data = snapshot.val();
         if (data && Array.isArray(data) && window.state) {
+			window.state = state;
           window.state.atlet = data;
           if (typeof saveStorage === 'function') saveStorage("atlet", data);
           if (typeof renderSidebar === 'function') renderSidebar();
