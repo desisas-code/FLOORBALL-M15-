@@ -167,27 +167,26 @@
           state.joggingLogs = Array.from(dailyMap.values());
 saveStorage("joggingLogs", state.joggingLogs);
 
-          // 3. Update Laporan Validasi
-          if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
-            const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
-            const mergedVal = new Map();
+          // 3. Update Laporan Validasi dari Server Spreadsheet
+if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
+    const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
+    const valMap = new Map();
 
-            localVal.forEach(item => { 
-              if (item && item.id) mergedVal.set(String(item.id), item); 
-            });
-            
-            data.laporanValidasi.forEach(serverItem => {
-              if (serverItem && serverItem.id) {
-                const localItem = mergedVal.get(String(serverItem.id));
-                if (!localItem || localItem.status === 'Menunggu') {
-                  mergedVal.set(String(serverItem.id), serverItem);
-                }
-              }
-            });
+    // Muat data lokal
+    localVal.forEach(item => { 
+        if (item && item.id) valMap.set(String(item.id), item); 
+    });
+    
+    // Timpa dengan data server terbaru
+    data.laporanValidasi.forEach(serverItem => {
+        if (serverItem && serverItem.id) {
+            valMap.set(String(serverItem.id), serverItem);
+        }
+    });
 
-            state.laporanValidasi = Array.from(mergedVal.values());
-            saveStorage("laporanValidasi", state.laporanValidasi);
-          }
+    state.laporanValidasi = Array.from(valMap.values());
+    saveStorage("laporanValidasi", state.laporanValidasi);
+}
 
           // 4. Render Ulang Tampilan Otomatis
           if (typeof renderContent === 'function') {
@@ -1323,31 +1322,34 @@ function stopLiveGpsTracking() {
         }
 
 		// FITUR BACKUP DATA LOKAL KE FILE JSON
+// BACKUP LENGKAP KE FILE JSON
 function backupDataJSON() {
     const backupData = {
-        atlet: state.atlet,
-        absensi: state.absensi,
-        tesFisik: state.tesFisik,
-        tesTeknik: state.tesTeknik,
-        rpeLogs: state.rpeLogs,
-        joggingLogs: state.joggingLogs,
-        masLogs: state.masLogs,
-        laporanValidasi: state.laporanValidasi,
+        atlet: state.atlet || [],
+        absensi: state.absensi || [],
+        tesFisik: state.tesFisik || [],
+        tesTeknik: state.tesTeknik || [],
+        rpeLogs: state.rpeLogs || [],
+        joggingLogs: state.joggingLogs || [],
+        masLogs: state.masLogs || [],
+        laporanValidasi: state.laporanValidasi || [],
+        matchLive: state.matchLive || {},
+        periodisasiConfig: state.periodisasiConfig || {},
         exportedAt: new Date().toISOString()
     };
 
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Backup_Floorball_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute("download", `Backup_CoachFloorball_${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
 
-    showToast("File backup JSON berhasil diunduh!", "success");
+    showToast("File cadangan JSON berhasil diunduh!", "success");
 }
 
-// FITUR RESTORE DATA DARI FILE JSON
+// RESTORE LENGKAP DARI FILE JSON
 function restoreDataJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1365,12 +1367,15 @@ function restoreDataJSON(event) {
             if (data.joggingLogs) { state.joggingLogs = data.joggingLogs; saveStorage('joggingLogs', state.joggingLogs); }
             if (data.masLogs) { state.masLogs = data.masLogs; saveStorage('masLogs', state.masLogs); }
             if (data.laporanValidasi) { state.laporanValidasi = data.laporanValidasi; saveStorage('laporanValidasi', state.laporanValidasi); }
+            if (data.matchLive) { state.matchLive = data.matchLive; saveStorage('matchLive', state.matchLive); }
+            if (data.periodisasiConfig) { state.periodisasiConfig = data.periodisasiConfig; saveStorage('periodisasi', state.periodisasiConfig); }
 
+            initMatchPlayerStats();
             renderSidebar();
             renderContent();
-            showToast("Database berhasil dipulihkan dari file JSON!", "success");
+            showToast("Database berhasil dipulihkan secara menyeluruh!", "success");
         } catch (err) {
-            showToast("Gagal memulihkan: Format file JSON tidak valid!", "error");
+            showToast("Format file cadangan JSON tidak valid!", "error");
         }
     };
     reader.readAsText(file);
@@ -3815,41 +3820,42 @@ function renderMatchHeatmap() {
         }
 
         function updateAtletJoggingCalculations() {
-            const atlet = state.activeAtlet;
-            if (!atlet) return;
+    const atlet = state.activeAtlet;
+    if (!atlet) return;
 
-            const historiList = state.joggingLogs || [];
-            const matchLog = historiList.slice().reverse().find(item => 
-                String(item.atletId) === String(atlet.id) || String(item.namaAtlet) === String(atlet.nama)
-            );
-            
-            const waktuMnt = matchLog ? parseFloat(matchLog.waktu) : 30;
-            const zonaFactor = matchLog ? matchLog.zona : "0.75";
-            const jarakKm = matchLog ? parseFloat(matchLog.jarak) : 4.31;
-            const paceFormatted = matchLog ? matchLog.pace : "5'48\"";
-            
-            const speedKmh = (waktuMnt > 0 && jarakKm > 0) 
-                ? parseFloat((jarakKm / (waktuMnt / 60)).toFixed(1)) 
-                : 8.6;
-            const estKalori = Math.round(jarakKm * (atlet.bb || 65) * 0.75);
+    const historiList = state.joggingLogs || [];
+    const matchLog = historiList.slice().reverse().find(item => 
+        String(item.atletId) === String(atlet.id) || String(item.namaAtlet) === String(atlet.nama)
+    );
+    
+    const waktuMnt = matchLog ? parseFloat(matchLog.waktu) : 30;
+    const zonaFactor = matchLog ? String(matchLog.zona) : "0.75";
+    const jarakKm = matchLog ? parseFloat(matchLog.jarak) : 4.31;
+    const paceFormatted = matchLog ? matchLog.pace : "5'48\"";
+    
+    const speedKmh = (waktuMnt > 0 && jarakKm > 0) 
+        ? parseFloat((jarakKm / (waktuMnt / 60)).toFixed(1)) 
+        : 8.6;
+    const estKalori = Math.round(jarakKm * (atlet.bb || 65) * 0.75);
 
-            const durasiInput = document.getElementById('run-durasi');
-            const zonaInput = document.getElementById('run-zona');
-            if (durasiInput) durasiInput.value = waktuMnt;
-            if (zonaInput) {
-                const z = String(zonaFactor);
-                if (z.includes('0.6')) zonaInput.value = 'Zone 1 (60% MAS)';
-                else if (z.includes('0.8')) zonaInput.value = 'Zone 3 (80% MAS)';
-                else if (z.includes('0.9')) zonaInput.value = 'Zone 4 (90% MAS)';
-                else if (z.includes('1')) zonaInput.value = 'Zone 5 (100% MAS)';
-                else zonaInput.value = 'Zone 2: Aerobic Base (75% MAS)';
-            }
+    const durasiInput = document.getElementById('run-durasi');
+    const zonaInput = document.getElementById('run-zona');
 
-            if (document.getElementById('run-pace-display')) document.getElementById('run-pace-display').innerText = paceFormatted;
-            if (document.getElementById('run-jarak-display')) document.getElementById('run-jarak-display').innerText = `${jarakKm} km`;
-            if (document.getElementById('run-speed-display')) document.getElementById('run-speed-display').innerText = `${speedKmh} km/h`;
-            if (document.getElementById('run-kalori-display')) document.getElementById('run-kalori-display').innerText = `${estKalori} kcal`;
-        }
+    if (durasiInput) durasiInput.value = waktuMnt;
+    if (zonaInput) {
+        // Set value sesuai option value numerik
+        if (zonaFactor.includes('0.6')) zonaInput.value = '0.60';
+        else if (zonaFactor.includes('0.8')) zonaInput.value = '0.80';
+        else if (zonaFactor.includes('0.9')) zonaInput.value = '0.90';
+        else if (zonaFactor.includes('1')) zonaInput.value = '1.00';
+        else zonaInput.value = '0.75';
+    }
+
+    if (document.getElementById('run-pace-display')) document.getElementById('run-pace-display').innerText = paceFormatted;
+    if (document.getElementById('run-jarak-display')) document.getElementById('run-jarak-display').innerText = `${jarakKm} km`;
+    if (document.getElementById('run-speed-display')) document.getElementById('run-speed-display').innerText = `${speedKmh} km/h`;
+    if (document.getElementById('run-kalori-display')) document.getElementById('run-kalori-display').innerText = `${estKalori} kcal`;
+}
 
         async function submitAtletLaporanJogging(e) {
   e.preventDefault();
