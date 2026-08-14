@@ -1635,6 +1635,9 @@ function restoreDataJSON(event) {
                     state.activeAtlet = targetAtlet;
 state.currentRole = 'Atlet';
 state.currentMenu = 'menu-atlet-1';
+saveStorage('activeAtlet', targetAtlet); // Menyimpan sesi atlet agar tidak keluar saat refresh
+
+const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
 // PERBAIKAN: Simpan ke storage agar persist saat refresh
 saveStorage('activeAtlet', targetAtlet);
@@ -1818,7 +1821,6 @@ function deleteRiwayatValidasi(id) {
         state.laporanValidasi = state.laporanValidasi.filter(item => String(item.id) !== String(id));
     }
 
-    // PERBAIKAN: Gunakan helper saveStorage agar prefix 'cf_' konsisten
     saveStorage('laporanValidasi', state.laporanValidasi);
 
     renderContent();
@@ -3871,13 +3873,13 @@ function renderMatchHeatmap() {
 
     if (durasiInput) durasiInput.value = waktuMnt;
     if (zonaInput) {
-        // Set value sesuai option value numerik
-        if (zonaFactor.includes('0.6')) zonaInput.value = '0.60';
-        else if (zonaFactor.includes('0.8')) zonaInput.value = '0.80';
-        else if (zonaFactor.includes('0.9')) zonaInput.value = '0.90';
-        else if (zonaFactor.includes('1')) zonaInput.value = '1.00';
-        else zonaInput.value = '0.75';
-    }
+    const z = String(zonaFactor);
+    if (z.includes('0.6')) zonaInput.value = '0.60';
+    else if (z.includes('0.8')) zonaInput.value = '0.80';
+    else if (z.includes('0.9')) zonaInput.value = '0.90';
+    else if (z.includes('1')) zonaInput.value = '1.00';
+    else zonaInput.value = '0.75';
+}
 
     if (document.getElementById('run-pace-display')) document.getElementById('run-pace-display').innerText = paceFormatted;
     if (document.getElementById('run-jarak-display')) document.getElementById('run-jarak-display').innerText = `${jarakKm} km`;
@@ -6922,20 +6924,33 @@ const myReports = (state.laporanValidasi || []).filter(l => {
         }
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", () => {
-    // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
-const savedAtlet = loadStorage('activeAtlet');
-if (savedAtlet) {
-    state.activeAtlet = savedAtlet;    }
+    // 1. Muat sesi login tersimpan
+    const savedAtlet = loadStorage('activeAtlet', null);
 
-    const savedUser = loadStorage("currentUser");
-    if (savedUser) {
-      state.currentUser = savedUser;
+    if (savedAtlet) {
+        state.activeAtlet = savedAtlet;
+        state.currentRole = 'Atlet';
+        state.currentMenu = 'menu-atlet-1';
+
+        const initials = savedAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
+        if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(savedAtlet.nama);
+        if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
+
+        document.getElementById('login-screen')?.classList.add('hidden');
+        document.getElementById('app-screen')?.classList.remove('hidden');
+    } else {
+        selectLoginRole('pelatih');
     }
 
+    // 2. Render tampilan awal
+    renderSidebar();
     renderContent();
+
+    // 3. Jalankan Background Auto-sync tunggal (setiap 30 detik)
     autoFetchFromSpreadsheet();
     setInterval(autoFetchFromSpreadsheet, 30000);
-  });
+});
 
  function openAtletRadarModal(atletId) {
   const atlet = state.atlet.find(a => String(a.id) === String(atletId));
@@ -7106,7 +7121,7 @@ if (savedAtlet) {
     storageBucket: "project-id.appspot.com",
     messagingSenderId: "000000000000",
     appId: "1:000000000000:web:000000000000"
-  };
+};
 
   try {
     if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("...")) {
