@@ -839,66 +839,84 @@ if (menuId === 'menu-4') {
 
     // 9. ACWR & RPE
             if (menuId === 'menu-9') {
-                // Chart 1: Tren sRPE
-                const ctxSrpe = document.getElementById('chart-srpe-trend')?.getContext('2d');
-                if (ctxSrpe) {
-                    chartInstances['srpeTrend'] = new Chart(ctxSrpe, {
-                        type: 'line',
-                        data: {
-                            labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4', 'Minggu 5', 'Minggu 6'],
-                            datasets: [{
-                                label: 'Rerata sRPE (AU)',
-                                data: [1200, 1450, 1300, 1600, 1800, 1500],
-                                borderColor: '#0284C7',
-                                backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                                fill: true,
-                                tension: 0.3,
-                                borderWidth: 2.5,
-                                pointRadius: 4
-                            }]
-                        },
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false, 
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                y: { beginAtZero: true, ticks: { callback: v => v + ' AU', font: { size: 10 } } },
-                                x: { ticks: { font: { size: 10, weight: 'bold' } } }
-                            }
-                        }
-                    });
-                }
+    // 1. Chart 1: Tren sRPE Rerata Skuad per Hari (7 Hari Terakhir)
+    const ctxSrpe = document.getElementById('chart-srpe-trend')?.getContext('2d');
+    if (ctxSrpe) {
+        const rpeList = state.rpeLogs || loadStorage('rpeLogs', []);
+        const dayLabels = [];
+        const srpeDailyData = [];
+        const today = new Date();
 
-                // Chart 2: Rasio ACWR Per Atlet
-                const ctxAcwr = document.getElementById('chart-acwr-bar')?.getContext('2d');
-                if (ctxAcwr) {
-                    const atletList = state.atlet || [];
-                    const labels = atletList.map(a => a.nama.split(' ')[0]);
-                    const acwrValues = atletList.map(() => (Math.random() * (1.6 - 0.7) + 0.7).toFixed(2));
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            dayLabels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }));
 
-                    chartInstances['acwrBar'] = new Chart(ctxAcwr, {
-                        type: 'bar',
-                        data: {
-                            labels,
-                            datasets: [{
-                                label: 'Rasio ACWR',
-                                data: acwrValues,
-                                backgroundColor: acwrValues.map(v => v > 1.5 ? '#EF4444' : (v > 1.3 ? '#F59E0B' : (v >= 0.8 ? '#10B981' : '#3B82F6'))),
-                                borderRadius: 6
-                            }]
-                        },
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false, 
-                            plugins: { legend: { display: false } },
-                            scales: { 
-                                x: { ticks: { font: { size: 9, weight: 'bold' }, maxRotation: 45, minRotation: 45 } },
-                                y: { min: 0, max: 2.0, ticks: { stepSize: 0.4 } } 
-                            } 
-                        }
-                    });
+            // Hitung total sRPE pada tanggal tersebut
+            const dayLogs = rpeList.filter(l => l.tanggal === dateStr);
+            const dayTotal = dayLogs.reduce((acc, curr) => acc + (parseFloat(curr.sRPE) || 0), 0);
+            srpeDailyData.push(dayLogs.length > 0 ? Math.round(dayTotal / dayLogs.length) : 0);
+        }
+
+        chartInstances['srpeTrend'] = new Chart(ctxSrpe, {
+            type: 'line',
+            data: {
+                labels: dayLabels,
+                datasets: [{
+                    label: 'Rerata sRPE Skuad (AU)',
+                    data: srpeDailyData,
+                    borderColor: '#0284C7',
+                    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2.5,
+                    pointRadius: 4
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: v => v + ' AU', font: { size: 10 } } },
+                    x: { ticks: { font: { size: 10, weight: 'bold' } } }
                 }
             }
+        });
+    }
+
+    // 2. Chart 2: Rasio ACWR Nyata Per Atlet Skuad
+    const ctxAcwr = document.getElementById('chart-acwr-bar')?.getContext('2d');
+    if (ctxAcwr) {
+        const atletList = state.atlet || [];
+        const labels = atletList.map(a => a.nama.split(' ')[0]);
+        // Ambil data ACWR asli masing-masing atlet
+        const acwrValues = atletList.map(a => calculateAtletACWR(a.id).acwrRatio);
+
+        chartInstances['acwrBar'] = new Chart(ctxAcwr, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Rasio ACWR',
+                    data: acwrValues,
+                    backgroundColor: acwrValues.map(v => v > 1.5 ? '#EF4444' : (v > 1.3 ? '#F59E0B' : (v >= 0.8 ? '#10B981' : '#38BDF8'))),
+                    borderRadius: 6
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { ticks: { font: { size: 9, weight: 'bold' }, maxRotation: 45, minRotation: 45 } },
+                    y: { min: 0, max: 2.5, ticks: { stepSize: 0.5 } } 
+                }
+            }
+        });
+    }
+}
 
     // DASHBOARD ATLET (menu-atlet-1 sampai menu-atlet-5)
     if (menuId.startsWith('menu-atlet-')) {
@@ -1952,48 +1970,56 @@ function getAtletGpsLocation() {
         }
 
         function calculateAtletACWR(atletId, customLogs = null) {
-  const logs = customLogs || state.rpeLogs || loadStorage('rpeLogs', []);
-  const athleteLogs = logs.filter(r => String(r.atletId) === String(atletId));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  let acuteLoad = 0;   
-  let chronicSum = 0;  
-
-  athleteLogs.forEach(log => {
-    if (!log.tanggal) return;
-    const logDate = new Date(log.tanggal);
-    logDate.setHours(0, 0, 0, 0);
+    const logs = customLogs || state.rpeLogs || loadStorage('rpeLogs', []);
+    const athleteLogs = logs.filter(r => String(r.atletId) === String(atletId));
     
-    const diffDays = Math.floor((today - logDate) / (1000 * 60 * 60 * 24));
-    const loadVal = parseFloat(log.sRPE || (log.rpeVal * log.durasi) || log.srpe || 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    if (diffDays >= 0 && diffDays < 7) {
-      acuteLoad += loadVal;
+    let acuteLoad = 0;   // Beban Akut (7 hari terakhir)
+    let chronicSum = 0;  // Beban Kronik (28 hari terakhir)
+
+    athleteLogs.forEach(log => {
+        if (!log.tanggal) return;
+        
+        // Parse tanggal lokal aman
+        const parts = log.tanggal.split('-');
+        const logDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        logDate.setHours(0, 0, 0, 0);
+        
+        const diffDays = Math.floor((today - logDate) / (1000 * 60 * 60 * 24));
+        
+        // Ambil nilai sRPE dari berbagai kemungkinan key
+        const rpeVal = parseFloat(log.rpeVal || log.skalaRpe || log.rpe || 0);
+        const durasi = parseFloat(log.durasi || log.waktu || 0);
+        const loadVal = parseFloat(log.sRPE || log.srpe || (rpeVal * durasi) || 0);
+
+        if (diffDays >= 0 && diffDays < 7) {
+            acuteLoad += loadVal;
+        }
+        if (diffDays >= 0 && diffDays < 28) {
+            chronicSum += loadVal;
+        }
+    });
+
+    const chronicLoad = Math.round(chronicSum / 4);
+    let acwrRatio = chronicLoad > 0 ? parseFloat((acuteLoad / chronicLoad).toFixed(2)) : (acuteLoad > 0 ? parseFloat((acuteLoad / (acuteLoad || 1)).toFixed(2)) : 0);
+
+    let statusRisk = "Underloading";
+    let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
+
+    if (acwrRatio >= 0.8 && acwrRatio <= 1.3) {
+        statusRisk = "Sweet Spot (Aman)";
+        badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
+    } else if (acwrRatio > 1.3 && acwrRatio <= 1.5) {
+        statusRisk = "High Risk (Waspada)";
+        badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
+    } else if (acwrRatio > 1.5) {
+        statusRisk = "Danger Zone (Sangat Rawan)";
+        badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
     }
-    if (diffDays >= 0 && diffDays < 28) {
-      chronicSum += loadVal;
-    }
-  });
 
-  const chronicLoad = Math.round(chronicSum / 4);
-  let acwrRatio = chronicLoad > 0 ? parseFloat((acuteLoad / chronicLoad).toFixed(2)) : (acuteLoad > 0 ? 1.0 : 0);
-
-  let statusRisk = "Underloading";
-  let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
-
-  if (acwrRatio >= 0.8 && acwrRatio <= 1.3) {
-    statusRisk = "Sweet Spot (Aman)";
-    badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
-  } else if (acwrRatio > 1.3 && acwrRatio <= 1.5) {
-    statusRisk = "High Risk (Waspada)";
-    badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
-  } else if (acwrRatio > 1.5) {
-    statusRisk = "Danger Zone (Sangat Rawan)";
-    badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
-  }
-
-  return { acuteLoad, chronicLoad, acwrRatio, statusRisk, badgeClass, totalLogs: athleteLogs.length };
+    return { acuteLoad, chronicLoad, acwrRatio, statusRisk, badgeClass, totalLogs: athleteLogs.length };
 }
 		// 3. FUNGSI KALKULASI RASIO BEBAN LATIHAN (ACWR ALERT)
 function getACWRStatus(atlet) {
@@ -6081,19 +6107,20 @@ function generateJoggingSkuad(event) {
     `;
             } else if (state.currentMenu === 'menu-9') {
     pageTitle.innerText = "Dashboard Monitoring ACWR & Beban RPE Skuad";
-    const allReports = loadStorage('allReports') || loadStorage('riwayatRpe') || [];
-    const validReports = allReports.filter(r => r && (r.srpe || r.skalaRpe || r.rpe));
+    
+    // Gunakan state.rpeLogs langsung
+    const allRpeLogs = state.rpeLogs || loadStorage('rpeLogs', []);
 
     let countSweet = 0, countRisk = 0, countDanger = 0, countUnder = 0;
     let totalAcute = 0;
 
     const athleteAcwrList = state.atlet.map(at => {
-        const ac = calculateAtletACWR(at.id, validReports);
+        const ac = calculateAtletACWR(at.id, allRpeLogs);
         totalAcute += ac.acuteLoad;
-        if (ac.acwrRatio >= 0.8 && ac.acwrRatio <= 1.3) countSweet++;
-        else if (ac.acwrRatio > 1.3 && ac.acwrRatio <= 1.5) countRisk++;
-        else if (ac.acwrRatio > 1.5) countDanger++;
-        else countUnder++;
+        if (ac.totalLogs === 0 || ac.acwrRatio < 0.8) countUnder++;
+        else if (ac.acwrRatio <= 1.3) countSweet++;
+        else if (ac.acwrRatio <= 1.5) countRisk++;
+        else countDanger++;
         return { atlet: at, acwr: ac };
     });
 
