@@ -164,29 +164,30 @@
             }
           });
 
-          state.joggingLogs = Array.from(dailyMap.values());
-saveStorage("joggingLogs", state.joggingLogs);
+          state.joggingLogs = Array.from(dailyMap.values()).slice(0, 41);
+          saveStorage("joggingLogs", state.joggingLogs);
 
-          // 3. Update Laporan Validasi dari Server Spreadsheet
-if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
-    const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
-    const valMap = new Map();
+          // 3. Update Laporan Validasi
+          if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
+            const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
+            const mergedVal = new Map();
 
-    // Muat data lokal
-    localVal.forEach(item => { 
-        if (item && item.id) valMap.set(String(item.id), item); 
-    });
-    
-    // Timpa dengan data server terbaru
-    data.laporanValidasi.forEach(serverItem => {
-        if (serverItem && serverItem.id) {
-            valMap.set(String(serverItem.id), serverItem);
-        }
-    });
+            localVal.forEach(item => { 
+              if (item && item.id) mergedVal.set(String(item.id), item); 
+            });
+            
+            data.laporanValidasi.forEach(serverItem => {
+              if (serverItem && serverItem.id) {
+                const localItem = mergedVal.get(String(serverItem.id));
+                if (!localItem || localItem.status === 'Menunggu') {
+                  mergedVal.set(String(serverItem.id), serverItem);
+                }
+              }
+            });
 
-    state.laporanValidasi = Array.from(valMap.values());
-    saveStorage("laporanValidasi", state.laporanValidasi);
-}
+            state.laporanValidasi = Array.from(mergedVal.values());
+            saveStorage("laporanValidasi", state.laporanValidasi);
+          }
 
           // 4. Render Ulang Tampilan Otomatis
           if (typeof renderContent === 'function') {
@@ -199,35 +200,9 @@ if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanV
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-    // 1. Muat sesi login tersimpan
-    const savedAtlet = loadStorage('activeAtlet', null);
-
-    if (savedAtlet) {
-        state.activeAtlet = savedAtlet;
-        state.currentRole = 'Atlet';
-        state.currentMenu = 'menu-atlet-1';
-
-        // GUNAKAN NAMA savedInitials AGAR TIDAK BENTROK
-        const savedInitials = savedAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = savedInitials;
-        if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(savedAtlet.nama);
-        if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(savedAtlet.posisi)}`;
-        if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
-
-        document.getElementById('login-screen')?.classList.add('hidden');
-        document.getElementById('app-screen')?.classList.remove('hidden');
-    } else {
-        selectLoginRole('pelatih');
-    }
-
-    // 2. Render tampilan awal
-    renderSidebar();
-    renderContent();
-
-    // 3. Background sync
-    autoFetchFromSpreadsheet();
-    setInterval(autoFetchFromSpreadsheet, 30000);
-});
+      autoFetchFromSpreadsheet(); // Jalankan sekali saat pertama dimuat
+      setInterval(autoFetchFromSpreadsheet, 30000); // Polling setiap 30 detik
+    });
 		
     </script>
 
@@ -791,43 +766,44 @@ if (menuId === 'menu-4') {
 
     // 7. JOGGING & MAS (Grafik Volume & Pace)
             if (menuId === 'menu-7') {
-    const ctx = document.getElementById('chart-jogging-mas')?.getContext('2d');
-    if (ctx) {
-        // PERBAIKAN: Gunakan state.joggingLogs
-        const logs = state.joggingLogs || [];
-        const labels = logs.length > 0 ? logs.map((_, i) => `Sesi ${i + 1}`) : ['Sesi 1', 'Sesi 2', 'Sesi 3', 'Sesi 4', 'Sesi 5'];
-        const dataJarak = logs.length > 0 ? logs.map(j => parseFloat(j.jarak) || 0) : [3, 4, 3.5, 5, 4.2];
+                const ctx = document.getElementById('chart-jogging-mas')?.getContext('2d');
+                if (ctx) {
+                    const logs = state.jogging || [];
+                    const labels = logs.length > 0 ? logs.map((_, i) => `Sesi ${i + 1}`) : ['Sesi 1', 'Sesi 2', 'Sesi 3', 'Sesi 4', 'Sesi 5'];
+                    const dataJarak = logs.length > 0 ? logs.map(j => parseFloat(j.jarak) || 0) : [3, 4, 3.5, 5, 4.2];
 
-        chartInstances['jogging'] = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Jarak (KM)',
-                    data: dataJarak,
-                    borderColor: '#0284C7',
-                    backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                    fill: true,
-                    tension: 0.3,
-                    borderWidth: 2.5,
-                    pointRadius: 4
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { ticks: { font: { size: 10, weight: 'bold' } } },
-                    y: { 
-                        beginAtZero: true,
-                        ticks: { callback: v => v + ' km', font: { size: 10 } } 
-                    }
+                    chartInstances['jogging'] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Jarak (KM)',
+                                data: dataJarak,
+                                borderColor: '#0284C7',
+                                backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                borderWidth: 2.5,
+                                pointRadius: 4
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                x: { ticks: { font: { size: 10, weight: 'bold' } } },
+                                y: { 
+                                    beginAtZero: true,
+                                    ticks: { callback: v => v + ' km', font: { size: 10 } } 
+                                }
+                            }
+                        }
+                    });
                 }
             }
-        });
-    }
-}
 
     // 8. VALIDASI LAPORAN (Status Keputusan Validasi)
             if (menuId === 'menu-8') {
@@ -865,84 +841,66 @@ if (menuId === 'menu-4') {
 
     // 9. ACWR & RPE
             if (menuId === 'menu-9') {
-    // 1. Chart 1: Tren sRPE Rerata Skuad per Hari (7 Hari Terakhir)
-    const ctxSrpe = document.getElementById('chart-srpe-trend')?.getContext('2d');
-    if (ctxSrpe) {
-        const rpeList = state.rpeLogs || loadStorage('rpeLogs', []);
-        const dayLabels = [];
-        const srpeDailyData = [];
-        const today = new Date();
+                // Chart 1: Tren sRPE
+                const ctxSrpe = document.getElementById('chart-srpe-trend')?.getContext('2d');
+                if (ctxSrpe) {
+                    chartInstances['srpeTrend'] = new Chart(ctxSrpe, {
+                        type: 'line',
+                        data: {
+                            labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4', 'Minggu 5', 'Minggu 6'],
+                            datasets: [{
+                                label: 'Rerata sRPE (AU)',
+                                data: [1200, 1450, 1300, 1600, 1800, 1500],
+                                borderColor: '#0284C7',
+                                backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                borderWidth: 2.5,
+                                pointRadius: 4
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { callback: v => v + ' AU', font: { size: 10 } } },
+                                x: { ticks: { font: { size: 10, weight: 'bold' } } }
+                            }
+                        }
+                    });
+                }
 
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toISOString().split('T')[0];
-            dayLabels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }));
+                // Chart 2: Rasio ACWR Per Atlet
+                const ctxAcwr = document.getElementById('chart-acwr-bar')?.getContext('2d');
+                if (ctxAcwr) {
+                    const atletList = state.atlet || [];
+                    const labels = atletList.map(a => a.nama.split(' ')[0]);
+                    const acwrValues = atletList.map(() => (Math.random() * (1.6 - 0.7) + 0.7).toFixed(2));
 
-            // Hitung total sRPE pada tanggal tersebut
-            const dayLogs = rpeList.filter(l => l.tanggal === dateStr);
-            const dayTotal = dayLogs.reduce((acc, curr) => acc + (parseFloat(curr.sRPE) || 0), 0);
-            srpeDailyData.push(dayLogs.length > 0 ? Math.round(dayTotal / dayLogs.length) : 0);
-        }
-
-        chartInstances['srpeTrend'] = new Chart(ctxSrpe, {
-            type: 'line',
-            data: {
-                labels: dayLabels,
-                datasets: [{
-                    label: 'Rerata sRPE Skuad (AU)',
-                    data: srpeDailyData,
-                    borderColor: '#0284C7',
-                    backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                    fill: true,
-                    tension: 0.3,
-                    borderWidth: 2.5,
-                    pointRadius: 4
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { callback: v => v + ' AU', font: { size: 10 } } },
-                    x: { ticks: { font: { size: 10, weight: 'bold' } } }
+                    chartInstances['acwrBar'] = new Chart(ctxAcwr, {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Rasio ACWR',
+                                data: acwrValues,
+                                backgroundColor: acwrValues.map(v => v > 1.5 ? '#EF4444' : (v > 1.3 ? '#F59E0B' : (v >= 0.8 ? '#10B981' : '#3B82F6'))),
+                                borderRadius: 6
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: { legend: { display: false } },
+                            scales: { 
+                                x: { ticks: { font: { size: 9, weight: 'bold' }, maxRotation: 45, minRotation: 45 } },
+                                y: { min: 0, max: 2.0, ticks: { stepSize: 0.4 } } 
+                            } 
+                        }
+                    });
                 }
             }
-        });
-    }
-
-    // 2. Chart 2: Rasio ACWR Nyata Per Atlet Skuad
-    const ctxAcwr = document.getElementById('chart-acwr-bar')?.getContext('2d');
-    if (ctxAcwr) {
-        const atletList = state.atlet || [];
-        const labels = atletList.map(a => a.nama.split(' ')[0]);
-        // Ambil data ACWR asli masing-masing atlet
-        const acwrValues = atletList.map(a => calculateAtletACWR(a.id).acwrRatio);
-
-        chartInstances['acwrBar'] = new Chart(ctxAcwr, {
-            type: 'bar',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Rasio ACWR',
-                    data: acwrValues,
-                    backgroundColor: acwrValues.map(v => v > 1.5 ? '#EF4444' : (v > 1.3 ? '#F59E0B' : (v >= 0.8 ? '#10B981' : '#38BDF8'))),
-                    borderRadius: 6
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { legend: { display: false } },
-                scales: { 
-                    x: { ticks: { font: { size: 9, weight: 'bold' }, maxRotation: 45, minRotation: 45 } },
-                    y: { min: 0, max: 2.5, ticks: { stepSize: 0.5 } } 
-                }
-            }
-        });
-    }
-}
 
     // DASHBOARD ATLET (menu-atlet-1 sampai menu-atlet-5)
     if (menuId.startsWith('menu-atlet-')) {
@@ -1195,6 +1153,7 @@ function calculateHaversineDistance(lat1, lon1, lat2, lng2) {
     return R * c;
 }
 
+// Fungsi Mulai Tracking Live dengan Deteksi Aktivitas
 function startLiveGpsTracking() {
     const badge = document.getElementById('gps-status-badge');
     if (!navigator.geolocation) {
@@ -1335,21 +1294,21 @@ function stopLiveGpsTracking() {
         }
 
         function loadStorage(key, fallback) {
-    try {
-        const data = localStorage.getItem('cf_' + key);
-        return data ? JSON.parse(data) : fallback;
-    } catch(e) {
-        return fallback;
-    }
-}
+            try {
+                const data = localStorage.getItem('cf_' + key);
+                return data ? JSON.parse(data) : fallback;
+            } catch(e) {
+                return fallback;
+            }
+        }
 
-function saveStorage(key, value) {
-    try {
-        localStorage.setItem('cf_' + key, JSON.stringify(value));
-    } catch (err) {
-        console.error("Storage error:", err);
-    }
-}
+        function saveStorage(key, value) {
+            try {
+                localStorage.setItem('cf_' + key, JSON.stringify(value));
+            } catch (err) {
+                showToast("Memori browser penuh! Hapus riwayat lama.", "error");
+            }
+        }
 
         function exportToCSV(filename, headers, rows) {
             const csvContent = "data:text/csv;charset=utf-8," 
@@ -1364,34 +1323,31 @@ function saveStorage(key, value) {
         }
 
 		// FITUR BACKUP DATA LOKAL KE FILE JSON
-// BACKUP LENGKAP KE FILE JSON
 function backupDataJSON() {
     const backupData = {
-        atlet: state.atlet || [],
-        absensi: state.absensi || [],
-        tesFisik: state.tesFisik || [],
-        tesTeknik: state.tesTeknik || [],
-        rpeLogs: state.rpeLogs || [],
-        joggingLogs: state.joggingLogs || [],
-        masLogs: state.masLogs || [],
-        laporanValidasi: state.laporanValidasi || [],
-        matchLive: state.matchLive || {},
-        periodisasiConfig: state.periodisasiConfig || {},
+        atlet: state.atlet,
+        absensi: state.absensi,
+        tesFisik: state.tesFisik,
+        tesTeknik: state.tesTeknik,
+        rpeLogs: state.rpeLogs,
+        joggingLogs: state.joggingLogs,
+        masLogs: state.masLogs,
+        laporanValidasi: state.laporanValidasi,
         exportedAt: new Date().toISOString()
     };
 
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Backup_CoachFloorball_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute("download", `Backup_Floorball_${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
 
-    showToast("File cadangan JSON berhasil diunduh!", "success");
+    showToast("File backup JSON berhasil diunduh!", "success");
 }
 
-// RESTORE LENGKAP DARI FILE JSON
+// FITUR RESTORE DATA DARI FILE JSON
 function restoreDataJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1409,15 +1365,12 @@ function restoreDataJSON(event) {
             if (data.joggingLogs) { state.joggingLogs = data.joggingLogs; saveStorage('joggingLogs', state.joggingLogs); }
             if (data.masLogs) { state.masLogs = data.masLogs; saveStorage('masLogs', state.masLogs); }
             if (data.laporanValidasi) { state.laporanValidasi = data.laporanValidasi; saveStorage('laporanValidasi', state.laporanValidasi); }
-            if (data.matchLive) { state.matchLive = data.matchLive; saveStorage('matchLive', state.matchLive); }
-            if (data.periodisasiConfig) { state.periodisasiConfig = data.periodisasiConfig; saveStorage('periodisasi', state.periodisasiConfig); }
 
-            initMatchPlayerStats();
             renderSidebar();
             renderContent();
-            showToast("Database berhasil dipulihkan secara menyeluruh!", "success");
+            showToast("Database berhasil dipulihkan dari file JSON!", "success");
         } catch (err) {
-            showToast("Format file cadangan JSON tidak valid!", "error");
+            showToast("Gagal memulihkan: Format file JSON tidak valid!", "error");
         }
     };
     reader.readAsText(file);
@@ -1635,98 +1588,81 @@ function restoreDataJSON(event) {
 }
 
         function handleLogin(e) {
-    e.preventDefault();
-    const toast = showToast('Memverifikasi akses...', 'loading');
+            e.preventDefault();
+            const toast = showToast('Memverifikasi akses...', 'loading');
 
-    setTimeout(() => {
-        if (toast) toast.remove();
-        
-        if (state.loginRole === 'pelatih') {
-            const passInputElem = document.getElementById('auth-input-password');
-            const passInput = passInputElem ? passInputElem.value : '';
-            if (passInput !== COACH_PASSWORD_DEFAULT) {
-                showToast('Kata sandi Pelatih salah!', 'error');
-                return;
-            }
-            state.currentRole = 'Pelatih';
-            state.currentMenu = 'menu-1';
-            state.activeAtlet = null;
-            localStorage.removeItem('cf_activeAtlet');
+            setTimeout(() => {
+                if(toast) toast.remove();
+                if (state.loginRole === 'pelatih') {
+                    const passInputElem = document.getElementById('auth-input-password');
+                    const passInput = passInputElem ? passInputElem.value : '';
+                    if (passInput !== COACH_PASSWORD_DEFAULT) {
+                        showToast('Kata sandi Pelatih salah!', 'error');
+                        return;
+                    }
+                    state.currentRole = 'Pelatih';
+                    state.currentMenu = 'menu-1';
+                    state.activeAtlet = null;
+                    
+                    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
+                    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
+                    if(document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
+                    if(document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
 
-            if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
-            if (document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
-            if (document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
-            if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
+                    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+                    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+                    
+                    renderSidebar();
+                    renderContent();
+                    showToast('Berhasil masuk Mode Pelatih!', 'success');
+                } else {
+                    const selectAtletElem = document.getElementById('auth-select-atlet');
+                    const inputPinElem = document.getElementById('auth-input-pin');
+                    const selectedId = selectAtletElem ? selectAtletElem.value : '';
+                    const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
 
-            if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-            if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+                    const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
 
-            renderSidebar();
-            renderContent();
-            showToast('Berhasil masuk Mode Pelatih!', 'success');
-        } else {
-            const selectAtletElem = document.getElementById('auth-select-atlet');
-            const inputPinElem = document.getElementById('auth-input-pin');
-            const selectedId = selectAtletElem ? selectAtletElem.value : '';
-            const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
+                    if (!targetAtlet || targetAtlet.pin !== inputPin) {
+                        showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
+                        return;
+                    }
 
-            const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
+                    state.activeAtlet = targetAtlet;
+                    state.currentRole = 'Atlet';
+                    state.currentMenu = 'menu-atlet-1';
 
-            if (!targetAtlet || targetAtlet.pin !== inputPin) {
-                showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
-                return;
-            }
+                    const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
+                    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
+                    if(document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
+                    if(document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
 
-            state.activeAtlet = targetAtlet;
-            state.currentRole = 'Atlet';
-            state.currentMenu = 'menu-atlet-1';
-            saveStorage('activeAtlet', targetAtlet);
-
-            // Gunakan userInitials (hanya 1 kali deklarasi)
-            const userInitials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-            if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = userInitials;
-            if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
-            if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
-            if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
-
-            if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-            if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
-
-            renderSidebar();
-            renderContent();
-            showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
+                    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+                    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+                    
+                    renderSidebar();
+                    renderContent();
+                    showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
+                }
+            }, 500);
         }
-    }, 400);
-}
+
         function logout() {
-    // 1. Matikan GPS live jika aktif
-    if (typeof stopLiveGpsTracking === 'function') {
-        stopLiveGpsTracking();
-    }
-
-    // 2. Hentikan semua timer match & dribble
-    if (state.matchLive?.dribbleTimer?.intervalId) {
-        clearInterval(state.matchLive.dribbleTimer.intervalId);
-        state.matchLive.dribbleTimer.isRunning = false;
-        state.matchLive.dribbleTimer.elapsedSec = 0;
-    }
-    if (state.matchLive?.matchTimer?.intervalId) {
-        clearInterval(state.matchLive.matchTimer.intervalId);
-        state.matchLive.matchTimer.isRunning = false;
-    }
-
-    // 3. Hapus sesi aktif dari state dan storage
-    state.activeAtlet = null;
-    localStorage.removeItem('cf_activeAtlet');
-    localStorage.removeItem('cf_currentUser');
-
-    // 4. Alihkan layar kembali ke Login Pelatih
-    document.getElementById('app-screen')?.classList.add('hidden');
-    document.getElementById('login-screen')?.classList.remove('hidden');
-    selectLoginRole('pelatih');
-    
-    showToast('Anda telah keluar dari aplikasi.', 'success');
-}
+            if (state.matchLive.dribbleTimer.intervalId) {
+                clearInterval(state.matchLive.dribbleTimer.intervalId);
+                state.matchLive.dribbleTimer.isRunning = false;
+            }
+            if (state.matchLive.matchTimer && state.matchLive.matchTimer.intervalId) {
+                clearInterval(state.matchLive.matchTimer.intervalId);
+                state.matchLive.matchTimer.isRunning = false;
+            }
+            if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.add('hidden');
+            if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.remove('hidden');
+            state.activeAtlet = null;
+            selectLoginRole('pelatih');
+            showToast('Anda telah keluar dari aplikasi.', 'success');
+        }
 
         function showToast(message, type = 'loading') {
             const container = document.getElementById('toast-container');
@@ -1854,54 +1790,24 @@ function restoreDataJSON(event) {
             
             if (modal) modal.classList.remove('hidden');
         }
-
 function deleteRiwayatValidasi(id) {
     if (!confirm("Apakah Anda yakin ingin menghapus riwayat validasi ini?")) return;
 
+    // Filter hapus data dari state
     if (state.laporanValidasi) {
         state.laporanValidasi = state.laporanValidasi.filter(item => String(item.id) !== String(id));
     }
 
-    saveStorage('laporanValidasi', state.laporanValidasi);
+    // Simpan ke LocalStorage
+    if (typeof saveStateToLocalStorage === 'function') {
+        saveStateToLocalStorage();
+    } else {
+        localStorage.setItem('floorball_state', JSON.stringify(state));
+    }
 
+    // Re-render tampilan halaman dan update grafik
     renderContent();
     renderChartsForMenu(state.currentMenu);
-    showToast("Riwayat validasi berhasil dihapus permanen!", "success");
-} 
-		
-		// Fungsi trigger sekali klik dari tombol Form Atlet
-function getAtletGpsLocation() {
-    const badge = document.getElementById('gps-status-badge');
-    if (!navigator.geolocation) {
-        showToast("GPS tidak didukung pada browser ini!", "error");
-        return;
-    }
-
-    if (badge) {
-        badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600 mr-1"></i> Mengunci koordinat GPS...`;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const { latitude, longitude, accuracy } = position.coords;
-            state.currentGpsLocation = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-            
-            if (badge) {
-                badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-2xl text-xs font-bold text-center';
-                badge.innerHTML = `<i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> ${state.currentGpsLocation} (±${Math.round(accuracy)}m)`;
-            }
-            showToast("Koordinat GPS berhasil dikunci!", "success");
-        },
-        (error) => {
-            console.warn("GPS Error:", error);
-            if (badge) {
-                badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-800 border border-rose-200 rounded-2xl text-xs font-bold text-center';
-                badge.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-500 mr-1"></i> Gagal mengambil GPS. Pastikan izin lokasi aktif.`;
-            }
-            showToast("Gagal mengambil lokasi GPS!", "error");
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
 }
         function closeModalAtlet() {
             const modal = document.getElementById('modal-atlet');
@@ -1976,58 +1882,49 @@ function getAtletGpsLocation() {
             return records.length > 0 ? parseFloat(records[0].skor) : null; 
         }
 
-        function calculateAtletACWR(atletId, customLogs = null) {
-    const logs = customLogs || state.rpeLogs || loadStorage('rpeLogs', []);
-    const athleteLogs = logs.filter(r => String(r.atletId) === String(atletId));
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+        function calculateAtletACWR(atletId) {
+            const logs = state.rpeLogs.filter(r => String(r.atletId) === String(atletId));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-    let acuteLoad = 0;   // Beban Akut (7 hari terakhir)
-    let chronicSum = 0;  // Beban Kronik (28 hari terakhir)
+            let acuteLoad = 0;   
+            let chronicSum = 0;  
 
-    athleteLogs.forEach(log => {
-        if (!log.tanggal) return;
-        
-        // Parse tanggal lokal aman
-        const parts = log.tanggal.split('-');
-        const logDate = new Date(parts[0], parts[1] - 1, parts[2]);
-        logDate.setHours(0, 0, 0, 0);
-        
-        const diffDays = Math.floor((today - logDate) / (1000 * 60 * 60 * 24));
-        
-        // Ambil nilai sRPE dari berbagai kemungkinan key
-        const rpeVal = parseFloat(log.rpeVal || log.skalaRpe || log.rpe || 0);
-        const durasi = parseFloat(log.durasi || log.waktu || 0);
-        const loadVal = parseFloat(log.sRPE || log.srpe || (rpeVal * durasi) || 0);
+            logs.forEach(log => {
+                if (!log.tanggal) return;
+                const logDate = new Date(log.tanggal);
+                logDate.setHours(0, 0, 0, 0);
+                
+                const diffDays = Math.floor((today - logDate) / (1000 * 60 * 60 * 24));
 
-        if (diffDays >= 0 && diffDays < 7) {
-            acuteLoad += loadVal;
+                if (diffDays >= 0 && diffDays < 7) {
+                    acuteLoad += (log.sRPE || 0);
+                }
+                if (diffDays >= 0 && diffDays < 28) {
+                    chronicSum += (log.sRPE || 0);
+                }
+            });
+
+            const chronicLoad = Math.round(chronicSum / 4);
+            let acwrRatio = chronicLoad > 0 ? parseFloat((acuteLoad / chronicLoad).toFixed(2)) : 0;
+
+            let statusRisk = "Underloading";
+            let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
+
+            if (acwrRatio >= 0.8 && acwrRatio <= 1.3) {
+                statusRisk = "Sweet Spot (Aman)";
+                badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
+            } else if (acwrRatio > 1.3 && acwrRatio <= 1.5) {
+                statusRisk = "High Risk (Waspada)";
+                badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
+            } else if (acwrRatio > 1.5) {
+                statusRisk = "Danger Zone (Sangat Rawan)";
+                badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
+            }
+
+            return { acuteLoad, chronicLoad, acwrRatio, statusRisk, badgeClass, totalLogs: logs.length };
         }
-        if (diffDays >= 0 && diffDays < 28) {
-            chronicSum += loadVal;
-        }
-    });
 
-    const chronicLoad = Math.round(chronicSum / 4);
-    let acwrRatio = chronicLoad > 0 ? parseFloat((acuteLoad / chronicLoad).toFixed(2)) : (acuteLoad > 0 ? parseFloat((acuteLoad / (acuteLoad || 1)).toFixed(2)) : 0);
-
-    let statusRisk = "Underloading";
-    let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
-
-    if (acwrRatio >= 0.8 && acwrRatio <= 1.3) {
-        statusRisk = "Sweet Spot (Aman)";
-        badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
-    } else if (acwrRatio > 1.3 && acwrRatio <= 1.5) {
-        statusRisk = "High Risk (Waspada)";
-        badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
-    } else if (acwrRatio > 1.5) {
-        statusRisk = "Danger Zone (Sangat Rawan)";
-        badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
-    }
-
-    return { acuteLoad, chronicLoad, acwrRatio, statusRisk, badgeClass, totalLogs: athleteLogs.length };
-}
 		// 3. FUNGSI KALKULASI RASIO BEBAN LATIHAN (ACWR ALERT)
 function getACWRStatus(atlet) {
     const ac = calculateAtletACWR(atlet.id);
@@ -3883,91 +3780,89 @@ function renderMatchHeatmap() {
         }
 
         function updateAtletJoggingCalculations() {
-    const atlet = state.activeAtlet;
-    if (!atlet) return;
+            const atlet = state.activeAtlet;
+            if (!atlet) return;
 
-    const historiList = state.joggingLogs || [];
-    const matchLog = historiList.slice().reverse().find(item => 
-        String(item.atletId) === String(atlet.id) || String(item.namaAtlet) === String(atlet.nama)
-    );
-    
-    const waktuMnt = matchLog ? parseFloat(matchLog.waktu) : 30;
-    const zonaFactor = matchLog ? String(matchLog.zona) : "0.75";
-    const jarakKm = matchLog ? parseFloat(matchLog.jarak) : 4.31;
-    const paceFormatted = matchLog ? matchLog.pace : "5'48\"";
-    
-    const speedKmh = (waktuMnt > 0 && jarakKm > 0) 
-        ? parseFloat((jarakKm / (waktuMnt / 60)).toFixed(1)) 
-        : 8.6;
-    const estKalori = Math.round(jarakKm * (atlet.bb || 65) * 0.75);
+            const historiList = state.joggingLogs || [];
+            const matchLog = historiList.slice().reverse().find(item => 
+                String(item.atletId) === String(atlet.id) || String(item.namaAtlet) === String(atlet.nama)
+            );
+            
+            const waktuMnt = matchLog ? parseFloat(matchLog.waktu) : 30;
+            const zonaFactor = matchLog ? matchLog.zona : "0.75";
+            const jarakKm = matchLog ? parseFloat(matchLog.jarak) : 4.31;
+            const paceFormatted = matchLog ? matchLog.pace : "5'48\"";
+            
+            const speedKmh = (waktuMnt > 0 && jarakKm > 0) 
+                ? parseFloat((jarakKm / (waktuMnt / 60)).toFixed(1)) 
+                : 8.6;
+            const estKalori = Math.round(jarakKm * (atlet.bb || 65) * 0.75);
 
-    const durasiInput = document.getElementById('run-durasi');
-    const zonaInput = document.getElementById('run-zona');
+            const durasiInput = document.getElementById('run-durasi');
+            const zonaInput = document.getElementById('run-zona');
+            if (durasiInput) durasiInput.value = waktuMnt;
+            if (zonaInput) {
+                const z = String(zonaFactor);
+                if (z.includes('0.6')) zonaInput.value = 'Zone 1 (60% MAS)';
+                else if (z.includes('0.8')) zonaInput.value = 'Zone 3 (80% MAS)';
+                else if (z.includes('0.9')) zonaInput.value = 'Zone 4 (90% MAS)';
+                else if (z.includes('1')) zonaInput.value = 'Zone 5 (100% MAS)';
+                else zonaInput.value = 'Zone 2: Aerobic Base (75% MAS)';
+            }
 
-    if (durasiInput) durasiInput.value = waktuMnt;
-    if (zonaInput) {
-    const z = String(zonaFactor);
-    if (z.includes('0.6')) zonaInput.value = '0.60';
-    else if (z.includes('0.8')) zonaInput.value = '0.80';
-    else if (z.includes('0.9')) zonaInput.value = '0.90';
-    else if (z.includes('1')) zonaInput.value = '1.00';
-    else zonaInput.value = '0.75';
-}
-
-    if (document.getElementById('run-pace-display')) document.getElementById('run-pace-display').innerText = paceFormatted;
-    if (document.getElementById('run-jarak-display')) document.getElementById('run-jarak-display').innerText = `${jarakKm} km`;
-    if (document.getElementById('run-speed-display')) document.getElementById('run-speed-display').innerText = `${speedKmh} km/h`;
-    if (document.getElementById('run-kalori-display')) document.getElementById('run-kalori-display').innerText = `${estKalori} kcal`;
-}
+            if (document.getElementById('run-pace-display')) document.getElementById('run-pace-display').innerText = paceFormatted;
+            if (document.getElementById('run-jarak-display')) document.getElementById('run-jarak-display').innerText = `${jarakKm} km`;
+            if (document.getElementById('run-speed-display')) document.getElementById('run-speed-display').innerText = `${speedKmh} km/h`;
+            if (document.getElementById('run-kalori-display')) document.getElementById('run-kalori-display').innerText = `${estKalori} kcal`;
+        }
 
         async function submitAtletLaporanJogging(e) {
-  e.preventDefault();
-  const at = state.activeAtlet;
-  if (!at) return;
+            e.preventDefault();
+            const at = state.activeAtlet;
+            if (!at) return;
 
-  const selfieFile = document.getElementById('run-file-selfie')?.files[0];
-  const buktiFile = document.getElementById('run-file-bukti')?.files[0];
-  const durasiInput = document.getElementById('run-durasi');
+            const selfieFile = document.getElementById('run-file-selfie')?.files[0];
+            const buktiFile = document.getElementById('run-file-bukti')?.files[0];
 
-  const durasiVal = parseFloat(durasiInput?.value) || 30;
-  const distDisplay = document.getElementById('run-jarak-display')?.innerText || '0';
-  const autoDistCalc = parseFloat(distDisplay.replace(/[^0-9.]/g, '')) || 4.31;
-  const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) ? parseFloat(totalDistanceKm.toFixed(2)) : autoDistCalc;
-  const speedVal = durasiVal > 0 ? parseFloat((finalJarak / (durasiVal / 60)).toFixed(1)) : 0;
-  const kaloriVal = Math.round(finalJarak * (at.bb || 65) * 0.75);
+            const toast = showToast('Memproses & Mengunggah Laporan...', 'loading');
 
-  const toast = showToast('Memproses & Mengunggah Laporan...', 'loading');
+            let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
+            let stravaUrl = 'https://picsum.photos/500/500?sports';
 
-  let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
-  let stravaUrl = 'https://picsum.photos/500/500?sports';
+            if (selfieFile) {
+                try { 
+                    selfieUrl = await compressImage(selfieFile, 600, 600, 0.6); 
+                } catch(err) {
+                    console.warn("Gagal kompresi selfie:", err);
+                }
+            }
 
-  if (selfieFile) {
-    try { 
-      selfieUrl = await compressImage(selfieFile, 600, 600, 0.6); 
-    } catch(err) {
-      console.warn("Gagal kompresi selfie:", err);
-    }
-  }
+            if (buktiFile) {
+                try { 
+                    stravaUrl = await compressImage(buktiFile, 800, 800, 0.6); 
+                } catch(err) {
+                    console.warn("Gagal kompresi bukti strava:", err);
+                }
+            }
 
-  if (buktiFile) {
-    try { 
-      stravaUrl = await compressImage(buktiFile, 800, 800, 0.6); 
-    } catch(err) {
-      console.warn("Gagal kompresi bukti strava:", err);
-    }
-  }
+            // ... kode baris 3830 - 3835 ...
 
-  const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
+const durasiVal = matchLog ? parseFloat(matchLog.waktu) : 30;
+const jarakVal = matchLog ? parseFloat(matchLog.jarak) : 4.31;
+const speedVal = (durasiVal > 0 && jarakVal > 0) ? parseFloat((jarakVal / (durasiVal / 60)).toFixed(1)) : 8.6;
+const kaloriVal = Math.round(jarakVal * (at.bb || 65) * 0.75);
 
-  const newReport = {
+const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
+const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) ? parseFloat(totalDistanceKm.toFixed(2)) : jarakVal;
+
+const newReport = {
     id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-    atletId: String(at.id),
-    namaAtlet: at.nama,
-    tanggal: new Date().toISOString().split('T')[0],
+    atletId: at.id,
+    tanggal: matchLog ? matchLog.tanggal : new Date().toISOString().split('T')[0],
     jarak: finalJarak,
     waktu: durasiVal,
-    speedKmh: speedVal,
-    kalori: kaloriVal,
+    speedKmh: durasiVal > 0 ? parseFloat((finalJarak / (durasiVal / 60)).toFixed(1)) : 0,
+    kalori: Math.round(finalJarak * (at.bb || 65) * 0.75),
     gpsLoc: state.currentGpsLocation || 'Lokasi Terdeteksi',
     imgSelfieUrl: selfieUrl,
     imgStravaUrl: stravaUrl,
@@ -3976,21 +3871,23 @@ function renderMatchHeatmap() {
     detectedEdit: false,
     softwareDetected: isMotorDetected ? 'Terindikasi Naik Kendaraan (GPS Speed)' : 'Validasi Live GPS Tracker',
     status: 'Menunggu'
-  };
+};
 
-  if (!state.laporanValidasi) state.laporanValidasi = [];
-  state.laporanValidasi.unshift(newReport);
-  saveStorage('laporanValidasi', state.laporanValidasi);
+state.laporanValidasi.unshift(newReport);
 
-  if (typeof syncDataToSpreadsheet === 'function') {
-    syncDataToSpreadsheet();
+// Simpan seluruh data tanpa membatasi jumlah histori
+saveStorage('laporanValidasi', state.laporanValidasi);
+
+    // BARIS TAMBAHAN (Baris 3841): Langsung kirim ke Google Sheets
+    if (typeof syncDataToSpreadsheet === 'function') {
+      syncDataToSpreadsheet();
+    }
+
+    if (toast) toast.remove();
+    renderSidebar();
+    renderContent();
+    showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
   }
-
-  if (toast) toast.remove();
-  renderSidebar();
-  renderContent();
-  showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
-}
 
         async function setStatusLaporanValidasi(id, statusTarget) {
     const idx = state.laporanValidasi.findIndex(l => String(l.id) === String(id));
@@ -4121,113 +4018,116 @@ function renderMatchHeatmap() {
         // FITUR EKSPOR PDF OTOMATIS & CLEAN RENDER
         // =========================================================================
         function exportPDFCustom(elementId, filenamePrefix) {
-  const element = document.getElementById(elementId) || document.getElementById('main-container');
-  if (!element) {
-    showToast('Area dokumen tidak ditemukan!', 'error');
-    return;
-  }
+            const element = document.getElementById(elementId) || document.getElementById('main-container');
+            if (!element) {
+                showToast('Area dokumen tidak ditemukan!', 'error');
+                return;
+            }
 
-  const toast = showToast('Membangun dokumen PDF...', 'loading');
+            const toast = showToast('Membangun dokumen PDF resmi...', 'loading');
 
-  // Clone element sementara agar styling scroll tidak memotong dokumen PDF
-  const opt = {
-    margin: [10, 10, 10, 10],
-    filename: `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2, 
-      useCORS: true, 
-      scrollY: 0,
-      windowWidth: document.documentElement.offsetWidth
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+            const opt = {
+                margin:       [10, 10, 10, 10],
+                filename:     `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
 
-  html2pdf().set(opt).from(element).save().then(() => {
-    if (toast) toast.remove();
-    showToast('Dokumen PDF Berhasil Diunduh!', 'success');
-  }).catch(err => {
-    if (toast) toast.remove();
-    console.error("PDF Error:", err);
-    showToast('Gagal memproses PDF via generator. Membuka dialog cetak...', 'error');
-    window.print();
-  });
-}	
+            html2pdf().set(opt).from(element).save().then(() => {
+                if (toast) toast.remove();
+                showToast('Dokumen PDF Berhasil Diunduh!', 'success');
+            }).catch(err => {
+                if (toast) toast.remove();
+                console.error("PDF Error:", err);
+                showToast('Gagal memproses PDF. Mengalihkan ke Print bawaan...', 'error');
+                window.print();
+            });
+        }	
         function filterSearchAtlet(query) {
             state.searchQueryAtlet = query.toLowerCase();
             renderContent();
         }
 
 function generateJoggingSkuad(event) {
-    if (event) event.preventDefault();
+  if (event) event.preventDefault();
 
-    if (!state.atlet || state.atlet.length === 0) {
-        showToast("Data atlet belum dimuat!", "error");
-        return;
+  if (!state.atlet || state.atlet.length === 0) {
+    showToast("Data atlet belum dimuat!", "error");
+    return;
+  }
+
+  const selectedId = document.getElementById('jogging-atlet-id')?.value;
+  const zona = document.getElementById('jogging-zona')?.value || "0.75";
+  const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 25;
+  const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
+
+  let targetAthletes = [];
+  if (selectedId === 'semua' || !selectedId) {
+    targetAthletes = state.atlet;
+  } else {
+    const found = state.atlet.find(a => String(a.id) === String(selectedId));
+    if (found) targetAthletes = [found];
+  }
+
+  if (targetAthletes.length === 0) {
+    showToast("Atlet tidak ditemukan!", "error");
+    return;
+  }
+
+  // Buat log untuk atlet yang dipilih
+  const newLogs = targetAthletes.map(atlet => {
+    const vo2 = getAtletVO2Max(atlet.id) || 45;
+    const masKmh = vo2 / 3.5;
+    const factor = parseFloat(zona) || 0.75;
+    const speedKmh = masKmh * factor;
+    const jarak = parseFloat(((speedKmh * waktu) / 60).toFixed(2));
+    
+    const paceMin = Math.floor(60 / speedKmh);
+    const paceSec = Math.round(((60 / speedKmh) - paceMin) * 60);
+    const paceStr = `${paceMin}'${paceSec < 10 ? '0' : ''}${paceSec}" /km`;
+
+    return {
+      id: 'j_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      atletId: String(atlet.id),
+      namaAtlet: atlet.nama,
+      tanggal: tanggal,
+      vo2max: String(vo2),
+      zona: zona,
+      jarak: jarak,
+      waktu: waktu,
+      pace: paceStr
+    };
+  });
+
+  // 1. Ambil tanggal yang sedang dipilih di form (misal: "2026-08-11")
+  const selectedDate = tanggal;
+
+  // 2. Buat Map baru KHUSUS untuk tanggal yang sedang dipilih
+  const dailyLogMap = new Map();
+
+  // 3. Masukkan 41 data baru untuk tanggal hari ini
+  newLogs.forEach(item => {
+    if (item && item.atletId) {
+      // Kunci hanya berdasarkan atletId agar 1 atlet tepat memiliki 1 log di hari tersebut
+      dailyLogMap.set(String(item.atletId), item);
     }
+  });
 
-    const selectedId = document.getElementById('jogging-atlet-id')?.value;
-    const zona = document.getElementById('jogging-zona')?.value || "0.75";
-    const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 25;
-    const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
+  // 4. Set state HANYA berisi 41 log hari ini (riwayat hari lain tidak ditumpuk di tabel ini)
+  state.joggingLogs = Array.from(dailyLogMap.values());
+  
+  // 5. Simpan ke LocalStorage
+  saveStorage("joggingLogs", state.joggingLogs);
 
-    let targetAthletes = [];
-    if (selectedId === 'semua' || !selectedId) {
-        targetAthletes = state.atlet;
-    } else {
-        const found = state.atlet.find(a => String(a.id) === String(selectedId));
-        if (found) targetAthletes = [found];
-    }
-
-    const newLogs = targetAthletes.map(atlet => {
-        const vo2 = getAtletVO2Max(atlet.id) || 45;
-        const masKmh = vo2 / 3.5;
-        const factor = parseFloat(zona) || 0.75;
-        const speedKmh = masKmh * factor;
-        const jarak = parseFloat(((speedKmh * waktu) / 60).toFixed(2));
-        
-        const paceMin = Math.floor(60 / speedKmh);
-        const paceSec = Math.round(((60 / speedKmh) - paceMin) * 60);
-        const paceStr = `${paceMin}'${paceSec < 10 ? '0' : ''}${paceSec}" /km`;
-
-        return {
-            id: 'j_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-            atletId: String(atlet.id),
-            namaAtlet: atlet.nama,
-            tanggal: tanggal,
-            vo2max: String(vo2),
-            zona: zona,
-            jarak: jarak,
-            waktu: waktu,
-            pace: paceStr
-        };
-    });
-
-    // Gabungkan dengan data lama (perbarui jika ada entri atlet di tanggal yang sama)
-    const existingLogs = state.joggingLogs || [];
-    const mergedMap = new Map();
-
-    // Masukkan data lama terlebih dahulu
-    existingLogs.forEach(item => {
-        if (item && item.atletId && item.tanggal) {
-            mergedMap.set(`${item.atletId}_${item.tanggal}`, item);
-        }
-    });
-
-    // Timpa / tambahkan data sesi baru
-    newLogs.forEach(item => {
-        mergedMap.set(`${item.atletId}_${item.tanggal}`, item);
-    });
-
-    state.joggingLogs = Array.from(mergedMap.values());
-    saveStorage("joggingLogs", state.joggingLogs);
-
-    if (typeof syncDataToSpreadsheet === 'function') {
-        syncDataToSpreadsheet();
-    }
-
-    renderContent();
-    showToast(`Berhasil menyimpan ${newLogs.length} data sesi jogging!`, "success");
+  // Sync ke Google Sheets jika fungsi tersedia
+  if (typeof syncDataToSpreadsheet === 'function') {
+    syncDataToSpreadsheet();
+  }
+  
+  // Render ulang UI
+  renderContent();
+  showToast(`Berhasil menambahkan ${newLogs.length} log jogging!`, "success");
 }
         function renderContent() {
     const container = document.getElementById('main-container');
@@ -5219,64 +5119,58 @@ function generateJoggingSkuad(event) {
                     14 Parameter Fisik
                 </span>
             </div>
-<!-- 5. HISTORI RIWAYAT TES TEKNIK SKUAD -->
-<div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mt-8">
-    <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-2">
-        <div>
-            <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Histori Riwayat Tes Teknik Skuad
-            </h4>
-            <p class="text-xs font-semibold text-slate-400 mt-0.5">Catatan kronologis hasil tes Dual-Gate Passing dan Slalom Dribble & Shoot.</p>
-        </div>
-        <span class="bg-emerald-50 text-emerald-900 border border-emerald-200 font-black px-3.5 py-1.5 rounded-xl text-xs shadow-sm">
-            ${state.tesTeknik.length} Log Tersimpan
-        </span>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[700px]">
-            <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                <tr>
-                    <th class="p-4">Tanggal</th>
-                    <th class="p-4">Nama Atlet</th>
-                    <th class="p-4 text-center">Dual-Gate (S1 / S2)</th>
-                    <th class="p-4 text-center">Slalom 5m</th>
-                    <th class="p-4 text-center">Slalom 7m</th>
-                    <th class="p-4 text-center">Slalom 9m</th>
-                    <th class="p-4 text-center w-16">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                ${state.tesTeknik.length > 0 ? state.tesTeknik.map(t => {
-                    const atObj = state.atlet.find(a => String(a.id) === String(t.atletId));
-                    const dg1 = t.dualGate?.sesi1 ? `${t.dualGate.sesi1.rep} Rep (${t.dualGate.sesi1.waktu}s)` : '-';
-                    const dg2 = t.dualGate?.sesi2 ? `${t.dualGate.sesi2.rep} Rep (${t.dualGate.sesi2.waktu}s)` : '-';
-                    const s5 = t.slalomShoot?.s5m?.waktu ? `${t.slalomShoot.s5m.waktu}s` : '-';
-                    const s7 = t.slalomShoot?.s7m?.waktu ? `${t.slalomShoot.s7m.waktu}s` : '-';
-                    const s9 = t.slalomShoot?.s9m?.waktu ? `${t.slalomShoot.s9m.waktu}s` : '-';
+<!-- 5. HISTORI RIWAYAT TES TEKNIK SKUAD (LETAKKAN DI SINI) -->
+        <div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mt-8">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-2">
+                <div>
+                    <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Histori Riwayat Tes Teknik Skuad
+                    </h4>
+                    <p class="text-xs font-semibold text-slate-400 mt-0.5">Catatan kronologis hasil tes Dual-Gate Passing dan Slalom Dribble yang telah diinput.</p>
+                </div>
+                <span class="bg-emerald-50 text-emerald-900 border border-emerald-200 font-black px-3.5 py-1.5 rounded-xl text-xs shadow-sm">
+                    ${state.tesTeknik.length} Log Tersimpan
+                </span>
+            </div>
+            <div class="overflow-x-auto relative">
+                <table class="w-full text-left border-collapse min-w-[1200px]">
+                    <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                        <tr>
+                            <th class="p-4 sticky left-0 bg-slate-950 z-20 border-r border-slate-800 min-w-[160px]">Profil Atlet</th>
+                            <th class="p-4 border-r border-slate-800 text-center">Tgl Terakhir</th>
+                            ${listFieldTes.map(f => `<th class="p-3 text-center border-r border-slate-800 min-w-[70px]">${escapeHTML(f.shortLabel)}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+                        ${state.atlet.map(at => {
+                            const records = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
+                            const lastDate = records.length > 0 ? records[0].tanggal : '-';
+                            return `
+                                <tr class="hover:bg-blue-50/40 transition-colors">
+                                    <td class="p-3 font-black text-slate-800 sticky left-0 bg-white border-r z-10">
+                                        <div class="truncate max-w-[120px]">${escapeHTML(at.nama)}</div>
+                                        <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block">${escapeHTML(at.posisi)}</span>
+                                    </td>
+                                    <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>
+                                    ${listFieldTes.map(f => {
+                                        const item = records.find(t => t.keyTes === f.key);
+                                        if (!item) return `<td class="p-2 text-center border-r align-middle"><div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div></td>`;
+                                        const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
+                                        let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
+                                        if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600 shadow-sm';
+                                        else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600 shadow-sm';
+                                        else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500 shadow-sm';
+                                        else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600 shadow-sm';
+                                        else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600 shadow-sm';
 
-                    return `
-                    <tr class="hover:bg-blue-50/40 transition-colors">
-                        <td class="p-4 font-mono font-bold text-slate-500">${t.tanggal || '-'}</td>
-                        <td class="p-4 font-black text-slate-800">${atObj ? escapeHTML(atObj.nama) : 'Atlet'}</td>
-                        <td class="p-4 text-center font-mono font-bold text-blue-900">${dg1} | ${dg2}</td>
-                        <td class="p-4 text-center font-mono font-bold text-emerald-700">${s5}</td>
-                        <td class="p-4 text-center font-mono font-bold text-emerald-700">${s7}</td>
-                        <td class="p-4 text-center font-mono font-bold text-emerald-700">${s9}</td>
-                        <td class="p-4 text-center">
-                            <button onclick="deleteTesTeknikLog('${t.id}')" class="text-rose-500 bg-rose-50 w-7 h-7 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-lg transition-all shadow-sm border border-rose-100" title="Hapus">
-                                <i class="fa-solid fa-trash-can text-xs"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-                }).join('') : `
-                    <tr>
-                        <td colspan="7" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada data riwayat tes teknik yang tersimpan.</td>
-                    </tr>
-                `}
-            </tbody>
-        </table>
-    </div>
-</div>
+                                        return `<td class="p-2 text-center border-r align-middle"><div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full"><span class="font-mono font-black text-sm leading-none">${item.skor}</span><span class="text-[8px] font-extrabold mt-1">${kat}</span></div></td>`;
+                                    }).join('')}
+                                </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     `;
             } else if (state.currentMenu === 'menu-4') {
     pageTitle.innerText = "Periodisasi Latihan & Makrosiklus (Bompa Model)";
@@ -5617,8 +5511,8 @@ function generateJoggingSkuad(event) {
                             Pilih Atlet <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
-                            <select id="jogging-atlet-id" onchange="autoFillJoggingVO2(this.value)" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer shadow-sm">
-    <option value="semua">-- SEMUA ATLET (${state.atlet.length} ATLET) --</option>
+                            <select id="jogging-atlet-id" onchange="autoFillJoggingVO2(this.value)" required class="...">
+    <option value="semua">-- SEMUA ATLET (41 ATLET) --</option>
     ${optionsAtlet}
 </select>
                             <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -6114,20 +6008,19 @@ function generateJoggingSkuad(event) {
     `;
             } else if (state.currentMenu === 'menu-9') {
     pageTitle.innerText = "Dashboard Monitoring ACWR & Beban RPE Skuad";
-    
-    // Gunakan state.rpeLogs langsung
-    const allRpeLogs = state.rpeLogs || loadStorage('rpeLogs', []);
+    const allReports = loadStorage('allReports') || loadStorage('riwayatRpe') || [];
+    const validReports = allReports.filter(r => r && (r.srpe || r.skalaRpe || r.rpe));
 
     let countSweet = 0, countRisk = 0, countDanger = 0, countUnder = 0;
     let totalAcute = 0;
 
     const athleteAcwrList = state.atlet.map(at => {
-        const ac = calculateAtletACWR(at.id, allRpeLogs);
+        const ac = calculateAtletACWR(at.id, validReports);
         totalAcute += ac.acuteLoad;
-        if (ac.totalLogs === 0 || ac.acwrRatio < 0.8) countUnder++;
-        else if (ac.acwrRatio <= 1.3) countSweet++;
-        else if (ac.acwrRatio <= 1.5) countRisk++;
-        else countDanger++;
+        if (ac.acwrRatio >= 0.8 && ac.acwrRatio <= 1.3) countSweet++;
+        else if (ac.acwrRatio > 1.3 && ac.acwrRatio <= 1.5) countRisk++;
+        else if (ac.acwrRatio > 1.5) countDanger++;
+        else countUnder++;
         return { atlet: at, acwr: ac };
     });
 
@@ -6958,33 +6851,20 @@ const myReports = (state.laporanValidasi || []).filter(l => {
         }
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", () => {
-    // 1. Muat sesi login tersimpan
-    const savedAtlet = loadStorage('activeAtlet', null);
+    // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
+const savedAtlet = loadStorage('activeAtlet');
+if (savedAtlet) {
+    state.activeAtlet = savedAtlet;    }
 
-    if (savedAtlet) {
-        state.activeAtlet = savedAtlet;
-        state.currentRole = 'Atlet';
-        state.currentMenu = 'menu-atlet-1';
-
-        const initials = savedAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
-        if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(savedAtlet.nama);
-        if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
-
-        document.getElementById('login-screen')?.classList.add('hidden');
-        document.getElementById('app-screen')?.classList.remove('hidden');
-    } else {
-        selectLoginRole('pelatih');
+    const savedUser = loadStorage("currentUser");
+    if (savedUser) {
+      state.currentUser = savedUser;
     }
 
-    // 2. Render tampilan awal
-    renderSidebar();
     renderContent();
-
-    // 3. Jalankan Background Auto-sync tunggal (setiap 30 detik)
     autoFetchFromSpreadsheet();
     setInterval(autoFetchFromSpreadsheet, 30000);
-});
+  });
 
  function openAtletRadarModal(atletId) {
   const atlet = state.atlet.find(a => String(a.id) === String(atletId));
@@ -7016,94 +6896,59 @@ const myReports = (state.laporanValidasi || []).filter(l => {
 }
   let atletRadarChartInstance = null;
   function renderAtletRadarChart(atlet) {
-  const ctx = document.getElementById('atletRadarChart');
-  if (!ctx || typeof Chart === 'undefined') return;
+    const ctx = document.getElementById('atletRadarChart');
+    if (!ctx || typeof Chart === 'undefined') return;
 
-  if (atletRadarChartInstance) {
-    atletRadarChartInstance.destroy();
-  }
-
-  const myTes = state.tesFisik.filter(t => String(t.atletId) === String(atlet.id));
-  const isPutra = (atlet.gender === 'Putra');
-
-  // Helper konversi skor ke skala 0 - 100
-  const getNormalizedScore = (key, defaultScore) => {
-    const item = myTes.find(t => t.keyTes === key);
-    if (!item) return defaultScore;
-    const val = parseFloat(item.skor) || 0;
-    if (val <= 0) return defaultScore;
-
-    // 1. Sprint 20m (Waktu: 2.7s = 100%, 4.2s = 30%)
-    if (key === 'sprint20') {
-      const best = isPutra ? 2.8 : 3.1;
-      const worst = isPutra ? 4.0 : 4.4;
-      const score = 100 - ((val - best) / (worst - best)) * 70;
-      return Math.min(100, Math.max(20, Math.round(score)));
+    if (atletRadarChartInstance) {
+      atletRadarChartInstance.destroy();
     }
 
-    // 2. T-Test Agility (Waktu: 9.5s = 100%, 14.0s = 30%)
-    if (key === 'ttest') {
-      const best = isPutra ? 10.0 : 10.8;
-      const worst = isPutra ? 13.5 : 14.5;
-      const score = 100 - ((val - best) / (worst - best)) * 70;
-      return Math.min(100, Math.max(20, Math.round(score)));
-    }
+    // Ambil nilai dari database tesFisik asli milik atlet
+    const myTes = state.tesFisik.filter(t => String(t.atletId) === String(atlet.id));
+    const getScore = (key, defaultVal) => {
+      const item = myTes.find(t => t.keyTes === key);
+      if (!item) return defaultVal;
+      // Normalisasi skor sederhana ke skala 0-100 untuk radar
+      const val = parseFloat(item.skor) || 0;
+      return Math.min(100, Math.max(20, val * 1.5)); 
+    };
 
-    // 3. Yo-Yo IR1 VO2Max (Nilai: 35 = 30%, 60 = 100%)
-    if (key === 'yoyo') {
-      return Math.min(100, Math.max(20, Math.round(((val - 35) / 25) * 70 + 30)));
-    }
+    const dataRadar = [
+      getScore('sprint20', 70), // Speed
+      getScore('yoyo', 75),     // Endurance
+      getScore('push_up', 65),  // Strength
+      getScore('vsit', 80),     // Flexibility
+      getScore('ttest', 70)     // Agility
+    ];
 
-    // 4. Push Up (Reps: 10 = 20%, 60 = 100%)
-    if (key === 'push_up') {
-      return Math.min(100, Math.max(20, Math.round((val / 55) * 100)));
-    }
-
-    // 5. V-Sit Flexibility (cm: -5 = 20%, 20 = 100%)
-    if (key === 'vsit') {
-      return Math.min(100, Math.max(20, Math.round(((val + 5) / 25) * 80 + 20)));
-    }
-
-    return defaultScore;
-  };
-
-  const dataRadar = [
-    getNormalizedScore('sprint20', 70), // Speed
-    getNormalizedScore('yoyo', 75),     // Endurance
-    getNormalizedScore('push_up', 65),  // Strength
-    getNormalizedScore('vsit', 75),     // Flexibility
-    getNormalizedScore('ttest', 70)     // Agility
-  ];
-
-  atletRadarChartInstance = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: ['Speed (20m)', 'Endurance (Yo-Yo)', 'Strength (Push Up)', 'Flexibility (V-Sit)', 'Agility (T-Test)'],
-      datasets: [{
-        label: 'Profil Kebugaran',
-        data: dataRadar,
-        backgroundColor: 'rgba(56, 189, 248, 0.25)',
-        borderColor: '#38BDF8',
-        pointBackgroundColor: '#38BDF8',
-        pointBorderColor: '#fff',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      scales: {
-        r: {
-          angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
-          grid: { color: 'rgba(255, 255, 255, 0.2)' },
-          pointLabels: { color: '#cbd5e1', font: { size: 10, weight: 'bold' } },
-          ticks: { display: false, beginAtZero: true, max: 100 }
-        }
+    atletRadarChartInstance = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['Speed', 'Endurance', 'Strength', 'Flexibility', 'Agility'],
+        datasets: [{
+          label: 'Profil Kebugaran',
+          data: dataRadar,
+          backgroundColor: 'rgba(56, 189, 248, 0.25)',
+          borderColor: '#38BDF8',
+          pointBackgroundColor: '#38BDF8',
+          pointBorderColor: '#fff'
+        }]
       },
-      plugins: { legend: { display: false } }
-    }
-  });
-}
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+            pointLabels: { color: '#cbd5e1', font: { size: 10, weight: 'bold' } },
+            ticks: { display: false, beginAtZero: true, max: 100 }
+          }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
 
   // 3. SHARE WHATSAPP PERTANDINGAN
   function shareMatchToWhatsApp() {
@@ -7143,44 +6988,29 @@ const myReports = (state.laporanValidasi || []).filter(l => {
     </script>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // Masukkan konfigurasi Firebase asli Anda di sini:
-  const firebaseConfig = {
-    apiKey: "AIzaSy...",
-    authDomain: "project-id.firebaseapp.com",
-    databaseURL: "https://project-id-default-rtdb.firebaseio.com",
-    projectId: "project-id",
-    storageBucket: "project-id.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "1:000000000000:web:000000000000"
-};
+    const firebaseConfig = { ... };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  try {
-    if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("...")) {
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
+    // BIND KE WINDOW AGAR BISA DIBACA SKRIP UTAMA
+    window.db = db;
+    window.dbRef = ref;
+    window.dbSet = set;
+    window.dbOnValue = onValue;
 
-      window.db = db;
-      window.dbRef = ref;
-      window.dbSet = set;
-      window.dbOnValue = onValue;
-
-      onValue(ref(db, 'atletData'), (snapshot) => {
-        const data = snapshot.val();
-        if (data && Array.isArray(data) && window.state) {
-			window.state = state;
-          window.state.atlet = data;
-          if (typeof saveStorage === 'function') saveStorage("atlet", data);
-          if (typeof renderSidebar === 'function') renderSidebar();
-          if (typeof renderContent === 'function') renderContent();
-        }
-      });
-    }
-  } catch (err) {
-    console.warn("Firebase tidak diinisialisasi:", err);
-  }
-</script>
+    // SINKRONISASI DATA DARI FIREBASE
+    onValue(ref(db, 'atletData'), (snapshot) => {
+      const data = snapshot.val();
+      if (data && Array.isArray(data) && window.state) {
+        window.state.atlet = data;
+        if (typeof saveStorage === 'function') saveStorage("atlet", data);
+        if (typeof renderSidebar === 'function') renderSidebar();
+        if (typeof renderContent === 'function') renderContent();
+      }
+    });
+  </script>
 </body>
 </html>
