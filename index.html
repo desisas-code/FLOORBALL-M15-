@@ -199,9 +199,35 @@ if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanV
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      autoFetchFromSpreadsheet(); // Jalankan sekali saat pertama dimuat
-      setInterval(autoFetchFromSpreadsheet, 30000); // Polling setiap 30 detik
-    });
+    // 1. Muat sesi login tersimpan
+    const savedAtlet = loadStorage('activeAtlet', null);
+
+    if (savedAtlet) {
+        state.activeAtlet = savedAtlet;
+        state.currentRole = 'Atlet';
+        state.currentMenu = 'menu-atlet-1';
+
+        // GUNAKAN NAMA savedInitials AGAR TIDAK BENTROK
+        const savedInitials = savedAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = savedInitials;
+        if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(savedAtlet.nama);
+        if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(savedAtlet.posisi)}`;
+        if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
+
+        document.getElementById('login-screen')?.classList.add('hidden');
+        document.getElementById('app-screen')?.classList.remove('hidden');
+    } else {
+        selectLoginRole('pelatih');
+    }
+
+    // 2. Render tampilan awal
+    renderSidebar();
+    renderContent();
+
+    // 3. Background sync
+    autoFetchFromSpreadsheet();
+    setInterval(autoFetchFromSpreadsheet, 30000);
+});
 		
     </script>
 
