@@ -1637,45 +1637,39 @@ function restoreDataJSON(event) {
                     renderSidebar();
                     renderContent();
                     showToast('Berhasil masuk Mode Pelatih!', 'success');
-                } else {
-                    const selectAtletElem = document.getElementById('auth-select-atlet');
-                    const inputPinElem = document.getElementById('auth-input-pin');
-                    const selectedId = selectAtletElem ? selectAtletElem.value : '';
-                    const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
+                // GANTI BAGIAN LOGIN MODE ATLET MENJADI SEPERTI INI:
+} else {
+    const selectAtletElem = document.getElementById('auth-select-atlet');
+    const inputPinElem = document.getElementById('auth-input-pin');
+    const selectedId = selectAtletElem ? selectAtletElem.value : '';
+    const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
 
-                    const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
+    const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
 
-                    if (!targetAtlet || targetAtlet.pin !== inputPin) {
-                        showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
-                        return;
-                    }
+    if (!targetAtlet || targetAtlet.pin !== inputPin) {
+        showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
+        return;
+    }
 
-                    state.activeAtlet = targetAtlet;
-state.currentRole = 'Atlet';
-state.currentMenu = 'menu-atlet-1';
-saveStorage('activeAtlet', targetAtlet); // Menyimpan sesi atlet agar tidak keluar saat refresh
+    state.activeAtlet = targetAtlet;
+    state.currentRole = 'Atlet';
+    state.currentMenu = 'menu-atlet-1';
+    saveStorage('activeAtlet', targetAtlet);
 
-const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    // DEKLARASI INITIALS CUKUP 1 KALI
+    const userInitials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = userInitials;
+    if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
+    if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
+    if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
 
-// PERBAIKAN: Simpan ke storage agar persist saat refresh
-saveStorage('activeAtlet', targetAtlet);
-
-                    const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
-                    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
-                    if(document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
-                    if(document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
-
-                    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-                    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
-                    
-                    renderSidebar();
-                    renderContent();
-                    showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
-                }
-            }, 500);
-        }
-
+    document.getElementById('login-screen')?.classList.add('hidden');
+    document.getElementById('app-screen')?.classList.remove('hidden');
+    
+    renderSidebar();
+    renderContent();
+    showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
+}
         function logout() {
     // 1. Matikan GPS live jika aktif
     if (typeof stopLiveGpsTracking === 'function') {
