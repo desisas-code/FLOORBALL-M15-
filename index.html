@@ -1335,21 +1335,21 @@ function stopLiveGpsTracking() {
         }
 
         function loadStorage(key, fallback) {
-            try {
-                const data = localStorage.getItem('cf_' + key);
-                return data ? JSON.parse(data) : fallback;
-            } catch(e) {
-                return fallback;
-            }
-        }
+    try {
+        const data = localStorage.getItem('cf_' + key);
+        return data ? JSON.parse(data) : fallback;
+    } catch(e) {
+        return fallback;
+    }
+}
 
-        function saveStorage(key, value) {
-            try {
-                localStorage.setItem('cf_' + key, JSON.stringify(value));
-            } catch (err) {
-                showToast("Memori browser penuh! Hapus riwayat lama.", "error");
-            }
-        }
+function saveStorage(key, value) {
+    try {
+        localStorage.setItem('cf_' + key, JSON.stringify(value));
+    } catch (err) {
+        console.error("Storage error:", err);
+    }
+}
 
         function exportToCSV(filename, headers, rows) {
             const csvContent = "data:text/csv;charset=utf-8," 
@@ -1863,23 +1863,10 @@ function deleteRiwayatValidasi(id) {
     }
 
     saveStorage('laporanValidasi', state.laporanValidasi);
+
     renderContent();
     renderChartsForMenu(state.currentMenu);
     showToast("Riwayat validasi berhasil dihapus permanen!", "success");
-}
-  
-    if (state.laporanValidasi) {
-        state.laporanValidasi = state.laporanValidasi.filter(item => String(item.id) !== String(id));
-    }
-
-    if (typeof saveStateToLocalStorage === 'function') {
-        saveStateToLocalStorage();
-    } else {
-        localStorage.setItem('floorball_state', JSON.stringify(state));
-    }
-
-    renderContent();
-    renderChartsForMenu(state.currentMenu);
 } 
 		
 		// Fungsi trigger sekali klik dari tombol Form Atlet
