@@ -1328,21 +1328,73 @@
         }
 
         async function autoFetchFromSpreadsheet() {
-            try {
-                const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL}?_t=${new Date().getTime()}`);
-                const data = await res.json();
-                if (data && data.status === "success") {
-                    if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
-                        state.atlet = data.atlet;
-                        saveStorage("atlet", data.atlet);
-                    }
-                    if (typeof renderContent === 'function') renderContent();
-                }
-            } catch (e) {
-                console.log("Background sync idle...");
-            }
-        }
+  try {
+    const res = await fetch(`${GOOGLE_SHEET_WEB_APP_URL || SCRIPT_URL}?_t=${new Date().getTime()}`);
+    const data = await res.json();
+    
+    if (data && data.status === "success") {
+      // 1. Update Data Atlet
+      if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
+        state.atlet = data.atlet;
+        saveStorage("atlet", data.atlet);
+      }
 
+      // 2. Sinkronisasi Log RPE & Beban Latihan dari HP Atlet (TAMBAHAN UTAMA)
+      if (data.rpeLogs && Array.isArray(data.rpeLogs)) {
+        const localRpe = loadStorage("rpeLogs") || state.rpeLogs || [];
+        const rpeMap = new Map();
+
+        // Gabungkan data lokal dan server tanpa duplikasi ID
+        [...localRpe, ...data.rpeLogs].forEach(item => {
+          if (item && item.id) {
+            rpeMap.set(String(item.id), item);
+          }
+        });
+
+        state.rpeLogs = Array.from(rpeMap.values()).sort((a, b) => new Date(b.tanggal || 0) - new Date(a.tanggal || 0));
+        saveStorage("rpeLogs", state.rpeLogs);
+      }
+
+      // 3. Sinkronisasi Log Jogging
+      const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
+      const serverJogging = data.joggingLogs || data.programLatihan || [];
+      const dailyMap = new Map();
+
+      [...localJogging, ...serverJogging].forEach(item => {
+        if (item && item.id) {
+          dailyMap.set(String(item.id), item);
+        }
+      });
+      state.joggingLogs = Array.from(dailyMap.values());
+      saveStorage("joggingLogs", state.joggingLogs);
+
+      // 4. Update Laporan Validasi
+      if (data.laporanValidasi && Array.isArray(data.laporanValidasi)) {
+        const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
+        const mergedVal = new Map();
+
+        localVal.forEach(item => { 
+          if (item && item.id) mergedVal.set(String(item.id), item); 
+        });
+        
+        data.laporanValidasi.forEach(serverItem => {
+          if (serverItem && serverItem.id) {
+            mergedVal.set(String(serverItem.id), serverItem);
+          }
+        });
+
+        state.laporanValidasi = Array.from(mergedVal.values());
+        saveStorage("laporanValidasi", state.laporanValidasi);
+      }
+
+      // 5. Render Ulang UI & Update Grafik
+      if (typeof renderSidebar === 'function') renderSidebar();
+      if (typeof renderContent === 'function') renderContent();
+    }
+  } catch (e) {
+    console.log("Sinkronisasi otomatis menunggu koneksi...");
+  }
+}
         function exportPDFCustom(elementId, filenamePrefix) {
             const element = document.getElementById(elementId) || document.getElementById('main-container');
             if (!element) return;
