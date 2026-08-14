@@ -3817,52 +3817,53 @@ function renderMatchHeatmap() {
         }
 
         async function submitAtletLaporanJogging(e) {
-            e.preventDefault();
-            const at = state.activeAtlet;
-            if (!at) return;
+  e.preventDefault();
+  const at = state.activeAtlet;
+  if (!at) return;
 
-            const selfieFile = document.getElementById('run-file-selfie')?.files[0];
-            const buktiFile = document.getElementById('run-file-bukti')?.files[0];
+  const selfieFile = document.getElementById('run-file-selfie')?.files[0];
+  const buktiFile = document.getElementById('run-file-bukti')?.files[0];
+  const durasiInput = document.getElementById('run-durasi');
 
-            const toast = showToast('Memproses & Mengunggah Laporan...', 'loading');
+  const durasiVal = parseFloat(durasiInput?.value) || 30;
+  const distDisplay = document.getElementById('run-jarak-display')?.innerText || '0';
+  const autoDistCalc = parseFloat(distDisplay.replace(/[^0-9.]/g, '')) || 4.31;
+  const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) ? parseFloat(totalDistanceKm.toFixed(2)) : autoDistCalc;
+  const speedVal = durasiVal > 0 ? parseFloat((finalJarak / (durasiVal / 60)).toFixed(1)) : 0;
+  const kaloriVal = Math.round(finalJarak * (at.bb || 65) * 0.75);
 
-            let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
-            let stravaUrl = 'https://picsum.photos/500/500?sports';
+  const toast = showToast('Memproses & Mengunggah Laporan...', 'loading');
 
-            if (selfieFile) {
-                try { 
-                    selfieUrl = await compressImage(selfieFile, 600, 600, 0.6); 
-                } catch(err) {
-                    console.warn("Gagal kompresi selfie:", err);
-                }
-            }
+  let selfieUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80';
+  let stravaUrl = 'https://picsum.photos/500/500?sports';
 
-            if (buktiFile) {
-                try { 
-                    stravaUrl = await compressImage(buktiFile, 800, 800, 0.6); 
-                } catch(err) {
-                    console.warn("Gagal kompresi bukti strava:", err);
-                }
-            }
+  if (selfieFile) {
+    try { 
+      selfieUrl = await compressImage(selfieFile, 600, 600, 0.6); 
+    } catch(err) {
+      console.warn("Gagal kompresi selfie:", err);
+    }
+  }
 
-            // ... kode baris 3830 - 3835 ...
+  if (buktiFile) {
+    try { 
+      stravaUrl = await compressImage(buktiFile, 800, 800, 0.6); 
+    } catch(err) {
+      console.warn("Gagal kompresi bukti strava:", err);
+    }
+  }
 
-const durasiVal = matchLog ? parseFloat(matchLog.waktu) : 30;
-const jarakVal = matchLog ? parseFloat(matchLog.jarak) : 4.31;
-const speedVal = (durasiVal > 0 && jarakVal > 0) ? parseFloat((jarakVal / (durasiVal / 60)).toFixed(1)) : 8.6;
-const kaloriVal = Math.round(jarakVal * (at.bb || 65) * 0.75);
+  const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
 
-const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
-const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) ? parseFloat(totalDistanceKm.toFixed(2)) : jarakVal;
-
-const newReport = {
+  const newReport = {
     id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-    atletId: at.id,
-    tanggal: matchLog ? matchLog.tanggal : new Date().toISOString().split('T')[0],
+    atletId: String(at.id),
+    namaAtlet: at.nama,
+    tanggal: new Date().toISOString().split('T')[0],
     jarak: finalJarak,
     waktu: durasiVal,
-    speedKmh: durasiVal > 0 ? parseFloat((finalJarak / (durasiVal / 60)).toFixed(1)) : 0,
-    kalori: Math.round(finalJarak * (at.bb || 65) * 0.75),
+    speedKmh: speedVal,
+    kalori: kaloriVal,
     gpsLoc: state.currentGpsLocation || 'Lokasi Terdeteksi',
     imgSelfieUrl: selfieUrl,
     imgStravaUrl: stravaUrl,
@@ -3871,23 +3872,21 @@ const newReport = {
     detectedEdit: false,
     softwareDetected: isMotorDetected ? 'Terindikasi Naik Kendaraan (GPS Speed)' : 'Validasi Live GPS Tracker',
     status: 'Menunggu'
-};
+  };
 
-state.laporanValidasi.unshift(newReport);
+  if (!state.laporanValidasi) state.laporanValidasi = [];
+  state.laporanValidasi.unshift(newReport);
+  saveStorage('laporanValidasi', state.laporanValidasi);
 
-// Simpan seluruh data tanpa membatasi jumlah histori
-saveStorage('laporanValidasi', state.laporanValidasi);
-
-    // BARIS TAMBAHAN (Baris 3841): Langsung kirim ke Google Sheets
-    if (typeof syncDataToSpreadsheet === 'function') {
-      syncDataToSpreadsheet();
-    }
-
-    if (toast) toast.remove();
-    renderSidebar();
-    renderContent();
-    showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
+  if (typeof syncDataToSpreadsheet === 'function') {
+    syncDataToSpreadsheet();
   }
+
+  if (toast) toast.remove();
+  renderSidebar();
+  renderContent();
+  showToast('Laporan Jogging & Bukti Foto berhasil dikirim ke Pelatih!', 'success');
+}
 
         async function setStatusLaporanValidasi(id, statusTarget) {
     const idx = state.laporanValidasi.findIndex(l => String(l.id) === String(id));
@@ -5511,8 +5510,8 @@ function generateJoggingSkuad(event) {
                             Pilih Atlet <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
-                            <select id="jogging-atlet-id" onchange="autoFillJoggingVO2(this.value)" required class="...">
-    <option value="semua">-- SEMUA ATLET (41 ATLET) --</option>
+                            <select id="jogging-atlet-id" onchange="autoFillJoggingVO2(this.value)" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer shadow-sm">
+    <option value="semua">-- SEMUA ATLET (${state.atlet.length} ATLET) --</option>
     ${optionsAtlet}
 </select>
                             <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -6988,29 +6987,43 @@ if (savedAtlet) {
     </script>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    const firebaseConfig = { ... };
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+  // Masukkan konfigurasi Firebase asli Anda di sini:
+  const firebaseConfig = {
+    apiKey: "AIzaSy...",
+    authDomain: "project-id.firebaseapp.com",
+    databaseURL: "https://project-id-default-rtdb.firebaseio.com",
+    projectId: "project-id",
+    storageBucket: "project-id.appspot.com",
+    messagingSenderId: "000000000000",
+    appId: "1:000000000000:web:000000000000"
+  };
 
-    // BIND KE WINDOW AGAR BISA DIBACA SKRIP UTAMA
-    window.db = db;
-    window.dbRef = ref;
-    window.dbSet = set;
-    window.dbOnValue = onValue;
+  try {
+    if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("...")) {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
 
-    // SINKRONISASI DATA DARI FIREBASE
-    onValue(ref(db, 'atletData'), (snapshot) => {
-      const data = snapshot.val();
-      if (data && Array.isArray(data) && window.state) {
-        window.state.atlet = data;
-        if (typeof saveStorage === 'function') saveStorage("atlet", data);
-        if (typeof renderSidebar === 'function') renderSidebar();
-        if (typeof renderContent === 'function') renderContent();
-      }
-    });
-  </script>
+      window.db = db;
+      window.dbRef = ref;
+      window.dbSet = set;
+      window.dbOnValue = onValue;
+
+      onValue(ref(db, 'atletData'), (snapshot) => {
+        const data = snapshot.val();
+        if (data && Array.isArray(data) && window.state) {
+          window.state.atlet = data;
+          if (typeof saveStorage === 'function') saveStorage("atlet", data);
+          if (typeof renderSidebar === 'function') renderSidebar();
+          if (typeof renderContent === 'function') renderContent();
+        }
+      });
+    }
+  } catch (err) {
+    console.warn("Firebase tidak diinisialisasi:", err);
+  }
+</script>
 </body>
 </html>
