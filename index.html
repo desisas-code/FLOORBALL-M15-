@@ -164,8 +164,8 @@
             }
           });
 
-          state.joggingLogs = Array.from(dailyMap.values()).slice(0, 41);
-          saveStorage("joggingLogs", state.joggingLogs);
+          state.joggingLogs = Array.from(dailyMap.values());
+saveStorage("joggingLogs", state.joggingLogs);
 
           // 3. Update Laporan Validasi
           if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
@@ -1916,49 +1916,50 @@ function getAtletGpsLocation() {
             return records.length > 0 ? parseFloat(records[0].skor) : null; 
         }
 
-        function calculateAtletACWR(atletId) {
-            const logs = state.rpeLogs.filter(r => String(r.atletId) === String(atletId));
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+        function calculateAtletACWR(atletId, customLogs = null) {
+  const logs = customLogs || state.rpeLogs || loadStorage('rpeLogs', []);
+  const athleteLogs = logs.filter(r => String(r.atletId) === String(atletId));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-            let acuteLoad = 0;   
-            let chronicSum = 0;  
+  let acuteLoad = 0;   
+  let chronicSum = 0;  
 
-            logs.forEach(log => {
-                if (!log.tanggal) return;
-                const logDate = new Date(log.tanggal);
-                logDate.setHours(0, 0, 0, 0);
-                
-                const diffDays = Math.floor((today - logDate) / (1000 * 60 * 60 * 24));
+  athleteLogs.forEach(log => {
+    if (!log.tanggal) return;
+    const logDate = new Date(log.tanggal);
+    logDate.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.floor((today - logDate) / (1000 * 60 * 60 * 24));
+    const loadVal = parseFloat(log.sRPE || (log.rpeVal * log.durasi) || log.srpe || 0);
 
-                if (diffDays >= 0 && diffDays < 7) {
-                    acuteLoad += (log.sRPE || 0);
-                }
-                if (diffDays >= 0 && diffDays < 28) {
-                    chronicSum += (log.sRPE || 0);
-                }
-            });
+    if (diffDays >= 0 && diffDays < 7) {
+      acuteLoad += loadVal;
+    }
+    if (diffDays >= 0 && diffDays < 28) {
+      chronicSum += loadVal;
+    }
+  });
 
-            const chronicLoad = Math.round(chronicSum / 4);
-            let acwrRatio = chronicLoad > 0 ? parseFloat((acuteLoad / chronicLoad).toFixed(2)) : 0;
+  const chronicLoad = Math.round(chronicSum / 4);
+  let acwrRatio = chronicLoad > 0 ? parseFloat((acuteLoad / chronicLoad).toFixed(2)) : (acuteLoad > 0 ? 1.0 : 0);
 
-            let statusRisk = "Underloading";
-            let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
+  let statusRisk = "Underloading";
+  let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
 
-            if (acwrRatio >= 0.8 && acwrRatio <= 1.3) {
-                statusRisk = "Sweet Spot (Aman)";
-                badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
-            } else if (acwrRatio > 1.3 && acwrRatio <= 1.5) {
-                statusRisk = "High Risk (Waspada)";
-                badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
-            } else if (acwrRatio > 1.5) {
-                statusRisk = "Danger Zone (Sangat Rawan)";
-                badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
-            }
+  if (acwrRatio >= 0.8 && acwrRatio <= 1.3) {
+    statusRisk = "Sweet Spot (Aman)";
+    badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300";
+  } else if (acwrRatio > 1.3 && acwrRatio <= 1.5) {
+    statusRisk = "High Risk (Waspada)";
+    badgeClass = "bg-amber-100 text-amber-800 border-amber-300";
+  } else if (acwrRatio > 1.5) {
+    statusRisk = "Danger Zone (Sangat Rawan)";
+    badgeClass = "bg-rose-100 text-rose-800 border-rose-300";
+  }
 
-            return { acuteLoad, chronicLoad, acwrRatio, statusRisk, badgeClass, totalLogs: logs.length };
-        }
-
+  return { acuteLoad, chronicLoad, acwrRatio, statusRisk, badgeClass, totalLogs: athleteLogs.length };
+}
 		// 3. FUNGSI KALKULASI RASIO BEBAN LATIHAN (ACWR ALERT)
 function getACWRStatus(atlet) {
     const ac = calculateAtletACWR(atlet.id);
@@ -4051,32 +4052,38 @@ function renderMatchHeatmap() {
         // FITUR EKSPOR PDF OTOMATIS & CLEAN RENDER
         // =========================================================================
         function exportPDFCustom(elementId, filenamePrefix) {
-            const element = document.getElementById(elementId) || document.getElementById('main-container');
-            if (!element) {
-                showToast('Area dokumen tidak ditemukan!', 'error');
-                return;
-            }
+  const element = document.getElementById(elementId) || document.getElementById('main-container');
+  if (!element) {
+    showToast('Area dokumen tidak ditemukan!', 'error');
+    return;
+  }
 
-            const toast = showToast('Membangun dokumen PDF resmi...', 'loading');
+  const toast = showToast('Membangun dokumen PDF...', 'loading');
 
-            const opt = {
-                margin:       [10, 10, 10, 10],
-                filename:     `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+  // Clone element sementara agar styling scroll tidak memotong dokumen PDF
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true, 
+      scrollY: 0,
+      windowWidth: document.documentElement.offsetWidth
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                if (toast) toast.remove();
-                showToast('Dokumen PDF Berhasil Diunduh!', 'success');
-            }).catch(err => {
-                if (toast) toast.remove();
-                console.error("PDF Error:", err);
-                showToast('Gagal memproses PDF. Mengalihkan ke Print bawaan...', 'error');
-                window.print();
-            });
-        }	
+  html2pdf().set(opt).from(element).save().then(() => {
+    if (toast) toast.remove();
+    showToast('Dokumen PDF Berhasil Diunduh!', 'success');
+  }).catch(err => {
+    if (toast) toast.remove();
+    console.error("PDF Error:", err);
+    showToast('Gagal memproses PDF via generator. Membuka dialog cetak...', 'error');
+    window.print();
+  });
+}	
         function filterSearchAtlet(query) {
             state.searchQueryAtlet = query.toLowerCase();
             renderContent();
@@ -6920,59 +6927,94 @@ if (savedAtlet) {
 }
   let atletRadarChartInstance = null;
   function renderAtletRadarChart(atlet) {
-    const ctx = document.getElementById('atletRadarChart');
-    if (!ctx || typeof Chart === 'undefined') return;
+  const ctx = document.getElementById('atletRadarChart');
+  if (!ctx || typeof Chart === 'undefined') return;
 
-    if (atletRadarChartInstance) {
-      atletRadarChartInstance.destroy();
+  if (atletRadarChartInstance) {
+    atletRadarChartInstance.destroy();
+  }
+
+  const myTes = state.tesFisik.filter(t => String(t.atletId) === String(atlet.id));
+  const isPutra = (atlet.gender === 'Putra');
+
+  // Helper konversi skor ke skala 0 - 100
+  const getNormalizedScore = (key, defaultScore) => {
+    const item = myTes.find(t => t.keyTes === key);
+    if (!item) return defaultScore;
+    const val = parseFloat(item.skor) || 0;
+    if (val <= 0) return defaultScore;
+
+    // 1. Sprint 20m (Waktu: 2.7s = 100%, 4.2s = 30%)
+    if (key === 'sprint20') {
+      const best = isPutra ? 2.8 : 3.1;
+      const worst = isPutra ? 4.0 : 4.4;
+      const score = 100 - ((val - best) / (worst - best)) * 70;
+      return Math.min(100, Math.max(20, Math.round(score)));
     }
 
-    // Ambil nilai dari database tesFisik asli milik atlet
-    const myTes = state.tesFisik.filter(t => String(t.atletId) === String(atlet.id));
-    const getScore = (key, defaultVal) => {
-      const item = myTes.find(t => t.keyTes === key);
-      if (!item) return defaultVal;
-      // Normalisasi skor sederhana ke skala 0-100 untuk radar
-      const val = parseFloat(item.skor) || 0;
-      return Math.min(100, Math.max(20, val * 1.5)); 
-    };
+    // 2. T-Test Agility (Waktu: 9.5s = 100%, 14.0s = 30%)
+    if (key === 'ttest') {
+      const best = isPutra ? 10.0 : 10.8;
+      const worst = isPutra ? 13.5 : 14.5;
+      const score = 100 - ((val - best) / (worst - best)) * 70;
+      return Math.min(100, Math.max(20, Math.round(score)));
+    }
 
-    const dataRadar = [
-      getScore('sprint20', 70), // Speed
-      getScore('yoyo', 75),     // Endurance
-      getScore('push_up', 65),  // Strength
-      getScore('vsit', 80),     // Flexibility
-      getScore('ttest', 70)     // Agility
-    ];
+    // 3. Yo-Yo IR1 VO2Max (Nilai: 35 = 30%, 60 = 100%)
+    if (key === 'yoyo') {
+      return Math.min(100, Math.max(20, Math.round(((val - 35) / 25) * 70 + 30)));
+    }
 
-    atletRadarChartInstance = new Chart(ctx, {
-      type: 'radar',
-      data: {
-        labels: ['Speed', 'Endurance', 'Strength', 'Flexibility', 'Agility'],
-        datasets: [{
-          label: 'Profil Kebugaran',
-          data: dataRadar,
-          backgroundColor: 'rgba(56, 189, 248, 0.25)',
-          borderColor: '#38BDF8',
-          pointBackgroundColor: '#38BDF8',
-          pointBorderColor: '#fff'
-        }]
+    // 4. Push Up (Reps: 10 = 20%, 60 = 100%)
+    if (key === 'push_up') {
+      return Math.min(100, Math.max(20, Math.round((val / 55) * 100)));
+    }
+
+    // 5. V-Sit Flexibility (cm: -5 = 20%, 20 = 100%)
+    if (key === 'vsit') {
+      return Math.min(100, Math.max(20, Math.round(((val + 5) / 25) * 80 + 20)));
+    }
+
+    return defaultScore;
+  };
+
+  const dataRadar = [
+    getNormalizedScore('sprint20', 70), // Speed
+    getNormalizedScore('yoyo', 75),     // Endurance
+    getNormalizedScore('push_up', 65),  // Strength
+    getNormalizedScore('vsit', 75),     // Flexibility
+    getNormalizedScore('ttest', 70)     // Agility
+  ];
+
+  atletRadarChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Speed (20m)', 'Endurance (Yo-Yo)', 'Strength (Push Up)', 'Flexibility (V-Sit)', 'Agility (T-Test)'],
+      datasets: [{
+        label: 'Profil Kebugaran',
+        data: dataRadar,
+        backgroundColor: 'rgba(56, 189, 248, 0.25)',
+        borderColor: '#38BDF8',
+        pointBackgroundColor: '#38BDF8',
+        pointBorderColor: '#fff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        r: {
+          angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+          grid: { color: 'rgba(255, 255, 255, 0.2)' },
+          pointLabels: { color: '#cbd5e1', font: { size: 10, weight: 'bold' } },
+          ticks: { display: false, beginAtZero: true, max: 100 }
+        }
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        scales: {
-          r: {
-            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
-            grid: { color: 'rgba(255, 255, 255, 0.2)' },
-            pointLabels: { color: '#cbd5e1', font: { size: 10, weight: 'bold' } },
-            ticks: { display: false, beginAtZero: true, max: 100 }
-          }
-        },
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
+      plugins: { legend: { display: false } }
+    }
+  });
+}
 
   // 3. SHARE WHATSAPP PERTANDINGAN
   function shareMatchToWhatsApp() {
