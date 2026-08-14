@@ -1809,6 +1809,40 @@ function deleteRiwayatValidasi(id) {
     renderContent();
     renderChartsForMenu(state.currentMenu);
 }
+		// Fungsi trigger sekali klik dari tombol Form Atlet
+function getAtletGpsLocation() {
+    const badge = document.getElementById('gps-status-badge');
+    if (!navigator.geolocation) {
+        showToast("GPS tidak didukung pada browser ini!", "error");
+        return;
+    }
+
+    if (badge) {
+        badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600 mr-1"></i> Mengunci koordinat GPS...`;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            state.currentGpsLocation = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            
+            if (badge) {
+                badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-2xl text-xs font-bold text-center';
+                badge.innerHTML = `<i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> ${state.currentGpsLocation} (±${Math.round(accuracy)}m)`;
+            }
+            showToast("Koordinat GPS berhasil dikunci!", "success");
+        },
+        (error) => {
+            console.warn("GPS Error:", error);
+            if (badge) {
+                badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-800 border border-rose-200 rounded-2xl text-xs font-bold text-center';
+                badge.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-500 mr-1"></i> Gagal mengambil GPS. Pastikan izin lokasi aktif.`;
+            }
+            showToast("Gagal mengambil lokasi GPS!", "error");
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
         function closeModalAtlet() {
             const modal = document.getElementById('modal-atlet');
             if(modal) modal.classList.add('hidden');
@@ -4049,84 +4083,75 @@ function renderMatchHeatmap() {
         }
 
 function generateJoggingSkuad(event) {
-  if (event) event.preventDefault();
+    if (event) event.preventDefault();
 
-  if (!state.atlet || state.atlet.length === 0) {
-    showToast("Data atlet belum dimuat!", "error");
-    return;
-  }
-
-  const selectedId = document.getElementById('jogging-atlet-id')?.value;
-  const zona = document.getElementById('jogging-zona')?.value || "0.75";
-  const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 25;
-  const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
-
-  let targetAthletes = [];
-  if (selectedId === 'semua' || !selectedId) {
-    targetAthletes = state.atlet;
-  } else {
-    const found = state.atlet.find(a => String(a.id) === String(selectedId));
-    if (found) targetAthletes = [found];
-  }
-
-  if (targetAthletes.length === 0) {
-    showToast("Atlet tidak ditemukan!", "error");
-    return;
-  }
-
-  // Buat log untuk atlet yang dipilih
-  const newLogs = targetAthletes.map(atlet => {
-    const vo2 = getAtletVO2Max(atlet.id) || 45;
-    const masKmh = vo2 / 3.5;
-    const factor = parseFloat(zona) || 0.75;
-    const speedKmh = masKmh * factor;
-    const jarak = parseFloat(((speedKmh * waktu) / 60).toFixed(2));
-    
-    const paceMin = Math.floor(60 / speedKmh);
-    const paceSec = Math.round(((60 / speedKmh) - paceMin) * 60);
-    const paceStr = `${paceMin}'${paceSec < 10 ? '0' : ''}${paceSec}" /km`;
-
-    return {
-      id: 'j_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-      atletId: String(atlet.id),
-      namaAtlet: atlet.nama,
-      tanggal: tanggal,
-      vo2max: String(vo2),
-      zona: zona,
-      jarak: jarak,
-      waktu: waktu,
-      pace: paceStr
-    };
-  });
-
-  // 1. Ambil tanggal yang sedang dipilih di form (misal: "2026-08-11")
-  const selectedDate = tanggal;
-
-  // 2. Buat Map baru KHUSUS untuk tanggal yang sedang dipilih
-  const dailyLogMap = new Map();
-
-  // 3. Masukkan 41 data baru untuk tanggal hari ini
-  newLogs.forEach(item => {
-    if (item && item.atletId) {
-      // Kunci hanya berdasarkan atletId agar 1 atlet tepat memiliki 1 log di hari tersebut
-      dailyLogMap.set(String(item.atletId), item);
+    if (!state.atlet || state.atlet.length === 0) {
+        showToast("Data atlet belum dimuat!", "error");
+        return;
     }
-  });
 
-  // 4. Set state HANYA berisi 41 log hari ini (riwayat hari lain tidak ditumpuk di tabel ini)
-  state.joggingLogs = Array.from(dailyLogMap.values());
-  
-  // 5. Simpan ke LocalStorage
-  saveStorage("joggingLogs", state.joggingLogs);
+    const selectedId = document.getElementById('jogging-atlet-id')?.value;
+    const zona = document.getElementById('jogging-zona')?.value || "0.75";
+    const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 25;
+    const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
 
-  // Sync ke Google Sheets jika fungsi tersedia
-  if (typeof syncDataToSpreadsheet === 'function') {
-    syncDataToSpreadsheet();
-  }
-  
-  // Render ulang UI
-  renderContent();
-  showToast(`Berhasil menambahkan ${newLogs.length} log jogging!`, "success");
+    let targetAthletes = [];
+    if (selectedId === 'semua' || !selectedId) {
+        targetAthletes = state.atlet;
+    } else {
+        const found = state.atlet.find(a => String(a.id) === String(selectedId));
+        if (found) targetAthletes = [found];
+    }
+
+    const newLogs = targetAthletes.map(atlet => {
+        const vo2 = getAtletVO2Max(atlet.id) || 45;
+        const masKmh = vo2 / 3.5;
+        const factor = parseFloat(zona) || 0.75;
+        const speedKmh = masKmh * factor;
+        const jarak = parseFloat(((speedKmh * waktu) / 60).toFixed(2));
+        
+        const paceMin = Math.floor(60 / speedKmh);
+        const paceSec = Math.round(((60 / speedKmh) - paceMin) * 60);
+        const paceStr = `${paceMin}'${paceSec < 10 ? '0' : ''}${paceSec}" /km`;
+
+        return {
+            id: 'j_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            atletId: String(atlet.id),
+            namaAtlet: atlet.nama,
+            tanggal: tanggal,
+            vo2max: String(vo2),
+            zona: zona,
+            jarak: jarak,
+            waktu: waktu,
+            pace: paceStr
+        };
+    });
+
+    // Gabungkan dengan data lama (perbarui jika ada entri atlet di tanggal yang sama)
+    const existingLogs = state.joggingLogs || [];
+    const mergedMap = new Map();
+
+    // Masukkan data lama terlebih dahulu
+    existingLogs.forEach(item => {
+        if (item && item.atletId && item.tanggal) {
+            mergedMap.set(`${item.atletId}_${item.tanggal}`, item);
+        }
+    });
+
+    // Timpa / tambahkan data sesi baru
+    newLogs.forEach(item => {
+        mergedMap.set(`${item.atletId}_${item.tanggal}`, item);
+    });
+
+    state.joggingLogs = Array.from(mergedMap.values());
+    saveStorage("joggingLogs", state.joggingLogs);
+
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
+    }
+
+    renderContent();
+    showToast(`Berhasil menyimpan ${newLogs.length} data sesi jogging!`, "success");
 }
         function renderContent() {
     const container = document.getElementById('main-container');
