@@ -1636,65 +1636,68 @@ function restoreDataJSON(event) {
 }
 
         function handleLogin(e) {
-            e.preventDefault();
-            const toast = showToast('Memverifikasi akses...', 'loading');
+    e.preventDefault();
+    const toast = showToast('Memverifikasi akses...', 'loading');
 
-            setTimeout(() => {
-                if(toast) toast.remove();
-                if (state.loginRole === 'pelatih') {
-                    const passInputElem = document.getElementById('auth-input-password');
-                    const passInput = passInputElem ? passInputElem.value : '';
-                    if (passInput !== COACH_PASSWORD_DEFAULT) {
-                        showToast('Kata sandi Pelatih salah!', 'error');
-                        return;
-                    }
-                    state.currentRole = 'Pelatih';
-                    state.currentMenu = 'menu-1';
-                    state.activeAtlet = null;
-                    
-                    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
-                    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
-                    if(document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
-                    if(document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
+    setTimeout(() => {
+        if (toast) toast.remove();
+        
+        if (state.loginRole === 'pelatih') {
+            const passInputElem = document.getElementById('auth-input-password');
+            const passInput = passInputElem ? passInputElem.value : '';
+            if (passInput !== COACH_PASSWORD_DEFAULT) {
+                showToast('Kata sandi Pelatih salah!', 'error');
+                return;
+            }
+            state.currentRole = 'Pelatih';
+            state.currentMenu = 'menu-1';
+            state.activeAtlet = null;
+            localStorage.removeItem('cf_activeAtlet');
 
-                    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-                    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
-                    
-                    renderSidebar();
-                    renderContent();
-                    showToast('Berhasil masuk Mode Pelatih!', 'success');
-                // GANTI BAGIAN LOGIN MODE ATLET MENJADI SEPERTI INI:
-} else {
-    const selectAtletElem = document.getElementById('auth-select-atlet');
-    const inputPinElem = document.getElementById('auth-input-pin');
-    const selectedId = selectAtletElem ? selectAtletElem.value : '';
-    const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
+            if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
+            if (document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
+            if (document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
+            if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
 
-    const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
+            if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+            if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
 
-    if (!targetAtlet || targetAtlet.pin !== inputPin) {
-        showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
-        return;
-    }
+            renderSidebar();
+            renderContent();
+            showToast('Berhasil masuk Mode Pelatih!', 'success');
+        } else {
+            const selectAtletElem = document.getElementById('auth-select-atlet');
+            const inputPinElem = document.getElementById('auth-input-pin');
+            const selectedId = selectAtletElem ? selectAtletElem.value : '';
+            const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
 
-    state.activeAtlet = targetAtlet;
-    state.currentRole = 'Atlet';
-    state.currentMenu = 'menu-atlet-1';
-    saveStorage('activeAtlet', targetAtlet);
+            const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
 
-    // DEKLARASI INITIALS CUKUP 1 KALI
-    const userInitials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = userInitials;
-    if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
-    if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
-    if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
+            if (!targetAtlet || targetAtlet.pin !== inputPin) {
+                showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
+                return;
+            }
 
-    document.getElementById('login-screen')?.classList.add('hidden');
-    document.getElementById('app-screen')?.classList.remove('hidden');
-    
-    renderSidebar();
-    renderContent();
-    showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
+            state.activeAtlet = targetAtlet;
+            state.currentRole = 'Atlet';
+            state.currentMenu = 'menu-atlet-1';
+            saveStorage('activeAtlet', targetAtlet);
+
+            // Gunakan userInitials (hanya 1 kali deklarasi)
+            const userInitials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = userInitials;
+            if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
+            if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
+            if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
+
+            if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+            if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+
+            renderSidebar();
+            renderContent();
+            showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
+        }
+    }, 400);
 }
         function logout() {
     // 1. Matikan GPS live jika aktif
