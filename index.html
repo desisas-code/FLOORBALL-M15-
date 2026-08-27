@@ -188,7 +188,20 @@
             state.laporanValidasi = Array.from(mergedVal.values());
             saveStorage("laporanValidasi", state.laporanValidasi);
           }
+			// 3.5 Sinkronisasi Log RPE & ACWR
+          if (data.rpeLogs && Array.isArray(data.rpeLogs) && data.rpeLogs.length > 0) {
+            const localRpe = loadStorage("rpeLogs") || state.rpeLogs || [];
+            const rpeMap = new Map();
 
+            [...localRpe, ...data.rpeLogs].forEach(item => {
+              if (item && item.id) {
+                rpeMap.set(String(item.id), item);
+              }
+            });
+
+            state.rpeLogs = Array.from(rpeMap.values());
+            saveStorage("rpeLogs", state.rpeLogs);
+          }
           // 4. Render Ulang Tampilan Otomatis
           if (typeof renderContent === 'function') {
             renderContent();
