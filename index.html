@@ -4016,16 +4016,25 @@ function renderMatchHeatmap() {
     state.rpeLogs.unshift(newRpe);
     saveStorage('rpeLogs', state.rpeLogs);
 
-    // Kirim otomatis ke Google Apps Script backend
-    if (typeof syncDataToSpreadsheet === 'function') {
-        await syncDataToSpreadsheet();
+    // Kirim langsung ke Google Apps Script
+    try {
+        await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: "APPEND_RPE",
+                data: newRpe
+            })
+        });
+        showToast('Catatan RPE berhasil dikirim ke Pelatih!', 'success');
+    } catch (err) {
+        showToast('Koneksi terganggu. Data disimpan lokal & dikirim saat online.', 'error');
     }
 
     renderSidebar(); 
     renderContent();
-    showToast('Catatan RPE berhasil dikirim ke Pelatih!', 'success');
 }
-
         function exportDataAtletCSV() {
             const headers = ['Nama', 'Posisi', 'Gender', 'Usia', 'Tinggi (cm)', 'Berat (kg)', 'PIN', 'Cedera'];
             const rows = state.atlet.map(a => [a.nama, a.posisi, a.gender, a.usia, a.tb, a.bb, a.pin, a.cedera]);
