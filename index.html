@@ -1486,7 +1486,11 @@ function restoreDataJSON(event) {
             masLogs: loadStorage('masLogs', [
                 { id: 'm1', atletId: '1', tanggal: '2026-07-30', vo2max: '48.5', walkSec: 15, jogSec: 15, sprintSec: 15, walkDist: 23, jogDist: 40, sprintDist: 69, rep: 10 }
             ]),
-            rpeLogs: loadStorage('rpeLogs', []),
+            rpeLogs: loadStorage('rpeLogs', [
+    { id: 'rpe_1', atletId: '1', namaAtlet: 'Dandi Wijaya', tanggal: '2026-08-25', rpeVal: 7, durasi: 90, hrMax: 178, sRPE: 630, status: 'Disetujui' },
+    { id: 'rpe_2', atletId: '2', namaAtlet: 'Rian Pratama', tanggal: '2026-08-25', rpeVal: 6, durasi: 90, hrMax: 165, sRPE: 540, status: 'Disetujui' },
+    { id: 'rpe_3', atletId: '3', namaAtlet: 'Fajar Nugraha', tanggal: '2026-08-26', rpeVal: 8, durasi: 75, hrMax: 182, sRPE: 600, status: 'Disetujui' }
+]),
             uploadedHashes: new Set(loadStorage('uploadedHashes', ['img_dummy_strava_sample_1', 'img_dummy_strava_sample_2'])),
             laporanValidasi: loadStorage('laporanValidasi', [
                 {
