@@ -464,6 +464,7 @@
 }
 // Registry tunggal untuk seluruh instance chart aktif
 const chartRegistry = {};
+const chartInstances = chartRegistry;
 
 function destroyAllCharts() {
     Object.keys(chartRegistry).forEach(key => {
@@ -880,74 +881,67 @@ function renderAcwrChart(canvasId, labels, dataValues) {
     });
 }
     // 9. ACWR & RPE
-            if (menuId === 'menu-9') {
-                // Chart 1: Tren sRPE
-                const ctxSrpe = document.getElementById('chart-srpe-trend')?.getContext('2d');
-                if (ctxSrpe) {
-                    chartInstances['srpeTrend'] = new Chart(ctxSrpe, {
-                        type: 'line',
-                        data: {
-                            labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4', 'Minggu 5', 'Minggu 6'],
-                            datasets: [{
-                                label: 'Rerata sRPE (AU)',
-                                data: [1200, 1450, 1300, 1600, 1800, 1500],
-                                borderColor: '#0284C7',
-                                backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                                fill: true,
-                                tension: 0.3,
-                                borderWidth: 2.5,
-                                pointRadius: 4
-                            }]
-                        }
-							// Chart 2: Rasio ACWR Per Atlet
-const atletList = state.atlet || [];
-const labels = atletList.map(a => a.nama.split(' ')[0]);
-const acwrValues = atletList.map(() => (Math.random() * (1.6 - 0.7) + 0.7).toFixed(2));
-
-// Panggil fungsi optimasi di sini
-renderAcwrChart('chart-acwr-bar', labels, acwrValues);
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false, 
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                y: { beginAtZero: true, ticks: { callback: v => v + ' AU', font: { size: 10 } } },
-                                x: { ticks: { font: { size: 10, weight: 'bold' } } }
-                            }
-                        }
-                    });
+    if (menuId === 'menu-9') {
+        // Chart 1: Tren sRPE
+        const ctxSrpe = document.getElementById('chart-srpe-trend')?.getContext('2d');
+        if (ctxSrpe) {
+            chartInstances['srpeTrend'] = new Chart(ctxSrpe, {
+                type: 'line',
+                data: {
+                    labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4', 'Minggu 5', 'Minggu 6'],
+                    datasets: [{
+                        label: 'Rerata sRPE (AU)',
+                        data: [1200, 1450, 1300, 1600, 1800, 1500],
+                        borderColor: '#0284C7',
+                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2.5,
+                        pointRadius: 4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: v => v + ' AU', font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10, weight: 'bold' } } }
+                    }
                 }
+            });
+        }
 
-                // Chart 2: Rasio ACWR Per Atlet
-                const ctxAcwr = document.getElementById('chart-acwr-bar')?.getContext('2d');
-                if (ctxAcwr) {
-                    const atletList = state.atlet || [];
-                    const labels = atletList.map(a => a.nama.split(' ')[0]);
-                    const acwrValues = atletList.map(() => (Math.random() * (1.6 - 0.7) + 0.7).toFixed(2));
+        // Chart 2: Rasio ACWR Per Atlet
+        const ctxAcwr = document.getElementById('chart-acwr-bar')?.getContext('2d');
+        if (ctxAcwr) {
+            const atletList = state.atlet || [];
+            const labels = atletList.map(a => a.nama.split(' ')[0]);
+            const acwrValues = atletList.map(() => (Math.random() * (1.6 - 0.7) + 0.7).toFixed(2));
 
-                    chartInstances['acwrBar'] = new Chart(ctxAcwr, {
-                        type: 'bar',
-                        data: {
-                            labels,
-                            datasets: [{
-                                label: 'Rasio ACWR',
-                                data: acwrValues,
-                                backgroundColor: acwrValues.map(v => v > 1.5 ? '#EF4444' : (v > 1.3 ? '#F59E0B' : (v >= 0.8 ? '#10B981' : '#3B82F6'))),
-                                borderRadius: 6
-                            }]
-                        },
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false, 
-                            plugins: { legend: { display: false } },
-                            scales: { 
-                                x: { ticks: { font: { size: 9, weight: 'bold' }, maxRotation: 45, minRotation: 45 } },
-                                y: { min: 0, max: 2.0, ticks: { stepSize: 0.4 } } 
-                            } 
-                        }
-                    });
+            chartInstances['acwrBar'] = new Chart(ctxAcwr, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Rasio ACWR',
+                        data: acwrValues,
+                        backgroundColor: acwrValues.map(v => v > 1.5 ? '#EF4444' : (v > 1.3 ? '#F59E0B' : (v >= 0.8 ? '#10B981' : '#3B82F6'))),
+                        borderRadius: 6
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        x: { ticks: { font: { size: 9, weight: 'bold' }, maxRotation: 45, minRotation: 45 } },
+                        y: { min: 0, max: 2.0, ticks: { stepSize: 0.4 } } 
+                    } 
                 }
-            }
+            });
+        }
+    }
 
     // DASHBOARD ATLET (menu-atlet-1 sampai menu-atlet-5)
     if (menuId.startsWith('menu-atlet-')) {
