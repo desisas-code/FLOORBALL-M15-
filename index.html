@@ -499,14 +499,21 @@ function destroySingleChart(chartKey) {
     destroySingleChart(menuId);
 		
     if (menuId === 'menu-1') {
-        const ctxPos = document.getElementById('chart-posisi-atlet')?.getContext('2d');
-        if (ctxPos) {
-            const counts = { DL: 0, DR: 0, FL: 0, FR: 0, C: 0, GK: 0 };
-            state.atlet.forEach(a => { if (counts[a.posisi] !== undefined) counts[a.posisi]++; });
+        const canvasPos = document.getElementById('chart-posisi-atlet');
+if (canvasPos) {
+  // 1. Hancurkan instance chart lama jika sudah ada
+  const existingChart = Chart.getChart(canvasPos);
+  if (existingChart) {
+    existingChart.destroy();
+  }
 
-            // PASTE KODE BARU DI SINI:
-            chartInstances['posisi'] = new Chart(ctxPos, {
-                type: 'doughnut',
+  // 2. Hitung data posisi
+  const counts = { DL: 0, DR: 0, FL: 0, FR: 0, C: 0, GK: 0 };
+  state.atlet.forEach(a => { if (counts[a.posisi] !== undefined) counts[a.posisi]++; });
+
+  // 3. Buat Chart baru
+  chartInstances['posisi'] = new Chart(canvasPos.getContext('2d'), {
+    type: 'doughnut',
                 data: {
                     labels: Object.keys(counts),
                     datasets: [{
