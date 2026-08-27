@@ -4000,7 +4000,6 @@ function renderMatchHeatmap() {
     const hrMax = parseInt(document.getElementById('rpe-hrmax')?.value) || 0;
     const sRPE = rpeVal * durasi;
 
-    // Buat objek laporan RPE yang konsisten untuk State & Menu 9 Pelatih
     const newRpe = {
         id: 'rpe_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         atletId: String(atlet.id),
@@ -4010,25 +4009,16 @@ function renderMatchHeatmap() {
         durasi: durasi,
         hrMax: hrMax,
         sRPE: sRPE,
-        status: 'Disetujui' // Otomatis disetujui agar langsung terhitung di ACWR Menu 9
+        status: 'Disetujui'
     };
 
-    // 1. Simpan ke rpeLogs (State Utama)
     if (!state.rpeLogs) state.rpeLogs = [];
     state.rpeLogs.unshift(newRpe);
     saveStorage('rpeLogs', state.rpeLogs);
 
-    // 2. Simpan juga ke allReports untuk fallback sinkronisasi
-    let allReports = loadStorage('allReports') || [];
-    allReports.unshift(newRpe);
-    saveStorage('allReports', allReports);
-
-    // 3. Kirim langsung ke Google Spreadsheet & Firebase
+    // Kirim otomatis ke Google Apps Script backend
     if (typeof syncDataToSpreadsheet === 'function') {
-        syncDataToSpreadsheet();
-    }
-    if (window.db && window.dbSet && window.dbRef) {
-        window.dbSet(window.dbRef(window.db, 'rpeLogs/' + newRpe.id), newRpe);
+        await syncDataToSpreadsheet();
     }
 
     renderSidebar(); 
