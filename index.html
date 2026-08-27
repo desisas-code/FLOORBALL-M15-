@@ -481,7 +481,9 @@ function destroySingleChart(chartKey) {
     }
 }
 
-    // 1. MENU ATLET & PIN (Distribusi Posisi Pemain)
+    function renderChartsForMenu(menuId) {
+    destroySingleChart(menuId);
+		
     if (menuId === 'menu-1') {
         const ctxPos = document.getElementById('chart-posisi-atlet')?.getContext('2d');
         if (ctxPos) {
