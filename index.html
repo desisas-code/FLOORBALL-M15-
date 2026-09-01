@@ -1636,18 +1636,34 @@ function restoreDataJSON(event) {
     const beban = document.getElementById('gym-beban')?.value;
     const setRep = document.getElementById('gym-set-rep')?.value;
 
-    const newLog = {
-        id: 'gym_' + Date.now(),
-        atletId,
-        tanggal,
-        kategori,
-        gerakan,
-        beban,
-        setRep
-    };
+    const newLogs = [];
+
+    if (atletId === 'semua') {
+        state.atlet.forEach(a => {
+            newLogs.push({
+                id: 'gym_' + Date.now() + '_' + a.id,
+                atletId: String(a.id),
+                tanggal,
+                kategori,
+                gerakan,
+                beban,
+                setRep
+            });
+        });
+    } else {
+        newLogs.push({
+            id: 'gym_' + Date.now(),
+            atletId,
+            tanggal,
+            kategori,
+            gerakan,
+            beban,
+            setRep
+        });
+    }
 
     if (!state.gymLogs) state.gymLogs = [];
-    state.gymLogs.unshift(newLog);
+    state.gymLogs = [...newLogs, ...state.gymLogs];
     saveStorage('gymLogs', state.gymLogs);
 
     if (typeof syncDataToSpreadsheet === 'function') {
@@ -1655,15 +1671,76 @@ function restoreDataJSON(event) {
     }
 
     renderContent();
-    showToast('Program Gym berhasil dicatat!', 'success');
+    showToast(`Preskripsi Gym (${newLogs.length} entri) berhasil disimpan!`, 'success');
 }
-
 function deleteGymLog(id) {
     if (!confirm('Hapus log latihan gym ini?')) return;
     state.gymLogs = state.gymLogs.filter(g => String(g.id) !== String(id));
     saveStorage('gymLogs', state.gymLogs);
     renderContent();
     showToast('Log Gym berhasil dihapus', 'success');
+}
+		// AUTO-FILL DRILL DARI PRESET GYM
+function autoFillGymDrill(presetKey) {
+    const drillMap = {
+        squat: { gerakan: "Barbell Back Squat", kategori: "Lower Body Power", beban: "70-80% 1RM", setRep: "4 Set × 6-8 Reps (Rest 90s)" },
+        rdl: { gerakan: "Romanian Deadlift (RDL)", kategori: "Lower Body Power", beban: "65-75% 1RM", setRep: "3 Set × 8-10 Reps (Rest 60s)" },
+        trap_bar: { gerakan: "Trap Bar Deadlift (Explosive)", kategori: "Lower Body Power", beban: "80-85% 1RM", setRep: "4 Set × 5 Reps (Rest 120s)" },
+        bulgarian: { gerakan: "Dumbbell Bulgarian Split Squat", kategori: "Lower Body Power", beban: "Moderate DB", setRep: "3 Set × 8 Reps / Kaki" },
+        bench_press: { gerakan: "Barbell Bench Press", kategori: "Upper Body Strength", beban: "75% 1RM", setRep: "4 Set × 6-8 Reps (Rest 90s)" },
+        db_row: { gerakan: "Single Arm Dumbbell Row", kategori: "Upper Body Strength", beban: "Moderate-Heavy", setRep: "3 Set × 10 Reps / Sisi" },
+        landmine_rot: { gerakan: "Landmine Rotational Press", kategori: "Core & Rotation", beban: "15-25 kg Bar", setRep: "3 Set × 8 Reps / Sisi (Explosive)" },
+        pallof_press: { gerakan: "Cable Pallof Press Hold", kategori: "Core & Rotation", beban: "Moderate Cable", setRep: "3 Set × 12 Reps (Hold 2s)" },
+        wrist_curl: { gerakan: "Wrist Roller & Pronation/Supination", kategori: "Forearm & Grip", beban: "5-10 kg", setRep: "3 Set × 15 Reps" },
+        box_jump: { gerakan: "Plyometric Box Jump (Landing Focus)", kategori: "Lower Body Power", beban: "Bodyweight", setRep: "4 Set × 5 Reps (Max Height)" }
+    };
+
+    if (!presetKey || !drillMap[presetKey]) return;
+
+    const data = drillMap[presetKey];
+    if (document.getElementById('gym-gerakan')) document.getElementById('gym-gerakan').value = data.gerakan;
+    if (document.getElementById('gym-kategori')) document.getElementById('gym-kategori').value = data.kategori;
+    if (document.getElementById('gym-beban')) document.getElementById('gym-beban').value = data.beban;
+    if (document.getElementById('gym-set-rep')) document.getElementById('gym-set-rep').value = data.setRep;
+}
+
+// KALKULATOR 1RM (ONE REP MAX)
+function calculate1RM() {
+    const weight = parseFloat(document.getElementById('calc-weight')?.value || 0);
+    const reps = parseFloat(document.getElementById('calc-reps')?.value || 0);
+
+    if (weight <= 0 || reps <= 0) {
+        if (document.getElementById('res-1rm')) document.getElementById('res-1rm').innerText = "0 kg";
+        if (document.getElementById('res-85')) document.getElementById('res-85').innerText = "0 kg";
+        if (document.getElementById('res-75')) document.getElementById('res-75').innerText = "0 kg";
+        if (document.getElementById('res-65')) document.getElementById('res-65').innerText = "0 kg";
+        return;
+    }
+
+    // Formula Epley
+    const oneRM = reps === 1 ? weight : Math.round(weight * (1 + reps / 30));
+    const p85 = Math.round(oneRM * 0.85);
+    const p75 = Math.round(oneRM * 0.75);
+    const p65 = Math.round(oneRM * 0.65);
+
+    if (document.getElementById('res-1rm')) document.getElementById('res-1rm').innerText = `${oneRM} kg`;
+    if (document.getElementById('res-85')) document.getElementById('res-85').innerText = `${p85} kg`;
+    if (document.getElementById('res-75')) document.getElementById('res-75').innerText = `${p75} kg`;
+    if (document.getElementById('res-65')) document.getElementById('res-65').innerText = `${p65} kg`;
+}
+
+// EKSPOR REKAP GYM KE CSV
+function exportGymLogsCSV() {
+    const listGym = loadStorage('gymLogs', state.gymLogs || []);
+    const headers = ['Tanggal', 'Nama Atlet', 'Kategori', 'Gerakan', 'Target Beban', 'Set & Reps'];
+    const rows = listGym.map(g => {
+        const pObj = state.atlet.find(a => String(a.id) === String(g.atletId));
+        const nama = g.atletId === 'semua' ? 'Semua Atlet Skuad' : (pObj ? pObj.nama : 'Unknown');
+        return [g.tanggal || '-', nama, g.kategori || '-', g.gerakan || '-', g.beban || '-', g.setRep || '-'];
+    });
+
+    exportToCSV('Rekap_Preskripsi_Gym_Floorball.csv', headers, rows);
+    showToast('File CSV Riwayat Gym berhasil diunduh!', 'success');
 }
 		
         function toggleSidebarDesktop() {
@@ -6340,104 +6417,245 @@ ${(() => {
     pageTitle.innerText = "Preskripsi & Log Latihan Gym / Strength";
     const today = new Date().toISOString().split('T')[0];
     const optionsAtlet = state.atlet.map(a => `<option value="${a.id}">${escapeHTML(a.nama)} (${escapeHTML(a.posisi)})</option>`).join('');
-
     const listGym = loadStorage('gymLogs', state.gymLogs || []);
+
+    // Hitung ringkasan statistik gym
+    const totalSesiGym = listGym.length;
+    const lowerCount = listGym.filter(g => g.kategori?.includes('Lower')).length;
+    const upperCount = listGym.filter(g => g.kategori?.includes('Upper')).length;
+    const coreCount = listGym.filter(g => g.kategori?.includes('Core')).length;
 
     container.innerHTML = `
         <div class="space-y-6">
-            <!-- FORM INPUT GYM -->
-            <div class="bg-white/95 backdrop-blur-xl p-6 sm:p-8 rounded-[32px] border border-slate-200/80 shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-                    <div>
-                        <h3 class="text-lg font-black text-slate-900 font-display flex items-center gap-2">
-                            <i class="fa-solid fa-dumbbell text-blue-900"></i> Preskripsi Latihan Beban (Gym)
-                        </h3>
-                        <p class="text-xs font-semibold text-slate-400 mt-0.5">Input target angkatan, set, dan repetisi untuk pemain.</p>
+            <!-- 1. KPI HIGHLIGHT CARDS GYM -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-900 flex items-center justify-center font-black text-xl shrink-0">
+                        <i class="fa-solid fa-dumbbell"></i>
                     </div>
-                    <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
-                        Strength & Power
-                    </span>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Preskripsi</p>
+                        <h4 class="text-2xl font-black text-slate-900 font-display">${totalSesiGym} <span class="text-xs font-bold text-slate-500">Sesi</span></h4>
+                    </div>
                 </div>
 
-                <form onsubmit="submitGymLog(event)" class="space-y-5">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="block text-[11px] font-black uppercase text-slate-500">Pilih Atlet</label>
-                            <select id="gym-atlet-id" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
-                                ${optionsAtlet}
-                            </select>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="block text-[11px] font-black uppercase text-slate-500">Tanggal Sesi</label>
-                            <input type="date" id="gym-tanggal" required value="${today}" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="block text-[11px] font-black uppercase text-slate-500">Fokus Latihan</label>
-                            <select id="gym-kategori" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
-                                <option value="Lower Body Power">Lower Body Power (Squat, Deadlift)</option>
-                                <option value="Upper Body Strength">Upper Body Strength (Bench Press, Row)</option>
-                                <option value="Core & Rotation">Core & Rotational Power</option>
-                                <option value="Hypertrophy / AA">Hypertrophy / Anatomical Adaptation</option>
-                            </select>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="block text-[11px] font-black uppercase text-slate-500">Nama Gerakan / Drill</label>
-                            <input type="text" id="gym-gerakan" placeholder="Contoh: Barbell Back Squat" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="block text-[11px] font-black uppercase text-slate-500">Target Beban (kg / %1RM)</label>
-                            <input type="text" id="gym-beban" placeholder="Contoh: 60 kg (75% 1RM)" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="block text-[11px] font-black uppercase text-slate-500">Skema Set × Repetisi</label>
-                            <input type="text" id="gym-set-rep" placeholder="Contoh: 4 Set × 8 Reps (Rest 90s)" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
-                        </div>
+                <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl shrink-0">
+                        <i class="fa-solid fa-person-walking"></i>
                     </div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Lower Body</p>
+                        <h4 class="text-2xl font-black text-emerald-950 font-display">${lowerCount} <span class="text-xs font-bold text-emerald-600">Drill</span></h4>
+                    </div>
+                </div>
 
-                    <div class="flex justify-end pt-2">
-                        <button type="submit" class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white font-black px-6 py-3 rounded-2xl text-xs shadow-lg active:scale-95 transition-all flex items-center gap-2">
-                            <i class="fa-solid fa-plus text-cyan-400"></i> Simpan Target Gym
-                        </button>
+                <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xl shrink-0">
+                        <i class="fa-solid fa-hand-fist"></i>
                     </div>
-                </form>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Upper Body</p>
+                        <h4 class="text-2xl font-black text-indigo-950 font-display">${upperCount} <span class="text-xs font-bold text-indigo-600">Drill</span></h4>
+                    </div>
+                </div>
+
+                <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-xl shrink-0">
+                        <i class="fa-solid fa-arrows-spin"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Core & Rotasi</p>
+                        <h4 class="text-2xl font-black text-amber-950 font-display">${coreCount} <span class="text-xs font-bold text-amber-600">Drill</span></h4>
+                    </div>
+                </div>
             </div>
 
-            <!-- TABEL HISTORI GYM -->
-            <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden">
-                <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                    <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-blue-900"></i> Riwayat Preskripsi Gym Skuad
-                    </h4>
-                    <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
-                        ${listGym.length} Log Tersimpan
-                    </span>
+            <!-- 2. GRID KALKULATOR 1RM & FORM INPUT PRESET -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- FORM INPUT PRESET GYM -->
+                <div class="lg:col-span-8 bg-white/95 backdrop-blur-xl p-6 sm:p-8 rounded-[32px] border border-slate-200/80 shadow-xl space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900 font-display flex items-center gap-2">
+                                <i class="fa-solid fa-pen-ruler text-blue-900"></i> Form Preskripsi Strength & Conditioning
+                            </h3>
+                            <p class="text-xs font-semibold text-slate-400 mt-0.5">Input target beban, repetisi, intensitas RPE, dan tempo latihan atlet.</p>
+                        </div>
+                        <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
+                            Strength Protocol
+                        </span>
+                    </div>
+
+                    <form onsubmit="submitGymLog(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Pilih Atlet Target <span class="text-rose-500">*</span></label>
+                                <select id="gym-atlet-id" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
+                                    <option value="semua">-- SEMUA ATLET (${state.atlet.length} ATLET) --</option>
+                                    ${optionsAtlet}
+                                </select>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Tanggal Sesi <span class="text-rose-500">*</span></label>
+                                <input type="date" id="gym-tanggal" required value="${today}" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
+                            </div>
+                        </div>
+
+                        <!-- PILIHAN PRESET GERAKAN SPESIFIK FLOORBALL -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
+                            <div class="space-y-1.5">
+                                <label class="block text-[11px] font-black uppercase text-blue-900">Library Gerakan Floorball</label>
+                                <select id="gym-preset-gerakan" onchange="autoFillGymDrill(this.value)" class="w-full px-4 py-3 rounded-2xl border border-blue-200 text-xs font-bold bg-white text-blue-950 focus:outline-none focus:border-blue-600 shadow-sm">
+                                    <option value="">-- Pilih Rekomendasi Gerakan --</option>
+                                    <option value="squat">Barbell Back Squat (Power Tungkai & Stance)</option>
+                                    <option value="rdl">Romanian Deadlift / RDL (Hamstring & Pencegahan Cedera)</option>
+                                    <option value="trap_bar">Trap Bar Deadlift (Eksplosivitas Akselerasi)</option>
+                                    <option value="bulgarian">Bulgarian Split Squat (Unilateral Knee Stability)</option>
+                                    <option value="bench_press">Barbell Bench Press (Pushing Power saat Kontak Fisik)</option>
+                                    <option value="db_row">Single Arm Dumbbell Row (Kekuatan Tarikan Stickwork)</option>
+                                    <option value="landmine_rot">Landmine Rotational Press (Power Shooting & Drag Shot)</option>
+                                    <option value="pallof_press">Pallof Press / Cable Hold (Anti-Rotation Core Stability)</option>
+                                    <option value="wrist_curl">Wrist Roller & Forearm Rotations (Kecepatan Wrist Shot)</option>
+                                    <option value="box_jump">Plyo Box Jump (Vertikal & Reaksi Kiper/Striker)</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Kategori / Fase Latihan</label>
+                                <select id="gym-kategori" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
+                                    <option value="Lower Body Power">Lower Body Power (Squat, Deadlift, Jump)</option>
+                                    <option value="Upper Body Strength">Upper Body Strength (Press, Row, Pull)</option>
+                                    <option value="Core & Rotation">Core & Rotational Power (Shooting Mechanics)</option>
+                                    <option value="Forearm & Grip">Forearm, Wrist & Grip (Stickhandling Control)</option>
+                                    <option value="Hypertrophy / AA">Anatomical Adaptation (AA) / Hypertrophy</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- DETAIL INPUT BEBAN & SET -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Nama Gerakan <span class="text-rose-500">*</span></label>
+                                <input type="text" id="gym-gerakan" placeholder="Contoh: Barbell Back Squat" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Target Beban (kg / %1RM) <span class="text-rose-500">*</span></label>
+                                <input type="text" id="gym-beban" placeholder="Contoh: 60 kg (75% 1RM)" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Skema Set × Reps & Rest <span class="text-rose-500">*</span></label>
+                                <input type="text" id="gym-set-rep" placeholder="Contoh: 4 Set × 8 Reps (Rest 90s)" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2">
+                            <span class="text-[11px] text-slate-400 font-semibold italic"><i class="fa-solid fa-circle-info mr-1 text-blue-600"></i> Data otomatis tersinkronisasi ke Google Spreadsheet.</span>
+                            <button type="submit" class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-800 hover:to-indigo-900 text-white font-black px-8 py-3.5 rounded-2xl text-xs shadow-xl shadow-blue-900/30 active:scale-95 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-plus text-cyan-400"></i> Simpan Preskripsi Gym
+                            </button>
+                        </div>
+                    </form>
                 </div>
+
+                <!-- KALKULATOR 1RM INTERAKTIF -->
+                <div class="lg:col-span-4 bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-white p-6 rounded-[32px] border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                            <h4 class="font-black text-amber-400 text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-calculator"></i> Kalkulator 1RM (One Rep Max)
+                            </h4>
+                            <span class="text-[9px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">Epley Model</span>
+                        </div>
+
+                        <div class="space-y-3 mb-4">
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Beban Terangkat (kg)</label>
+                                <input type="number" id="calc-weight" oninput="calculate1RM()" placeholder="Contoh: 80" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold text-sm focus:outline-none focus:border-amber-400">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Jumlah Repetisi (Reps)</label>
+                                <input type="number" id="calc-reps" oninput="calculate1RM()" placeholder="Contoh: 6" max="15" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold text-sm focus:outline-none focus:border-amber-400">
+                            </div>
+                        </div>
+
+                        <!-- ESTIMASI 1RM & TARGET ZONA BEBAN -->
+                        <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl space-y-2.5">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[11px] text-slate-400 font-extrabold">Estimasi 100% 1RM:</span>
+                                <span class="text-xl font-black font-mono text-amber-400" id="res-1rm">0 kg</span>
+                            </div>
+                            <div class="h-px bg-slate-800"></div>
+                            <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] font-mono">
+                                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                                    <span class="block text-slate-500 font-bold">Power (85%)</span>
+                                    <strong class="text-rose-400" id="res-85">0 kg</strong>
+                                </div>
+                                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                                    <span class="block text-slate-500 font-bold">Strength (75%)</span>
+                                    <strong class="text-amber-300" id="res-75">0 kg</strong>
+                                </div>
+                                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                                    <span class="block text-slate-500 font-bold">Hyper (65%)</span>
+                                    <strong class="text-emerald-400" id="res-65">0 kg</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-[9px] text-slate-500 mt-4 text-center">Formula: $\text{1RM} = \text{Beban} \times (1 + \text{Reps} / 30)$.</p>
+                </div>
+            </div>
+
+            <!-- 3. TABEL RIWAYAT PRESKRIPSI GYM -->
+            <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden">
+                <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-3">
+                    <div>
+                        <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-blue-900"></i> Riwayat Preskripsi Latihan Gym Skuad
+                        </h4>
+                        <p class="text-xs font-semibold text-slate-400 mt-0.5">Daftar beban dan program gym yang telah ditugaskan.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportGymLogsCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-excel"></i> Ekspor CSV
+                        </button>
+                        <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3.5 py-2 rounded-2xl text-xs shadow-sm">
+                            ${listGym.length} Log Tersimpan
+                        </span>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
+                    <table class="w-full text-left border-collapse min-w-[750px]">
                         <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
                             <tr>
                                 <th class="p-4">Tanggal</th>
                                 <th class="p-4">Nama Atlet</th>
-                                <th class="p-4">Fokus</th>
-                                <th class="p-4">Gerakan</th>
-                                <th class="p-4 text-center">Beban</th>
-                                <th class="p-4 text-center">Set × Rep</th>
+                                <th class="p-4">Kategori Latihan</th>
+                                <th class="p-4">Gerakan / Drill</th>
+                                <th class="p-4 text-center">Target Beban</th>
+                                <th class="p-4 text-center">Skema Set × Reps</th>
                                 <th class="p-4 text-center w-20">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-xs font-semibold">
                             ${listGym.length > 0 ? listGym.map(g => {
                                 const pObj = state.atlet.find(a => String(a.id) === String(g.atletId));
+                                const namaTampil = g.atletId === 'semua' ? 'Semua Atlet Skuad' : (pObj ? escapeHTML(pObj.nama) : 'Atlet Skuad');
+                                
                                 return `
                                     <tr class="hover:bg-blue-50/40 transition-colors">
-                                        <td class="p-4 font-mono font-bold text-slate-500">${g.tanggal}</td>
-                                        <td class="p-4 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : 'Atlet'}</td>
-                                        <td class="p-4"><span class="bg-blue-50 text-blue-900 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold">${escapeHTML(g.kategori)}</span></td>
-                                        <td class="p-4 font-extrabold text-slate-700">${escapeHTML(g.gerakan)}</td>
-                                        <td class="p-4 text-center font-mono font-black text-blue-900">${escapeHTML(g.beban)}</td>
-                                        <td class="p-4 text-center font-mono font-bold text-slate-600">${escapeHTML(g.setRep)}</td>
+                                        <td class="p-4 font-mono font-bold text-slate-500">${g.tanggal || '-'}</td>
+                                        <td class="p-4 font-black text-slate-800">${namaTampil}</td>
+                                        <td class="p-4"><span class="bg-blue-50 text-blue-900 border border-blue-200 px-2.5 py-1 rounded-xl text-[10px] font-bold">${escapeHTML(g.kategori || '-')}</span></td>
+                                        <td class="p-4 font-extrabold text-slate-700">${escapeHTML(g.gerakan || '-')}</td>
+                                        <td class="p-4 text-center font-mono font-black text-blue-900">${escapeHTML(g.beban || '-')}</td>
+                                        <td class="p-4 text-center font-mono font-bold text-slate-600">${escapeHTML(g.setRep || '-')}</td>
                                         <td class="p-4 text-center">
-                                            <button onclick="deleteGymLog('${g.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus">
+                                            <button onclick="deleteGymLog('${g.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus Log">
                                                 <i class="fa-solid fa-trash-can text-xs"></i>
                                             </button>
                                         </td>
@@ -6445,7 +6663,7 @@ ${(() => {
                                 `;
                             }).join('') : `
                                 <tr>
-                                    <td colspan="7" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada data latihan gym yang dicatat.</td>
+                                    <td colspan="7" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada catatan program latihan gym tersimpan.</td>
                                 </tr>
                             `}
                         </tbody>
@@ -6454,6 +6672,7 @@ ${(() => {
             </div>
         </div>
     `;
+
             } else if (state.currentMenu === 'menu-atlet-1') {
     pageTitle.innerText = "Dashboard Personal Atlet";
     const at = state.activeAtlet;
