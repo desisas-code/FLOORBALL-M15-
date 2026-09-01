@@ -6112,8 +6112,10 @@ function generateJoggingSkuad(event) {
     `;
             } else if (state.currentMenu === 'menu-9') {
     pageTitle.innerText = "Dashboard Monitoring ACWR & Beban RPE Skuad";
-    const allReports = loadStorage('allReports') || loadStorage('riwayatRpe') || [];
-    const validReports = allReports.filter(r => r && (r.srpe || r.skalaRpe || r.rpe));
+    
+    // 1. Pastikan selalu memuat data terbaru dari rpeLogs
+    state.rpeLogs = loadStorage('rpeLogs', state.rpeLogs || []);
+    const validReports = state.rpeLogs || [];
 
     let countSweet = 0, countRisk = 0, countDanger = 0, countUnder = 0;
     let totalAcute = 0;
@@ -6267,26 +6269,29 @@ function generateJoggingSkuad(event) {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-    ${(() => {
-        const listRpe = (state.rpeLogs && state.rpeLogs.length > 0) ? state.rpeLogs : loadStorage('allReports', []);
-        if (listRpe.length === 0) {
-            return `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan RPE yang masuk dari atlet.</td></tr>`;
-        }
-        return listRpe.map(r => {
-            const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
-            return `
-                <tr class="hover:bg-blue-50/40 transition-colors">
-                    <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
-                    <td class="p-4 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : (r.namaAtlet ? escapeHTML(r.namaAtlet) : 'Atlet Skuad')}</td>
-                    <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${r.rpeVal || 0}/10</td>
-                    <td class="p-4 text-center font-mono font-bold text-slate-600">${r.durasi || 0} mnt</td>
-                    <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
-                    <td class="p-4 text-center font-black text-blue-900 font-mono">${r.sRPE || (r.rpeVal * r.durasi) || 0} AU</td>
-                </tr>
-            `;
-        }).join('');
-    })()}
-					</tbody>
+${(() => {
+    const listRpe = loadStorage('rpeLogs', state.rpeLogs || []);
+    if (!listRpe || listRpe.length === 0) {
+        return `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan RPE yang masuk dari atlet.</td></tr>`;
+    }
+    return listRpe.map(r => {
+        const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
+        const namaTampil = pObj ? escapeHTML(pObj.nama) : (r.namaAtlet ? escapeHTML(r.namaAtlet) : 'Atlet Skuad');
+        const loadVal = r.sRPE || (r.rpeVal * r.durasi) || 0;
+
+        return `
+            <tr class="hover:bg-blue-50/40 transition-colors">
+                <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
+                <td class="p-4 font-black text-slate-800">${namaTampil}</td>
+                <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${r.rpeVal || 0}/10</td>
+                <td class="p-4 text-center font-mono font-bold text-slate-600">${r.durasi || 0} mnt</td>
+                <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
+                <td class="p-4 text-center font-black text-blue-900 font-mono">${loadVal} AU</td>
+            </tr>
+        `;
+    }).join('');
+})()}
+</tbody>
                 </table>
             </div>
         </div>
