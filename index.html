@@ -6414,12 +6414,11 @@ ${(() => {
         </div>
     `;
 } else if (state.currentMenu === 'menu-10') {
-    pageTitle.innerText = "Preskripsi & Log Latihan Gym / Strength";
+    pageTitle.innerText = "Preskripsi, Program & Log Latihan Gym";
     const today = new Date().toISOString().split('T')[0];
     const optionsAtlet = state.atlet.map(a => `<option value="${a.id}">${escapeHTML(a.nama)} (${escapeHTML(a.posisi)})</option>`).join('');
     const listGym = loadStorage('gymLogs', state.gymLogs || []);
 
-    // Hitung ringkasan statistik gym
     const totalSesiGym = listGym.length;
     const lowerCount = listGym.filter(g => g.kategori?.includes('Lower')).length;
     const upperCount = listGym.filter(g => g.kategori?.includes('Upper')).length;
@@ -6427,7 +6426,7 @@ ${(() => {
 
     container.innerHTML = `
         <div class="space-y-6">
-            <!-- 1. KPI HIGHLIGHT CARDS GYM -->
+            <!-- 1. KPI HIGHLIGHT CARDS -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white/95 backdrop-blur-xl p-5 rounded-[28px] border border-slate-200/80 shadow-md flex items-center gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-900 flex items-center justify-center font-black text-xl shrink-0">
@@ -6435,7 +6434,7 @@ ${(() => {
                     </div>
                     <div>
                         <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Preskripsi</p>
-                        <h4 class="text-2xl font-black text-slate-900 font-display">${totalSesiGym} <span class="text-xs font-bold text-slate-500">Sesi</span></h4>
+                        <h4 class="text-2xl font-black text-slate-900 font-display">${totalSesiGym} <span class="text-xs font-bold text-slate-500">Log</span></h4>
                     </div>
                 </div>
 
@@ -6470,19 +6469,66 @@ ${(() => {
                 </div>
             </div>
 
-            <!-- 2. GRID KALKULATOR 1RM & FORM INPUT PRESET -->
+            <!-- 2. MODUL TEMPLATE PROGRAM LATIHAN GYM SIAP PAKAI -->
+            <div class="bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-white p-6 sm:p-8 rounded-[32px] border border-slate-800 shadow-xl space-y-5">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                        <span class="text-[10px] font-black text-cyan-400 uppercase tracking-widest block mb-1">PROGRAM WORKOUT TERSTRUKTUR</span>
+                        <h3 class="text-lg sm:text-xl font-black font-display flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-cyan-400"></i> Template Program Latihan Strength & Power Floorball
+                        </h3>
+                    </div>
+                    <span class="bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 px-3.5 py-1.5 rounded-full text-xs font-black">
+                        Periodisasi Bompa
+                    </span>
+                </div>
+
+                <!-- SELECTOR PAKET PROGRAM -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <button type="button" onclick="selectGymProgramPackage('hypertrophy_aa')" id="btn-pkg-hypertrophy_aa" class="p-4 rounded-2xl text-left border border-slate-700 bg-slate-800/80 hover:border-cyan-400 transition-all group active:scale-95">
+                        <span class="text-[9px] font-black text-cyan-400 uppercase tracking-wider block">Fase 1 (TPU)</span>
+                        <h5 class="font-black text-sm text-slate-100 group-hover:text-cyan-300 transition-colors">Anatomical Adaptation</h5>
+                        <p class="text-[10px] text-slate-400 mt-1 font-semibold">Fondasi sendi, hipertrofi & stabilitas otot inti.</p>
+                    </button>
+
+                    <button type="button" onclick="selectGymProgramPackage('max_strength')" id="btn-pkg-max_strength" class="p-4 rounded-2xl text-left border border-slate-700 bg-slate-800/80 hover:border-cyan-400 transition-all group active:scale-95">
+                        <span class="text-[9px] font-black text-amber-400 uppercase tracking-wider block">Fase 2 (TPK)</span>
+                        <h5 class="font-black text-sm text-slate-100 group-hover:text-amber-300 transition-colors">Max Strength (MxS)</h5>
+                        <p class="text-[10px] text-slate-400 mt-1 font-semibold">Kekuatan maksimal tungkai, tarikan & dorongan.</p>
+                    </button>
+
+                    <button type="button" onclick="selectGymProgramPackage('conversion_power')" id="btn-pkg-conversion_power" class="p-4 rounded-2xl text-left border border-slate-700 bg-slate-800/80 hover:border-cyan-400 transition-all group active:scale-95">
+                        <span class="text-[9px] font-black text-rose-400 uppercase tracking-wider block">Fase 3 (Pra-Kompetisi)</span>
+                        <h5 class="font-black text-sm text-slate-100 group-hover:text-rose-300 transition-colors">Conversion to Power</h5>
+                        <p class="text-[10px] text-slate-400 mt-1 font-semibold">Eksplosivitas drag shot, sprint & pliometrik.</p>
+                    </button>
+
+                    <button type="button" onclick="selectGymProgramPackage('gk_special')" id="btn-pkg-gk_special" class="p-4 rounded-2xl text-left border border-slate-700 bg-slate-800/80 hover:border-cyan-400 transition-all group active:scale-95">
+                        <span class="text-[9px] font-black text-emerald-400 uppercase tracking-wider block">Posisi Khusus</span>
+                        <h5 class="font-black text-sm text-slate-100 group-hover:text-emerald-300 transition-colors">Goalkeeper Conditioning</h5>
+                        <p class="text-[10px] text-slate-400 mt-1 font-semibold">Mobilitas pinggul, knee slide & reaksi bahu.</p>
+                    </button>
+                </div>
+
+                <!-- DETAIL DRILL PROGRAM YANG AKTIF -->
+                <div id="gym-program-detail-card" class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl space-y-4">
+                    <!-- Dinamis dirender oleh selectGymProgramPackage() -->
+                </div>
+            </div>
+
+            <!-- 3. GRID FORM INPUT MANUAL & KALKULATOR 1RM -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- FORM INPUT PRESET GYM -->
+                <!-- FORM INPUT MANUAL/CUSTOM GYM -->
                 <div class="lg:col-span-8 bg-white/95 backdrop-blur-xl p-6 sm:p-8 rounded-[32px] border border-slate-200/80 shadow-xl space-y-6">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                         <div>
-                            <h3 class="text-lg font-black text-slate-900 font-display flex items-center gap-2">
-                                <i class="fa-solid fa-pen-ruler text-blue-900"></i> Form Preskripsi Strength & Conditioning
+                            <h3 class="text-base sm:text-lg font-black text-slate-900 font-display flex items-center gap-2">
+                                <i class="fa-solid fa-pen-ruler text-blue-900"></i> Preskripsi Kustom / Input Beban Individual
                             </h3>
-                            <p class="text-xs font-semibold text-slate-400 mt-0.5">Input target beban, repetisi, intensitas RPE, dan tempo latihan atlet.</p>
+                            <p class="text-xs font-semibold text-slate-400 mt-0.5">Catat beban latihan custom harian untuk atlet tertentu.</p>
                         </div>
                         <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3 py-1 rounded-xl text-xs shadow-sm">
-                            Strength Protocol
+                            Custom Prescriptions
                         </span>
                     </div>
 
@@ -6502,38 +6548,37 @@ ${(() => {
                             </div>
                         </div>
 
-                        <!-- PILIHAN PRESET GERAKAN SPESIFIK FLOORBALL -->
+                        <!-- PILIHAN PRESET GERAKAN -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
                             <div class="space-y-1.5">
-                                <label class="block text-[11px] font-black uppercase text-blue-900">Library Gerakan Floorball</label>
+                                <label class="block text-[11px] font-black uppercase text-blue-900">Preset Gerakan Standar</label>
                                 <select id="gym-preset-gerakan" onchange="autoFillGymDrill(this.value)" class="w-full px-4 py-3 rounded-2xl border border-blue-200 text-xs font-bold bg-white text-blue-950 focus:outline-none focus:border-blue-600 shadow-sm">
                                     <option value="">-- Pilih Rekomendasi Gerakan --</option>
                                     <option value="squat">Barbell Back Squat (Power Tungkai & Stance)</option>
-                                    <option value="rdl">Romanian Deadlift / RDL (Hamstring & Pencegahan Cedera)</option>
-                                    <option value="trap_bar">Trap Bar Deadlift (Eksplosivitas Akselerasi)</option>
+                                    <option value="rdl">Romanian Deadlift / RDL (Hamstring & Posterior Chain)</option>
+                                    <option value="trap_bar">Trap Bar Deadlift (Akselerasi & Explosive Drive)</option>
                                     <option value="bulgarian">Bulgarian Split Squat (Unilateral Knee Stability)</option>
-                                    <option value="bench_press">Barbell Bench Press (Pushing Power saat Kontak Fisik)</option>
-                                    <option value="db_row">Single Arm Dumbbell Row (Kekuatan Tarikan Stickwork)</option>
-                                    <option value="landmine_rot">Landmine Rotational Press (Power Shooting & Drag Shot)</option>
-                                    <option value="pallof_press">Pallof Press / Cable Hold (Anti-Rotation Core Stability)</option>
-                                    <option value="wrist_curl">Wrist Roller & Forearm Rotations (Kecepatan Wrist Shot)</option>
-                                    <option value="box_jump">Plyo Box Jump (Vertikal & Reaksi Kiper/Striker)</option>
+                                    <option value="bench_press">Barbell Bench Press (Pushing Power saat Body Contact)</option>
+                                    <option value="db_row">Single Arm Dumbbell Row (Tarikan & Power Stickwork)</option>
+                                    <option value="landmine_rot">Landmine Rotational Press (Power Drag Shot)</option>
+                                    <option value="pallof_press">Cable Pallof Press (Anti-Rotation Core)</option>
+                                    <option value="wrist_curl">Wrist Roller & Forearm Rotations (Wrist Shot Speed)</option>
+                                    <option value="box_jump">Plyo Box Jump (Vertical Power & Landing)</option>
                                 </select>
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-[11px] font-black uppercase text-slate-500">Kategori / Fase Latihan</label>
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Kategori Latihan</label>
                                 <select id="gym-kategori" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
                                     <option value="Lower Body Power">Lower Body Power (Squat, Deadlift, Jump)</option>
                                     <option value="Upper Body Strength">Upper Body Strength (Press, Row, Pull)</option>
                                     <option value="Core & Rotation">Core & Rotational Power (Shooting Mechanics)</option>
-                                    <option value="Forearm & Grip">Forearm, Wrist & Grip (Stickhandling Control)</option>
+                                    <option value="Forearm & Grip">Forearm, Wrist & Grip (Ball Control)</option>
                                     <option value="Hypertrophy / AA">Anatomical Adaptation (AA) / Hypertrophy</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- DETAIL INPUT BEBAN & SET -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div class="space-y-1.5">
                                 <label class="block text-[11px] font-black uppercase text-slate-500">Nama Gerakan <span class="text-rose-500">*</span></label>
@@ -6541,26 +6586,25 @@ ${(() => {
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-[11px] font-black uppercase text-slate-500">Target Beban (kg / %1RM) <span class="text-rose-500">*</span></label>
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Target Beban <span class="text-rose-500">*</span></label>
                                 <input type="text" id="gym-beban" placeholder="Contoh: 60 kg (75% 1RM)" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-[11px] font-black uppercase text-slate-500">Skema Set × Reps & Rest <span class="text-rose-500">*</span></label>
+                                <label class="block text-[11px] font-black uppercase text-slate-500">Skema Set × Reps <span class="text-rose-500">*</span></label>
                                 <input type="text" id="gym-set-rep" placeholder="Contoh: 4 Set × 8 Reps (Rest 90s)" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between pt-2">
-                            <span class="text-[11px] text-slate-400 font-semibold italic"><i class="fa-solid fa-circle-info mr-1 text-blue-600"></i> Data otomatis tersinkronisasi ke Google Spreadsheet.</span>
+                        <div class="flex items-center justify-end pt-2">
                             <button type="submit" class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-800 hover:to-indigo-900 text-white font-black px-8 py-3.5 rounded-2xl text-xs shadow-xl shadow-blue-900/30 active:scale-95 transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-plus text-cyan-400"></i> Simpan Preskripsi Gym
+                                <i class="fa-solid fa-plus text-cyan-400"></i> Simpan Drill Kustom
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- KALKULATOR 1RM INTERAKTIF -->
+                <!-- KALKULATOR 1RM -->
                 <div class="lg:col-span-4 bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-white p-6 rounded-[32px] border border-slate-800 shadow-xl flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
@@ -6581,7 +6625,6 @@ ${(() => {
                             </div>
                         </div>
 
-                        <!-- ESTIMASI 1RM & TARGET ZONA BEBAN -->
                         <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl space-y-2.5">
                             <div class="flex justify-between items-center">
                                 <span class="text-[11px] text-slate-400 font-extrabold">Estimasi 100% 1RM:</span>
@@ -6609,7 +6652,7 @@ ${(() => {
                 </div>
             </div>
 
-            <!-- 3. TABEL RIWAYAT PRESKRIPSI GYM -->
+            <!-- 4. TABEL RIWAYAT PRESKRIPSI GYM -->
             <div class="bg-white/95 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden">
                 <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-3">
                     <div>
@@ -6672,6 +6715,10 @@ ${(() => {
             </div>
         </div>
     `;
+
+    setTimeout(() => {
+        selectGymProgramPackage('hypertrophy_aa');
+    }, 50);
 
             } else if (state.currentMenu === 'menu-atlet-1') {
     pageTitle.innerText = "Dashboard Personal Atlet";
