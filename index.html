@@ -1264,45 +1264,13 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
                 autoSyncIntervalId = null;
             }
         }
-  // Variable Global untuk Tracking GPS & Aktivitas
-let gpsWatchId = null;
-let lastValidCoord = null;
-let totalDistanceKm = 0;
 
-function handleGpsUpdate(position) {
-    const { latitude, longitude, accuracy } = position.coords;
-    const timestamp = position.timestamp || Date.now();
-
-    // 1. Buang sinyal dengan akurasi buruk
-    if (accuracy > 15) return;
-
-    if (lastValidCoord) {
-        const timeDiffSec = (timestamp - lastValidCoord.timestamp) / 1000;
-        if (timeDiffSec < 1) return; // Debounce update yang terlalu rapat
-
-        const distKm = calculateHaversineDistance(
-            lastValidCoord.lat, lastValidCoord.lng, latitude, longitude
-        );
-        const distMeters = distKm * 1000;
-        const currentSpeedKmh = (distKm / (timeDiffSec / 3600));
-
-        // 2. Filter Drift: abaikan gerakan mikro < 4 meter
-        if (distMeters < 4) return;
-
-        // 3. Filter Teleportasi / Speed Anomali (> 30 km/jam untuk atlet lari)
-        if (currentSpeedKmh > 30) {
-            console.warn("Anomali kecepatan terdeteksi:", currentSpeedKmh);
-            return;
-        }
-
-        totalDistanceKm += distKm;
-    }
-// GANTI DARI SINI (Deklarasi variabel & startLiveGpsTracking)
+		// Variable Global untuk Tracking GPS & Aktivitas
 let gpsWatchId = null;
 let lastCoord = null;
 let totalDistanceKm = 0;
 
-// Fungsi Mulai Tracking Live dengan Deteksi Aktivitas
+// Fungsi Mulai Tracking Live dengan Deteksi Aktivitas (Cukup simpan 1 ini saja)
 function startLiveGpsTracking() {
     const badge = document.getElementById('gps-status-badge');
     if (!navigator.geolocation) {
@@ -1321,8 +1289,6 @@ function startLiveGpsTracking() {
     gpsWatchId = navigator.geolocation.watchPosition(
         (position) => {
             const { latitude, longitude, accuracy, speed } = position.coords;
-            
-            // Filter akurasi rendah (> 15 meter) agar data tidak meloncat
             if (accuracy > 15) return;
 
             const currentTime = Date.now();
@@ -1330,16 +1296,13 @@ function startLiveGpsTracking() {
             if (lastCoord) {
                 const timeDiffHours = (currentTime - lastCoord.timestamp) / (1000 * 3600);
                 const dist = calculateHaversineDistance(lastCoord.lat, lastCoord.lng, latitude, longitude);
-                
                 let currentSpeedKmh = speed ? (speed * 3.6) : (timeDiffHours > 0 ? (dist / timeDiffHours) : 0);
 
-                // Filter gerakan halus (hanya hitung jika berpindah > 3 meter)
                 if (dist > 0.003) { 
                     totalDistanceKm += dist;
                     lastCoord = { lat: latitude, lng: longitude, timestamp: currentTime };
                 }
 
-                // Deteksi Otomatis Jenis Aktivitas
                 let jenisAktivitas = "Diam / Istirahat";
                 let badgeStyle = "bg-emerald-50 text-emerald-900 border-emerald-200";
                 let iconAktivitas = "fa-person-walking";
@@ -1387,6 +1350,15 @@ function startLiveGpsTracking() {
         },
         { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
     );
+}
+
+// Fungsi Hentikan Tracking Lari
+function stopLiveGpsTracking() {
+    if (gpsWatchId !== null) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+        showToast("Live GPS Tracking dihentikan.", "success");
+    }
 }
 
 // Fungsi Hentikan Tracking Lari
@@ -5643,8 +5615,8 @@ function generateJoggingSkuad(event) {
                             Pilih Atlet <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative">
-                            <select id="jogging-atlet-id" onchange="autoFillJoggingVO2(this.value)" required class="...">
-    <option value="semua">-- SEMUA ATLET (41 ATLET) --</option>
+                            <select id="jogging-atlet-id" onchange="autoFillJoggingVO2(this.value)" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer shadow-sm appearance-none">
+    <option value="semua">-- SEMUA ATLET (${state.atlet.length} ATLET) --</option>
     ${optionsAtlet}
 </select>
                             <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
