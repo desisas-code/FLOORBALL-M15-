@@ -252,8 +252,8 @@
                             KATA SANDI PELATIH
                         </label>
                         <input type="password" id="auth-input-password" required 
-    placeholder="Masukkan kata sandi..." 
-    class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all">
+                            placeholder="Masukkan password" 
+                            class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all">
                     </div>
                 </div>
 
@@ -1784,17 +1784,17 @@ function exportGymLogsCSV() {
     const button = document.getElementById('auth-button');
 
     if (role === 'pelatih') {
-    // ...
-    if(fieldsContainer) {
-        fieldsContainer.innerHTML = `
-            <div>
-                <label class="block text-[11px] font-black text-slate-500 tracking-wider uppercase mb-2">KATA SANDI PELATIH</label>
-                <input type="password" id="auth-input-password" required placeholder="Masukkan kata sandi..." class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700">
-            </div>
-        `;
-    }
-    // ...
-}
+        if(tabPelatih) tabPelatih.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all bg-white text-blue-900 shadow-sm';
+        if(tabAtlet) tabAtlet.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all text-slate-500 hover:text-slate-800';
+        
+        if(fieldsContainer) {
+            fieldsContainer.innerHTML = `
+                <div>
+                    <label class="block text-[11px] font-black text-slate-500 tracking-wider uppercase mb-2">KATA SANDI PELATIH</label>
+                    <input type="password" id="auth-input-password" required placeholder="Masukkan kata sandi pelatih" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700">
+                </div>
+            `;
+        }
         if(button) button.innerHTML = 'Masuk Mode Pelatih <i class="fa-solid fa-arrow-right text-xs"></i>';
     } else {
         if(tabAtlet) tabAtlet.className = 'flex-1 py-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 transition-all bg-white text-blue-900 shadow-sm';
