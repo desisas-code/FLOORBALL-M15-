@@ -1613,14 +1613,16 @@ function restoreDataJSON(event) {
         { id: 'menu-7', name: 'Jogging & MAS', icon: 'fa-person-running' },
         { id: 'menu-8', name: 'Validasi Laporan', icon: 'fa-file-circle-check', badgeKey: 'validasi' },
         { id: 'menu-9', name: 'ACWR & RPE', icon: 'fa-gauge-high', badgeKey: 'acwr' },
-        { id: 'menu-10', name: 'Preskripsi & Log Gym', icon: 'fa-dumbbell' }
+        { id: 'menu-10', name: 'Preskripsi & Log Gym', icon: 'fa-dumbbell' },
+        { id: 'menu-11', name: 'Anatomi Otot Manusia', icon: 'fa-child' } // <--- TAMBAH INI
     ],
     Atlet: [
         { id: 'menu-atlet-1', name: 'Dashboard Personal', icon: 'fa-gauge' },
         { id: 'menu-atlet-2', name: 'Hasil Tes Fisik', icon: 'fa-square-poll-vertical' },
         { id: 'menu-atlet-3', name: 'Riwayat Absensi', icon: 'fa-clock-rotate-left' },
         { id: 'menu-atlet-4', name: 'Laporan Jogging', icon: 'fa-route' },
-        { id: 'menu-atlet-5', name: 'Input RPE & HR', icon: 'fa-heart-circle-bolt' }
+        { id: 'menu-atlet-5', name: 'Input RPE & HR', icon: 'fa-heart-circle-bolt' },
+        { id: 'menu-atlet-6', name: 'Peta Anatomi Otot', icon: 'fa-child' } // <--- TAMBAH INI
     ]
 };
 
@@ -4350,7 +4352,128 @@ function generateJoggingSkuad(event) {
   renderContent();
   showToast(`Berhasil menambahkan ${newLogs.length} log jogging!`, "success");
 }
-        function renderContent() {
+        // =========================================================================
+// DATABASE ANATOMI OTOT & FUNGSI FILTER
+// =========================================================================
+const muscleHierarchyData = {
+    besar: [
+        {
+            namaLatin: "Gluteus Maximus",
+            namaUmum: "Otot Bokong Utama",
+            kategori: "Otot Terbesar Tubuh (Massa & Volume)",
+            fungsiFloorball: "Ekstensi panggul eksplosif saat sprint, akselerasi awal, dan stabilitas pendaratan.",
+            drills: "Barbell Hip Thrust, Back Squat, Romanian Deadlift",
+            risikoCedera: "Glute amnesia, overload hamstring kompensator"
+        },
+        {
+            namaLatin: "Quadriceps Femoris (Rectus Femoris, Vastus Lateralis/Medialis/Intermedius)",
+            namaUmum: "Paha Depan",
+            kategori: "Otot Besar Tungkai",
+            fungsiFloorball: "Ekstensi lutut, deselerasi tiba-tiba (stopping/pivoting), dan power lompatan.",
+            drills: "Front Squat, Bulgarian Split Squat, Leg Press",
+            risikoCedera: "Patellar tendinopathy (Jumper's Knee), strain rectus femoris"
+        },
+        {
+            namaLatin: "Latissimus Dorsi",
+            namaUmum: "Sayap / Punggung Lebar",
+            kategori: "Otot Terbesar Tubuh Bagian Atas",
+            fungsiFloorball: "Menghasilkan tenaga tarikan dan rotasi bahu saat melakukan shooting (wrist & slap shot).",
+            drills: "Weighted Pull-Up, Single-Arm DB Row, Lat Pulldown",
+            risikoCedera: "Tightness rotasi toraks, impingement bahu"
+        },
+        {
+            namaLatin: "Hamstrings (Biceps Femoris, Semitendinosus, Semimembranosus)",
+            namaUmum: "Paha Belakang",
+            kategori: "Kelompok Otot Besar Posterior",
+            fungsiFloorball: "Deselerasi kecepatan tinggi, transisi lari cepat, dan proteksi ligamen ACL lutut.",
+            drills: "Nordic Hamstring Curl, Trap Bar RDL, Glute-Ham Raise",
+            risikoCedera: "Hamstring strain grade 1-3 saat full sprint"
+        }
+    ],
+    sedang: [
+        {
+            namaLatin: "Gastrocnemius & Soleus",
+            namaUmum: "Betis",
+            kategori: "Otot Sedang (Plantar Flexor)",
+            fungsiFloorball: "Propulsi langkah akselerasi, push-off lateral, dan serapan kejut tumit.",
+            drills: "Standing & Seated Calf Raise, Pogo Jump",
+            risikoCedera: "Achilles tendinitis, calf tear"
+        },
+        {
+            namaLatin: "Deltoideus (Anterior, Lateral, Posterior)",
+            namaUmum: "Bahu",
+            kategori: "Otot Sedang Shoulder Girdle",
+            fungsiFloorball: "Mengontrol posisi stick floorball pada sudut tinggi dan duel kontak badan bahu.",
+            drills: "Overhead Dumbbell Press, Lateral Raise, Face Pull",
+            risikoCedera: "Shoulder impingement syndrome"
+        },
+        {
+            namaLatin: "Obliquus Externus & Internus Abdominis",
+            namaUmum: "Otot Perut Samping / Rotator",
+            kategori: "Otot Inti (Core Rotators)",
+            fungsiFloorball: "Mentransfer energi rotasi panggul ke stick saat drag shot dan counter-attack pivot.",
+            drills: "Landmine Rotation, Cable Woodchop, Russian Twist",
+            risikoCedera: "Sports hernia, abdominal strain"
+        }
+    ],
+    kecil: [
+        {
+            namaLatin: "Rotator Cuff (Supraspinatus, Infraspinatus, Teres Minor, Subscapularis)",
+            namaUmum: "Stabilisator Sendi Bahu",
+            kategori: "Otot Stabilisator Kecil",
+            fungsiFloorball: "Menjaga kaput humeri tetap di sendi glenoid selama gerakan ayunan stick bertenaga tinggi.",
+            drills: "External/Internal Cable Rotations, Banded Face Pull",
+            risikoCedera: "Supraspinatus impingement & tendinitis"
+        },
+        {
+            namaLatin: "Pronator Teres & Flexor Carpi Radialis/Ulnaris",
+            namaUmum: "Fleksor & Pronator Pergelangan Tangan",
+            kategori: "Otot Kecil Lengan Bawah (Forearm)",
+            fungsiFloorball: "Menghasilkan 'snap' mikro di ujung stick untuk akurasi umpan pendek dan scooping bola.",
+            drills: "Wrist Roller, DB Wrist Flexion/Extension, Grip Squeeze",
+            risikoCedera: "Forearm pump, medial epicondylitis (Golfer's elbow)"
+        },
+        {
+            namaLatin: "Popliteus",
+            namaUmum: "Kunci Sendi Lutut",
+            kategori: "Otot Sangat Kecil Posterior Lutut",
+            fungsiFloorball: "Membuka kunci lutut dari posisi ekstensi penuh saat pivoting tajam.",
+            drills: "Terminal Knee Extensions (TKE), Single-leg balance band drills",
+            risikoCedera: "Popliteus strain akibat twisting lutut"
+        },
+        {
+            namaLatin: "Stapedius",
+            namaUmum: "Otot Pendengaran Tulang Tengah",
+            kategori: "Otot Terkecil Tubuh Manusia (~1 milimeter)",
+            fungsiFloorball: "Meredam transmisi getaran suara keras peluit wasit atau benturan bodi papan (rink).",
+            drills: "Tidak dilatih langsung (fisiologis otonom)",
+            risikoCedera: "Hiperakusis (jarang terjadi pada olahraga kontak)"
+        }
+    ]
+};
+
+function filterAnatomyGroup(groupKey) {
+    const cards = document.querySelectorAll('.anatomy-group-card');
+    cards.forEach(card => {
+        if (groupKey === 'semua' || card.getAttribute('data-group') === groupKey) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+
+    ['semua', 'besar', 'sedang', 'kecil'].forEach(key => {
+        const btn = document.getElementById(`btn-filter-anatomi-${key}`);
+        if (btn) {
+            if (key === groupKey) {
+                btn.className = "px-4 py-2 rounded-xl text-xs font-black bg-blue-900 text-white shadow-md";
+            } else {
+                btn.className = "px-4 py-2 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200";
+            }
+        }
+    });
+}
+		function renderContent() {
     const container = document.getElementById('main-container');
     const pageTitle = document.getElementById('page-title');
     if (!container || !pageTitle) return;
