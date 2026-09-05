@@ -2050,6 +2050,24 @@ function deleteRiwayatValidasi(id) {
     renderContent();
     renderChartsForMenu(state.currentMenu);
 }
+		function deleteRpeLog(id) {
+    if (!confirm("Apakah Anda yakin ingin menghapus catatan laporan RPE ini?")) return;
+
+    // 1. Hapus dari state
+    state.rpeLogs = (state.rpeLogs || []).filter(r => String(r.id) !== String(id));
+
+    // 2. Simpan ke LocalStorage
+    saveStorage('rpeLogs', state.rpeLogs);
+
+    // 3. Sinkronkan pembaruan ke Google Spreadsheet jika aktif
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
+    }
+
+    // 4. Perbarui tampilan & grafik
+    renderContent();
+    showToast("Laporan RPE berhasil dihapus!", "success");
+}
         function closeModalAtlet() {
             const modal = document.getElementById('modal-atlet');
             if(modal) modal.classList.add('hidden');
@@ -6520,15 +6538,20 @@ ${(() => {
         const loadVal = r.sRPE || (r.rpeVal * r.durasi) || 0;
 
         return `
-            <tr class="hover:bg-blue-50/40 transition-colors">
-                <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
-                <td class="p-4 font-black text-slate-800">${namaTampil}</td>
-                <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${r.rpeVal || 0}/10</td>
-                <td class="p-4 text-center font-mono font-bold text-slate-600">${r.durasi || 0} mnt</td>
-                <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
-                <td class="p-4 text-center font-black text-blue-900 font-mono">${loadVal} AU</td>
-            </tr>
-        `;
+        <tr class="hover:bg-blue-50/40 transition-colors">
+            <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
+            <td class="p-4 font-black text-slate-800">${namaTampil}</td>
+            <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${r.rpeVal || 0}/10</td>
+            <td class="p-4 text-center font-mono font-bold text-slate-600">${r.durasi || 0} mnt</td>
+            <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
+            <td class="p-4 text-center font-black text-blue-900 font-mono">${loadVal} AU</td>
+            <td class="p-4 text-center">
+                <button onclick="deleteRpeLog('${r.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus Laporan">
+                   <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+            </td>
+        </tr>
+   `;
     }).join('');
 })()}
 </tbody>
