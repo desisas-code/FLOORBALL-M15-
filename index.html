@@ -3379,7 +3379,7 @@ function renderMatchHeatmap() {
 
         <!-- 6. LAPANGAN TAKTIS SPASIAL & CONTROLLER AKSI -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-            <div class="lg:col-span-8 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md">
+            <div class="col-span-12 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md">
                 <div class="flex gap-2 mb-4">
                     <button onclick="setSpatialEventType('loss')" class="flex-1 py-2.5 rounded-2xl font-black text-xs transition-all ${state.matchLive.activeSpatialEventType === 'loss' ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Kehilangan</button>
                     <button onclick="setSpatialEventType('intercept')" class="flex-1 py-2.5 rounded-2xl font-black text-xs transition-all ${state.matchLive.activeSpatialEventType === 'intercept' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Cut Bola</button>
