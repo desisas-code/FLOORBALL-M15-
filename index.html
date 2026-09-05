@@ -4639,7 +4639,7 @@ function filterAnatomyGroup(groupKey) {
         </div>
     `;
 }
-}
+
 		let scene3D, camera3D, renderer3D, controls3D, animationFrameId3D;
 let muscleMeshMap = {};
 
@@ -7343,8 +7343,9 @@ function trigger3DMuscleSelect(muscleKey) {
     `;
 
     setTimeout(() => {
-        highlightMuscleGroup('glute');
-    }, 50);
+        init3DAnatomyViewer();
+        trigger3DMuscleSelect('glute');
+    }, 80);
             } else if (state.currentMenu === 'menu-atlet-1') {
     pageTitle.innerText = "Dashboard Personal Atlet";
     const at = state.activeAtlet;
