@@ -4459,98 +4459,100 @@ function generateJoggingSkuad(event) {
 // DATABASE ANATOMI OTOT & FUNGSI FILTER
 // =========================================================================
 const muscleHierarchyData = {
-    besar: [
+    mikro: [
         {
-            namaLatin: "Gluteus Maximus",
-            namaUmum: "Otot Bokong Utama",
-            kategori: "Otot Terbesar Tubuh (Massa & Volume)",
-            fungsiFloorball: "Ekstensi panggul eksplosif saat sprint, akselerasi awal, dan stabilitas pendaratan.",
-            drills: "Barbell Hip Thrust, Back Squat, Romanian Deadlift",
-            risikoCedera: "Glute amnesia, overload hamstring kompensator"
-        },
-        {
-            namaLatin: "Quadriceps Femoris (Rectus Femoris, Vastus Lateralis/Medialis/Intermedius)",
-            namaUmum: "Paha Depan",
-            kategori: "Otot Besar Tungkai",
-            fungsiFloorball: "Ekstensi lutut, deselerasi tiba-tiba (stopping/pivoting), dan power lompatan.",
-            drills: "Front Squat, Bulgarian Split Squat, Leg Press",
-            risikoCedera: "Patellar tendinopathy (Jumper's Knee), strain rectus femoris"
-        },
-        {
-            namaLatin: "Latissimus Dorsi",
-            namaUmum: "Sayap / Punggung Lebar",
-            kategori: "Otot Terbesar Tubuh Bagian Atas",
-            fungsiFloorball: "Menghasilkan tenaga tarikan dan rotasi bahu saat melakukan shooting (wrist & slap shot).",
-            drills: "Weighted Pull-Up, Single-Arm DB Row, Lat Pulldown",
-            risikoCedera: "Tightness rotasi toraks, impingement bahu"
-        },
-        {
-            namaLatin: "Hamstrings (Biceps Femoris, Semitendinosus, Semimembranosus)",
-            namaUmum: "Paha Belakang",
-            kategori: "Kelompok Otot Besar Posterior",
-            fungsiFloorball: "Deselerasi kecepatan tinggi, transisi lari cepat, dan proteksi ligamen ACL lutut.",
-            drills: "Nordic Hamstring Curl, Trap Bar RDL, Glute-Ham Raise",
-            risikoCedera: "Hamstring strain grade 1-3 saat full sprint"
-        }
-    ],
-    sedang: [
-        {
-            namaLatin: "Gastrocnemius & Soleus",
-            namaUmum: "Betis",
-            kategori: "Otot Sedang (Plantar Flexor)",
-            fungsiFloorball: "Propulsi langkah akselerasi, push-off lateral, dan serapan kejut tumit.",
-            drills: "Standing & Seated Calf Raise, Pogo Jump",
-            risikoCedera: "Achilles tendinitis, calf tear"
-        },
-        {
-            namaLatin: "Deltoideus (Anterior, Lateral, Posterior)",
-            namaUmum: "Bahu",
-            kategori: "Otot Sedang Shoulder Girdle",
-            fungsiFloorball: "Mengontrol posisi stick floorball pada sudut tinggi dan duel kontak badan bahu.",
-            drills: "Overhead Dumbbell Press, Lateral Raise, Face Pull",
-            risikoCedera: "Shoulder impingement syndrome"
-        },
-        {
-            namaLatin: "Obliquus Externus & Internus Abdominis",
-            namaUmum: "Otot Perut Samping / Rotator",
-            kategori: "Otot Inti (Core Rotators)",
-            fungsiFloorball: "Mentransfer energi rotasi panggul ke stick saat drag shot dan counter-attack pivot.",
-            drills: "Landmine Rotation, Cable Woodchop, Russian Twist",
-            risikoCedera: "Sports hernia, abdominal strain"
-        }
-    ],
-    kecil: [
-        {
-            namaLatin: "Rotator Cuff (Supraspinatus, Infraspinatus, Teres Minor, Subscapularis)",
-            namaUmum: "Stabilisator Sendi Bahu",
-            kategori: "Otot Stabilisator Kecil",
-            fungsiFloorball: "Menjaga kaput humeri tetap di sendi glenoid selama gerakan ayunan stick bertenaga tinggi.",
-            drills: "External/Internal Cable Rotations, Banded Face Pull",
-            risikoCedera: "Supraspinatus impingement & tendinitis"
-        },
-        {
-            namaLatin: "Pronator Teres & Flexor Carpi Radialis/Ulnaris",
-            namaUmum: "Fleksor & Pronator Pergelangan Tangan",
-            kategori: "Otot Kecil Lengan Bawah (Forearm)",
-            fungsiFloorball: "Menghasilkan 'snap' mikro di ujung stick untuk akurasi umpan pendek dan scooping bola.",
-            drills: "Wrist Roller, DB Wrist Flexion/Extension, Grip Squeeze",
-            risikoCedera: "Forearm pump, medial epicondylitis (Golfer's elbow)"
+            namaLatin: "Stapedius",
+            namaUmum: "Otot Tulang Pendengaran",
+            kategori: "Peringkat 1: Otot Terkecil Tubuh (~1 mm)",
+            fungsiFloorball: "Meredam transmisi getaran suara frekuensi tinggi akibat peluit wasit atau benturan bodi papan (rink).",
+            drills: "Tidak dilatih langsung (fisiologis otonom)",
+            risikoCedera: "Hiperakusis (sangat jarang terjadi)"
         },
         {
             namaLatin: "Popliteus",
             namaUmum: "Kunci Sendi Lutut",
-            kategori: "Otot Sangat Kecil Posterior Lutut",
-            fungsiFloorball: "Membuka kunci lutut dari posisi ekstensi penuh saat pivoting tajam.",
+            kategori: "Peringkat 2: Otot Mikro Stabilisator Sendi",
+            fungsiFloorball: "Membuka kunci rotasi lutut dari posisi ekstensi penuh saat pivoting tajam dan transisi langkah.",
             drills: "Terminal Knee Extensions (TKE), Single-leg balance band drills",
-            risikoCedera: "Popliteus strain akibat twisting lutut"
+            risikoCedera: "Popliteus strain akibat twisting lutut mendadak"
+        }
+    ],
+    kecil: [
+        {
+            namaLatin: "Flexor & Extensor Carpi",
+            namaUmum: "Lengan Bawah / Forearm & Wrist",
+            kategori: "Peringkat 3: Otot Distal Ekstremitas",
+            fungsiFloorball: "Menghasilkan akselerasi 'snap' mikro di ujung stick untuk akurasi drag shot, flick pass, dan ball handling cepat.",
+            drills: "Wrist Roller, DB Wrist Curls & Reverse Curls, Grip Squeeze",
+            risikoCedera: "Forearm pump, medial epicondylitis"
         },
         {
-            namaLatin: "Stapedius",
-            namaUmum: "Otot Pendengaran Tulang Tengah",
-            kategori: "Otot Terkecil Tubuh Manusia (~1 milimeter)",
-            fungsiFloorball: "Meredam transmisi getaran suara keras peluit wasit atau benturan bodi papan (rink).",
-            drills: "Tidak dilatih langsung (fisiologis otonom)",
-            risikoCedera: "Hiperakusis (jarang terjadi pada olahraga kontak)"
+            namaLatin: "Rotator Cuff (Supraspinatus, Infraspinatus, Teres Minor, Subscapularis)",
+            namaUmum: "Stabilisator Sendi Bahu",
+            kategori: "Peringkat 4: Otot Stabilisator Kaput Humeri",
+            fungsiFloorball: "Menjaga kaput humeri tetap di sendi glenoid selama gerakan ayunan stick bertenaga tinggi dan follow-through.",
+            drills: "Cable External/Internal Rotations, Banded Face Pull",
+            risikoCedera: "Shoulder impingement syndrome & tendinitis"
+        }
+    ],
+    sedang: [
+        {
+            namaLatin: "Obliquus Externus & Internus Abdominis",
+            namaUmum: "Otot Perut Samping / Rotator",
+            kategori: "Peringkat 5: Otot Inti (Kinetic Link Core)",
+            fungsiFloorball: "Mentransfer energi rotasi panggul ke stick saat drag shot dan counter-attack pivot.",
+            drills: "Landmine Rotational Press, Cable Woodchop, Russian Twist",
+            risikoCedera: "Sports hernia, abdominal strain"
+        },
+        {
+            namaLatin: "Deltoideus (Anterior, Lateral, Posterior)",
+            namaUmum: "Otot Bahu",
+            kategori: "Peringkat 6: Otot Sedang Shoulder Girdle",
+            fungsiFloorball: "Mengontrol posisi stick floorball pada sudut tinggi dan duel kontak badan bahu.",
+            drills: "Overhead Dumbbell Press, Lateral Raise, Upright Row",
+            risikoCedera: "Shoulder impingement, deltoid fatigue"
+        },
+        {
+            namaLatin: "Gastrocnemius & Soleus",
+            namaUmum: "Otot Betis",
+            kategori: "Peringkat 7: Otot Sedang Tungkai Bawah",
+            fungsiFloorball: "Propulsi langkah akselerasi awal, push-off lateral, dan serapan kejut tumit saat mendarat.",
+            drills: "Standing & Seated Calf Raise, Pogo Jump",
+            risikoCedera: "Achilles tendinitis, calf strain"
+        }
+    ],
+    besar: [
+        {
+            namaLatin: "Latissimus Dorsi & Pectoralis Major",
+            namaUmum: "Sayap / Punggung Lebar & Dada",
+            kategori: "Peringkat 8: Otot Besar Tubuh Bagian Atas",
+            fungsiFloorball: "Menghasilkan tenaga tarikan dan rotasi bahu saat melakukan shooting keras (slap & drag shot) serta duel badan.",
+            drills: "Weighted Pull-Up, Single-Arm DB Row, Bench Press",
+            risikoCedera: "Tightness rotasi toraks, pectoral strain"
+        },
+        {
+            namaLatin: "Hamstrings (Biceps Femoris, Semitendinosus, Semimembranosus)",
+            namaUmum: "Paha Belakang",
+            kategori: "Peringkat 9: Otot Besar Posterior Tungkai",
+            fungsiFloorball: "Deselerasi kecepatan tinggi, transisi lari cepat, dan proteksi ligamen ACL lutut.",
+            drills: "Nordic Hamstring Curl, Trap Bar RDL, Glute-Ham Raise",
+            risikoCedera: "Hamstring strain grade 1-3 saat full sprint"
+        },
+        {
+            namaLatin: "Quadriceps Femoris (Rectus Femoris & Vastus Group)",
+            namaUmum: "Paha Depan",
+            kategori: "Peringkat 10: Otot Besar Penggerak Tungkai",
+            fungsiFloorball: "Ekstensi lutut, deselerasi tiba-tiba (stopping/pivoting), dan power lompatan eksplosif.",
+            drills: "Barbell Back Squat, Front Squat, Bulgarian Split Squat",
+            risikoCedera: "Patellar tendinopathy (Jumper's Knee), strain rectus femoris"
+        },
+        {
+            namaLatin: "Gluteus Maximus",
+            namaUmum: "Otot Bokong Utama",
+            kategori: "Peringkat 11: Otot Terbesar Tubuh (Massa & Volume)",
+            fungsiFloorball: "Ekstensi panggul eksplosif saat sprint, akselerasi awal, dan stabilitas pendaratan.",
+            drills: "Barbell Hip Thrust, Heavy Kettlebell Swing, Deadlift",
+            risikoCedera: "Glute amnesia, overload kompensator pinggang"
         }
     ]
 };
@@ -7088,63 +7090,91 @@ function filterAnatomyGroup(groupKey) {
                     <div class="lg:col-span-6 bg-slate-950 rounded-3xl p-6 flex flex-col items-center justify-center relative shadow-inner border border-slate-800 min-h-[460px]">
                         <span class="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold mb-4">PILIH OTOT (ANTERIOR & POSTERIOR)</span>
                         
-                        <svg viewBox="0 0 280 420" class="w-full max-w-[260px] h-auto filter drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]">
-                            <!-- Garis Rangka Dasar Tubuh -->
-                            <g stroke="#334155" stroke-width="2" fill="#0f172a">
-                                <!-- Kepala -->
-                                <circle cx="140" cy="35" r="22" />
-                                <!-- Leher -->
-                                <rect x="133" y="57" width="14" height="15" rx="3" />
-                                <!-- Batang Tubuh -->
-                                <path d="M105 72 L175 72 L165 195 L115 195 Z" />
-                                <!-- Lengan Kiri & Kanan -->
-                                <path d="M105 75 L75 160 L62 230" stroke-linecap="round" stroke-width="12" />
-                                <path d="M175 75 L205 160 L218 230" stroke-linecap="round" stroke-width="12" />
-                                <!-- Tungkai Kiri & Kanan -->
-                                <path d="M123 195 L115 300 L110 395" stroke-linecap="round" stroke-width="20" />
-                                <path d="M157 195 L165 300 L170 395" stroke-linecap="round" stroke-width="20" />
-                            </g>
+                        <svg viewBox="0 0 280 440" class="w-full max-w-[280px] h-auto filter drop-shadow-[0_0_20px_rgba(56,189,248,0.25)] select-none">
+    <!-- DEFINISI FILTER GLOW & GRADASI WARNA -->
+    <defs>
+        <linearGradient id="bodyBaseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0F172A" />
+            <stop offset="100%" stop-color="#020617" />
+        </linearGradient>
+        <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+    </defs>
 
-                            <!-- AREA OTOT INTERAKTIF (KLIK UNTUK MEMILIH) -->
-                            <!-- Bahu / Deltoid -->
-                            <circle id="hotspot-deltoid" onclick="highlightMuscleGroup('deltoid')" cx="95" cy="85" r="14" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-125 hover:fill-amber-400" />
-                            <circle id="hotspot-deltoid-r" onclick="highlightMuscleGroup('deltoid')" cx="185" cy="85" r="14" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-125 hover:fill-amber-400" />
-                            
-                            <!-- Sayap / Lats -->
-                            <path id="hotspot-lats" onclick="highlightMuscleGroup('lats')" d="M112 105 Q125 130 118 165 L108 135 Z" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-1 transition-all hover:fill-amber-400" />
-                            <path id="hotspot-lats-r" onclick="highlightMuscleGroup('lats')" d="M168 105 Q155 130 162 165 L172 135 Z" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-1 transition-all hover:fill-amber-400" />
+    <!-- 1. SILUET DASAR KONTUR TUBUH ATLETIS -->
+    <g stroke="#1E293B" stroke-width="1.5" fill="url(#bodyBaseGrad)">
+        <!-- Kepala & Rahang Atletis -->
+        <path d="M140 12 C126 12 118 24 118 38 C118 52 128 62 140 66 C152 62 162 52 162 38 C162 24 154 12 140 12 Z" />
+        <!-- Leher & Trapezius Atas -->
+        <path d="M130 64 L120 74 L160 74 L150 64 Z" />
+        <!-- Siluet Garis Luar Lengan & Tungkai -->
+        <path d="M102 76 L70 148 L56 220 L66 222 L82 154 L110 88 Z" />
+        <path d="M178 76 L210 148 L224 220 L214 222 L198 154 L170 88 Z" />
+        <path d="M112 195 L96 305 L92 410 L108 410 L118 315 L132 205 Z" />
+        <path d="M168 195 L184 305 L188 410 L172 410 L162 315 L148 205 Z" />
+    </g>
 
-                            <!-- Perut Samping / Oblique -->
-                            <rect id="hotspot-oblique" onclick="highlightMuscleGroup('oblique')" x="122" y="140" width="36" height="28" rx="8" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-110 hover:fill-amber-400" />
+    <!-- 2. HOTSPOT KELOMPOK OTOT (KLIK UNTUK MEMILIH) -->
 
-                            <!-- Lengan Bawah / Forearm & Wrist -->
-                            <rect id="hotspot-forearm" onclick="highlightMuscleGroup('forearm')" x="60" y="180" width="14" height="40" rx="6" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-1 transition-all hover:scale-110 hover:fill-amber-400" />
-                            <rect id="hotspot-forearm-r" onclick="highlightMuscleGroup('forearm')" x="206" y="180" width="14" height="40" rx="6" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-1 transition-all hover:scale-110 hover:fill-amber-400" />
+    <!-- BAHU / DELTOIDEUS (Kiri & Kanan) -->
+    <g id="hotspot-deltoid" onclick="highlightMuscleGroup('deltoid')" class="muscle-hotspot cursor-pointer transition-all duration-300">
+        <path d="M102 75 C90 80 84 94 86 108 C88 116 94 120 100 114 C104 104 108 90 112 80 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400 hover:scale-105 transform origin-center" />
+        <path d="M178 75 C190 80 196 94 194 108 C192 116 186 120 180 114 C176 104 172 90 168 80 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400 hover:scale-105 transform origin-center" />
+    </g>
 
-                            <!-- Bokong / Gluteus -->
-                            <ellipse id="hotspot-glute" onclick="highlightMuscleGroup('glute')" cx="140" cy="205" rx="30" ry="16" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-110 hover:fill-amber-400" />
+    <!-- DADA & SAYAP / LATISSIMUS DORSI (V-Taper Toraks) -->
+    <g id="hotspot-lats" onclick="highlightMuscleGroup('lats')" class="muscle-hotspot cursor-pointer transition-all duration-300">
+        <path d="M112 86 C124 86 136 94 136 112 C130 134 116 156 112 162 C108 140 106 112 112 86 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+        <path d="M168 86 C156 86 144 94 144 112 C150 134 164 156 168 162 C172 140 174 112 168 86 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+    </g>
 
-                            <!-- Paha Depan / Quadriceps -->
-                            <rect id="hotspot-quads" onclick="highlightMuscleGroup('quads')" x="105" y="225" width="22" height="65" rx="10" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-110 hover:fill-amber-400" />
-                            <rect id="hotspot-quads-r" onclick="highlightMuscleGroup('quads')" x="153" y="225" width="22" height="65" rx="10" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-110 hover:fill-amber-400" />
+    <!-- OTOT PERUT & ROTATOR / OBLIQUUS -->
+    <g id="hotspot-oblique" onclick="highlightMuscleGroup('oblique')" class="muscle-hotspot cursor-pointer transition-all duration-300">
+        <path d="M124 124 C132 120 148 120 156 124 C158 144 154 168 152 178 C144 182 136 182 128 178 C126 168 122 144 124 124 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+    </g>
 
-                            <!-- Paha Belakang / Hamstring -->
-                            <circle id="hotspot-hamstring" onclick="highlightMuscleGroup('hamstring')" cx="140" cy="285" r="12" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-125 hover:fill-amber-400" />
+    <!-- LENGAN BAWAH / FOREARM & WRIST FLEXORS -->
+    <g id="hotspot-forearm" onclick="highlightMuscleGroup('forearm')" class="muscle-hotspot cursor-pointer transition-all duration-300">
+        <path d="M72 152 C64 172 58 198 56 218 C62 220 68 218 72 212 C76 196 80 174 84 156 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+        <path d="M208 152 C216 172 222 198 224 218 C218 220 212 218 208 212 C204 196 200 174 196 156 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+    </g>
 
-                            <!-- Betis / Calves -->
-                            <rect id="hotspot-calves" onclick="highlightMuscleGroup('calves')" x="102" y="320" width="18" height="50" rx="8" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-110 hover:fill-amber-400" />
-                            <rect id="hotspot-calves-r" onclick="highlightMuscleGroup('calves')" x="160" y="320" width="18" height="50" rx="8" class="muscle-hotspot cursor-pointer fill-blue-500/50 stroke-white stroke-2 transition-all hover:scale-110 hover:fill-amber-400" />
-                        </svg>
+    <!-- PANGGUL & BOKONG / GLUTEUS MAXIMUS -->
+    <g id="hotspot-glute" onclick="highlightMuscleGroup('glute')" class="muscle-hotspot cursor-pointer transition-all duration-300">
+        <path d="M116 182 C126 178 154 178 164 182 C172 192 170 214 158 222 C146 226 134 226 122 222 C110 214 108 192 116 182 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+    </g>
 
-                        <div class="mt-4 flex flex-wrap gap-2 justify-center">
-                            <span onclick="highlightMuscleGroup('glute')" class="cursor-pointer text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-700 font-bold">Bokong (Glute)</span>
-                            <span onclick="highlightMuscleGroup('quads')" class="cursor-pointer text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-700 font-bold">Paha Depan (Quads)</span>
-                            <span onclick="highlightMuscleGroup('hamstring')" class="cursor-pointer text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-700 font-bold">Hamstring</span>
-                            <span onclick="highlightMuscleGroup('lats')" class="cursor-pointer text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-700 font-bold">Punggung (Lats)</span>
-                            <span onclick="highlightMuscleGroup('oblique')" class="cursor-pointer text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-700 font-bold">Rotator Perut</span>
-                            <span onclick="highlightMuscleGroup('forearm')" class="cursor-pointer text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-700 font-bold">Pergelangan Tangan</span>
-                            <span onclick="highlightMuscleGroup('calves')" class="cursor-pointer text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1 rounded-lg border border-slate-700 font-bold">Betis</span>
-                        </div>
+    <!-- PAHA DEPAN / QUADRICEPS FEMORIS -->
+    <g id="hotspot-quads" onclick="highlightMuscleGroup('quads')" class="muscle-hotspot cursor-pointer transition-all duration-300">
+        <path d="M114 224 C126 224 134 238 132 268 C130 286 124 298 118 302 C110 298 102 278 104 250 C106 234 110 224 114 224 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+        <path d="M166 224 C154 224 146 238 148 268 C150 286 156 298 162 302 C170 298 178 278 176 250 C174 234 170 224 166 224 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+    </g>
+
+    <!-- KUNCI SENDI LUTUT & HAMSTRING / POPLITEUS & HAMSTRING -->
+    <g id="hotspot-hamstring" onclick="highlightMuscleGroup('hamstring')" class="muscle-hotspot cursor-pointer transition-all duration-300">
+        <ellipse cx="118" cy="306" rx="9" ry="6" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+        <ellipse cx="162" cy="306" rx="9" ry="6" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+    </g>
+
+    <!-- BETIS / GASTROCNEMIUS & SOLEUS -->
+    <g id="hotspot-calves" onclick="highlightMuscleGroup('calves')" class="muscle-hotspot cursor-pointer transition-all duration-300">
+        <path d="M116 316 C124 322 126 342 122 368 C118 388 112 398 108 398 C104 388 100 366 102 342 C104 324 110 316 116 316 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+        <path d="M164 316 C156 322 154 342 158 368 C162 388 168 398 172 398 C176 388 180 366 178 342 C176 324 170 316 164 316 Z" class="fill-sky-500/40 stroke-cyan-300/80 stroke-1 hover:fill-amber-400" />
+    </g>
+</svg>
+
+                        <div class="mt-4 flex flex-wrap gap-1.5 justify-center max-w-sm">
+    <span onclick="highlightMuscleGroup('forearm')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 px-2.5 py-1 rounded-xl border border-slate-800 font-bold transition">Pergelangan Tangan</span>
+    <span onclick="highlightMuscleGroup('deltoid')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 px-2.5 py-1 rounded-xl border border-slate-800 font-bold transition">Bahu (Deltoid)</span>
+    <span onclick="highlightMuscleGroup('oblique')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 px-2.5 py-1 rounded-xl border border-slate-800 font-bold transition">Rotator Perut</span>
+    <span onclick="highlightMuscleGroup('calves')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 px-2.5 py-1 rounded-xl border border-slate-800 font-bold transition">Betis (Calves)</span>
+    <span onclick="highlightMuscleGroup('lats')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 px-2.5 py-1 rounded-xl border border-slate-800 font-bold transition">Punggung / Dada</span>
+    <span onclick="highlightMuscleGroup('hamstring')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 px-2.5 py-1 rounded-xl border border-slate-800 font-bold transition">Hamstring</span>
+    <span onclick="highlightMuscleGroup('quads')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-400 px-2.5 py-1 rounded-xl border border-slate-800 font-bold transition">Paha Depan (Quads)</span>
+    <span onclick="highlightMuscleGroup('glute')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-400 px-2.5 py-1 rounded-xl border border-slate-800 font-black transition">Bokong (Gluteus Maximus)</span>
+</div>
                     </div>
 
                     <!-- DETAIL KARTU OTOT YANG SEDANG DIKLIK -->
