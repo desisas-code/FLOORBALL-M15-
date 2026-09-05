@@ -1360,15 +1360,6 @@ function stopLiveGpsTracking() {
         showToast("Live GPS Tracking dihentikan.", "success");
     }
 }
-
-// Fungsi Hentikan Tracking Lari
-function stopLiveGpsTracking() {
-    if (gpsWatchId !== null) {
-        navigator.geolocation.clearWatch(gpsWatchId);
-        gpsWatchId = null;
-        showToast("Live GPS Tracking dihentikan.", "success");
-    }
-}
         function escapeHTML(str) {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -6739,6 +6730,7 @@ function filterAnatomyGroup(groupKey) {
                 </table>
             </div>
         </div>
+	`;
 } else if (state.currentMenu === 'menu-10') {
     pageTitle.innerText = "Preskripsi, Program & Log Latihan Gym";
     const today = new Date().toISOString().split('T')[0];
