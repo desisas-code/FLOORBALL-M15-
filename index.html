@@ -7284,130 +7284,122 @@ function triggerHUDMuscle(muscleKey) {
         <span class="text-[10px] font-mono font-bold text-slate-400 bg-slate-900 px-2.5 py-1 rounded-full border border-slate-800">HUD v2.0</span>
     </div>
 
-    <!-- VIEWPORT SVG ANATOMI HUD (Tampil Sempurna & Berwarna) -->
-    <svg viewBox="0 0 240 500" class="w-full max-w-[230px] h-auto select-none">
-    <defs>
-        <!-- Filter Glow Neon Halus -->
-        <filter id="hudNeonGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-    </defs>
+    <!-- VIEWPORT SVG ANATOMI HUD (GAYA BLUEPRINT CYBER) -->
+    <div class="w-full flex items-center justify-center relative z-10 my-auto py-2">
+        <svg viewBox="0 0 240 500" class="w-full max-w-[230px] h-auto select-none">
+            <defs>
+                <filter id="hudNeonGlow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+            </defs>
 
-    <!-- 1. RANGKA DASAR / SILUET HITAM KELAM (Gaya Blueprint) -->
-    <g fill="#071224" stroke="#030712" stroke-width="2">
-        <!-- Kepala Oval Ramping -->
-        <ellipse cx="120" cy="48" rx="19" ry="27" />
-        <!-- Leher & Kolom Trapezius Dasar -->
-        <path d="M112 73 L106 90 L134 90 L128 73 Z" fill="#0c1e38" />
-        <!-- Pinggul / Crotch V-Cut Dasar -->
-        <polygon points="98,230 142,230 135,272 120,280 105,272" fill="#040a17" stroke="#020617" stroke-width="2" />
-        <!-- Tulang Lutut Bulat -->
-        <circle cx="89" cy="390" r="8" fill="#132a4a" />
-        <circle cx="151" cy="390" r="8" fill="#132a4a" />
-        <!-- Kaki Telapak Bawah -->
-        <polygon points="76,490 94,490 91,504 71,504" fill="#050e1c" />
-        <polygon points="164,490 146,490 149,504 169,504" fill="#050e1c" />
-    </g>
+            <!-- 1. RANGKA DASAR (SILUET BLUEPRINT GELAP) -->
+            <g fill="#071224" stroke="#030712" stroke-width="2">
+                <ellipse cx="120" cy="48" rx="19" ry="27" />
+                <path d="M112 73 L106 90 L134 90 L128 73 Z" fill="#0c1e38" />
+                <polygon points="98,230 142,230 135,272 120,280 105,272" fill="#040a17" stroke="#020617" stroke-width="2" />
+                <circle cx="89" cy="390" r="8" fill="#132a4a" />
+                <circle cx="151" cy="390" r="8" fill="#132a4a" />
+                <polygon points="76,490 94,490 91,504 71,504" fill="#050e1c" />
+                <polygon points="164,490 146,490 149,504 169,504" fill="#050e1c" />
+            </g>
 
-    <!-- 2. KELOMPOK OTOT PRESTASI INTERAKTIF (WARNA CYAN / BIRU TUA HUD) -->
+            <!-- 2. KELOMPOK OTOT INTERAKTIF -->
+            <!-- 1. STAPEDIUS -->
+            <g id="hotspot-stapedius" onclick="triggerHUDMuscle('stapedius')" class="cursor-pointer group">
+                <circle cx="120" cy="40" r="3.5" fill="#38bdf8" class="transition-transform group-hover:scale-150" />
+            </g>
 
-    <!-- OTOT MIKRO 1: STAPEDIUS (Titik Dengar Kepala) -->
-    <g id="hotspot-stapedius" onclick="triggerHUDMuscle('stapedius')" class="cursor-pointer group">
-        <circle cx="120" cy="40" r="3" fill="#38bdf8" class="transition-transform group-hover:scale-150" />
-    </g>
+            <!-- 2. POPLITEUS -->
+            <g id="hotspot-popliteus" onclick="triggerHUDMuscle('popliteus')" class="cursor-pointer group">
+                <circle cx="89" cy="390" r="7" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
+                <circle cx="151" cy="390" r="7" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
+            </g>
 
-    <!-- OTOT 2: POPLITEUS (Sendi Pengunci Belakang Lutut) -->
-    <g id="hotspot-popliteus" onclick="triggerHUDMuscle('popliteus')" class="cursor-pointer group">
-        <circle cx="89" cy="390" r="7" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
-        <circle cx="151" cy="390" r="7" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
-    </g>
+            <!-- 3. FOREARM -->
+            <g id="hotspot-forearm" onclick="triggerHUDMuscle('forearm')" class="cursor-pointer group">
+                <path d="M68 200 C62 230 52 270 48 285 C55 287 63 260 70 230 C74 210 72 200 68 200 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
+                <path d="M172 200 C178 230 188 270 192 285 C185 287 177 260 170 230 C166 210 168 200 172 200 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
+            </g>
 
-    <!-- OTOT 3: FOREARM / PERGELANGAN TANGAN & EXTENSOR -->
-    <g id="hotspot-forearm" onclick="triggerHUDMuscle('forearm')" class="cursor-pointer group">
-        <path d="M68 200 C62 230 52 270 48 285 C55 287 63 260 70 230 C74 210 72 200 68 200 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
-        <path d="M172 200 C178 230 188 270 192 285 C185 287 177 260 170 230 C166 210 168 200 172 200 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
-    </g>
+            <!-- 4. ROTATOR CUFF -->
+            <g id="hotspot-rotator" onclick="triggerHUDMuscle('rotator')" class="cursor-pointer group">
+                <ellipse cx="66" cy="174" rx="9" ry="24" transform="rotate(14 66 174)" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
+                <ellipse cx="174" cy="174" rx="9" ry="24" transform="rotate(-14 174 174)" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
+            </g>
 
-    <!-- OTOT 4: ROTATOR CUFF & BICEPS / TRICEPS -->
-    <g id="hotspot-rotator" onclick="triggerHUDMuscle('rotator')" class="cursor-pointer group">
-        <ellipse cx="66" cy="174" rx="9" ry="24" transform="rotate(14 66 174)" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
-        <ellipse cx="174" cy="174" rx="9" ry="24" transform="rotate(-14 174 174)" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" class="transition-all hover:fill-cyan-400" />
-    </g>
+            <!-- 5. DELTOID -->
+            <g id="hotspot-deltoid" onclick="triggerHUDMuscle('deltoid')" class="cursor-pointer group">
+                <path d="M72 104 C64 110 58 128 62 144 C67 146 72 134 76 122 C80 112 78 106 72 104 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.4" class="transition-all hover:fill-cyan-400" />
+                <path d="M168 104 C176 110 182 128 178 144 C173 146 168 134 164 122 C160 112 162 106 168 104 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.4" class="transition-all hover:fill-cyan-400" />
+                <path d="M60 102 C57 114 58 126 62 138 C64 126 68 114 66 102 Z" fill="#173860" />
+                <path d="M180 102 C183 114 182 126 178 138 C176 126 172 114 174 102 Z" fill="#173860" />
+            </g>
 
-    <!-- OTOT 5: DELTOID BAHU (Siku Sayap Atas Tajam) -->
-    <g id="hotspot-deltoid" onclick="triggerHUDMuscle('deltoid')" class="cursor-pointer group">
-        <path d="M72 104 C64 110 58 128 62 144 C67 146 72 134 76 122 C80 112 78 106 72 104 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.4" class="transition-all hover:fill-cyan-400" />
-        <path d="M168 104 C176 110 182 128 178 144 C173 146 168 134 164 122 C160 112 162 106 168 104 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.4" class="transition-all hover:fill-cyan-400" />
-        <!-- Deltoid Cap Samping -->
-        <path d="M60 102 C57 114 58 126 62 138 C64 126 68 114 66 102 Z" fill="#173860" />
-        <path d="M180 102 C183 114 182 126 178 138 C176 126 172 114 174 102 Z" fill="#173860" />
-    </g>
+            <!-- 8. LATS / DADA (NEON GLOW) -->
+            <g id="hotspot-lats" onclick="triggerHUDMuscle('lats')" class="cursor-pointer group">
+                <path d="M84 105 C100 96 114 100 117 114 C117 122 104 125 90 120 C81 116 80 110 84 105 Z" fill="#00f2fe" stroke="#ffffff" stroke-width="2" filter="url(#hudNeonGlow)" class="transition-all hover:brightness-125" />
+                <path d="M156 105 C140 96 126 100 123 114 C123 122 136 125 150 120 C159 116 160 110 156 105 Z" fill="#00f2fe" stroke="#ffffff" stroke-width="2" filter="url(#hudNeonGlow)" class="transition-all hover:brightness-125" />
+                <path d="M86 125 C98 122 112 124 116 138 C112 144 96 148 86 142 C82 135 82 128 86 125 Z" fill="#173c68" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+                <path d="M154 125 C142 122 128 124 124 138 C128 144 144 148 154 142 C158 135 158 128 154 125 Z" fill="#173c68" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+            </g>
 
-    <!-- OTOT 8: PECTORALIS DADA / SAYAP (Menyala Terang Neon Sesuai Gambar Contoh) -->
-    <g id="hotspot-lats" onclick="triggerHUDMuscle('lats')" class="cursor-pointer group">
-        <!-- Dada Kiri Melengkung Tajam -->
-        <path d="M84 105 C100 96 114 100 117 114 C117 122 104 125 90 120 C81 116 80 110 84 105 Z" fill="#00f2fe" stroke="#ffffff" stroke-width="2" filter="url(#hudNeonGlow)" class="transition-all hover:brightness-125" />
-        <!-- Dada Kanan Melengkung Tajam -->
-        <path d="M156 105 C140 96 126 100 123 114 C123 122 136 125 150 120 C159 116 160 110 156 105 Z" fill="#00f2fe" stroke="#ffffff" stroke-width="2" filter="url(#hudNeonGlow)" class="transition-all hover:brightness-125" />
-        
-        <!-- Pectoralis Bawah / Serratus Anterior Samping -->
-        <path d="M86 125 C98 122 112 124 116 138 C112 144 96 148 86 142 C82 135 82 128 86 125 Z" fill="#173c68" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-        <path d="M154 125 C142 122 128 124 124 138 C128 144 144 148 154 142 C158 135 158 128 154 125 Z" fill="#173c68" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-    </g>
+            <!-- 6. ABS / CORE -->
+            <g id="hotspot-oblique" onclick="triggerHUDMuscle('oblique')" class="cursor-pointer group">
+                <rect x="100" y="146" width="18" height="15" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
+                <rect x="122" y="146" width="18" height="15" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
+                <rect x="100" y="164" width="18" height="15" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
+                <rect x="122" y="164" width="18" height="15" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
+                <rect x="100" y="182" width="18" height="18" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
+                <rect x="122" y="182" width="18" height="18" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
+                <path d="M78 150 C86 170 88 190 86 210 C80 200 74 180 74 160 Z" fill="#143256" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
+                <path d="M162 150 C154 170 152 190 154 210 C160 200 166 180 166 160 Z" fill="#143256" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
+            </g>
 
-    <!-- OTOT 6: RECTUS ABDOMINIS & OBLIQUES (Kotak Sixpack Rapat) -->
-    <g id="hotspot-oblique" onclick="triggerHUDMuscle('oblique')" class="cursor-pointer group">
-        <!-- Kolom Abs Tengah -->
-        <rect x="100" y="146" width="18" height="15" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
-        <rect x="122" y="146" width="18" height="15" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
-        <rect x="100" y="164" width="18" height="15" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
-        <rect x="122" y="164" width="18" height="15" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
-        <rect x="100" y="182" width="18" height="18" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
-        <rect x="122" y="182" width="18" height="18" rx="2" fill="#183f6f" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
-        
-        <!-- Oblique Flanks Samping (Garis Pinggang V-Taper) -->
-        <path d="M78 150 C86 170 88 190 86 210 C80 200 74 180 74 160 Z" fill="#143256" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
-        <path d="M162 150 C154 170 152 190 154 210 C160 200 166 180 166 160 Z" fill="#143256" stroke="#0284c7" stroke-width="1" class="hover:fill-cyan-400" />
-    </g>
+            <!-- 11. GLUTEUS -->
+            <g id="hotspot-glute" onclick="triggerHUDMuscle('glute')" class="cursor-pointer group">
+                <path d="M98 226 C110 220 130 220 142 226 C144 246 132 262 120 262 C108 262 96 246 98 226 Z" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+            </g>
 
-    <!-- OTOT 11: GLUTEUS MAXIMUS / PELVIS BASE -->
-    <g id="hotspot-glute" onclick="triggerHUDMuscle('glute')" class="cursor-pointer group">
-        <path d="M98 226 C110 220 130 220 142 226 C144 246 132 262 120 262 C108 262 96 246 98 226 Z" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-    </g>
+            <!-- 10. QUADS & 9. HAMSTRINGS -->
+            <g id="hotspot-quads" onclick="triggerHUDMuscle('quads')" class="cursor-pointer group">
+                <ellipse cx="86" cy="305" rx="10" ry="50" transform="rotate(6 86 305)" fill="#1c477b" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+                <ellipse cx="106" cy="318" rx="7" ry="40" transform="rotate(-3 106 318)" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+                <ellipse cx="154" cy="305" rx="10" ry="50" transform="rotate(-6 154 305)" fill="#1c477b" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+                <ellipse cx="134" cy="318" rx="7" ry="40" transform="rotate(3 134 318)" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+            </g>
 
-    <!-- OTOT 9 & 10: QUADRICEPS & HAMSTRINGS (Tungkai Atas Memanjang Ramping) -->
-    <g id="hotspot-quads" onclick="triggerHUDMuscle('quads')" class="cursor-pointer group">
-        <!-- Paha Luar Kiri -->
-        <ellipse cx="86" cy="305" rx="10" ry="50" transform="rotate(6 86 305)" fill="#1c477b" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-        <!-- Paha Dalam Kiri (Adductor/Vastus Medialis) -->
-        <ellipse cx="106" cy="318" rx="7" ry="40" transform="rotate(-3 106 318)" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-        
-        <!-- Paha Luar Kanan -->
-        <ellipse cx="154" cy="305" rx="10" ry="50" transform="rotate(-6 154 305)" fill="#1c477b" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-        <!-- Paha Dalam Kanan -->
-        <ellipse cx="134" cy="318" rx="7" ry="40" transform="rotate(3 134 318)" fill="#15365e" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-    </g>
+            <g id="hotspot-hamstring" onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer group opacity-90">
+                <path d="M96 350 C94 365 96 376 98 382 C92 376 88 365 88 350 Z" fill="#183f6f" />
+                <path d="M144 350 C146 365 144 376 142 382 C148 376 152 365 152 350 Z" fill="#183f6f" />
+            </g>
 
-    <g id="hotspot-hamstring" onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer group opacity-90">
-        <path d="M96 350 C94 365 96 376 98 382 C92 376 88 365 88 350 Z" fill="#183f6f" />
-        <path d="M144 350 C146 365 144 376 142 382 C148 376 152 365 152 350 Z" fill="#183f6f" />
-    </g>
-
-    <!-- OTOT 7: CALVES & TIBIALIS (Betis dan Tulang Kering Bawah) -->
-    <g id="hotspot-calves" onclick="triggerHUDMuscle('calves')" class="cursor-pointer group">
-        <!-- Betis Luar Kiri -->
-        <ellipse cx="84" cy="436" rx="8" ry="44" fill="#1c477b" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-        <!-- Tibialis Kering Kiri -->
-        <rect x="94" y="405" width="4" height="66" rx="2" fill="#143256" />
-
-        <!-- Betis Luar Kanan -->
-        <ellipse cx="156" cy="436" rx="8" ry="44" fill="#1c477b" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
-        <!-- Tibialis Kering Kanan -->
-        <rect x="142" y="405" width="4" height="66" rx="2" fill="#143256" />
-    </g>
-</svg>
+            <!-- 7. CALVES -->
+            <g id="hotspot-calves" onclick="triggerHUDMuscle('calves')" class="cursor-pointer group">
+                <ellipse cx="84" cy="436" rx="8" ry="44" fill="#1c477b" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+                <rect x="94" y="405" width="4" height="66" rx="2" fill="#143256" />
+                <ellipse cx="156" cy="436" rx="8" ry="44" fill="#1c477b" stroke="#0284c7" stroke-width="1.2" class="hover:fill-cyan-400" />
+                <rect x="142" y="405" width="4" height="66" rx="2" fill="#143256" />
+            </g>
+        </svg>
     </div>
+
+    <!-- TOMBOL PILIH OTOT (TERKUNCI DI DALAM BINGKAI BAWAH) -->
+    <div class="w-full pt-3 border-t border-slate-800/80 flex flex-wrap gap-1.5 justify-center z-10">
+        <span onclick="triggerHUDMuscle('stapedius')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">1. Stapedius</span>
+        <span onclick="triggerHUDMuscle('popliteus')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">2. Popliteus</span>
+        <span onclick="triggerHUDMuscle('forearm')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">3. Forearm</span>
+        <span onclick="triggerHUDMuscle('rotator')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">4. Rotator</span>
+        <span onclick="triggerHUDMuscle('deltoid')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">5. Bahu</span>
+        <span onclick="triggerHUDMuscle('oblique')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">6. Abs/Core</span>
+        <span onclick="triggerHUDMuscle('calves')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">7. Betis</span>
+        <span onclick="triggerHUDMuscle('lats')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">8. Lats/Dada</span>
+        <span onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">9. Hamstring</span>
+        <span onclick="triggerHUDMuscle('quads')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">10. Quads</span>
+        <span onclick="triggerHUDMuscle('glute')" class="cursor-pointer text-[9px] bg-cyan-950 hover:bg-cyan-900 text-cyan-300 px-3 py-1 rounded-lg border border-cyan-500/50 font-black transition shadow-sm">11. Gluteus</span>
+    </div>
+</div>
 
     <!-- Tombol Navigasi Cepat (Urut Terkecil ke Terbesar) -->
     <div class="w-full pt-3 border-t border-slate-800/80 flex flex-wrap gap-1.5 justify-center z-10">
