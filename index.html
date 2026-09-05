@@ -6622,7 +6622,11 @@ ${(() => {
     }
     return listRpe.map(r => {
         const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
-        const namaTampil = pObj ? escapeHTML(pObj.nama) : (r.namaAtlet ? escapeHTML(r.namaAtlet) : 'Atlet Skuad');
+let namaBersih = pObj ? pObj.nama : r.namaAtlet;
+if (!namaBersih || namaBersih.includes("GMT") || namaBersih.includes("2026")) {
+    namaBersih = pObj ? pObj.nama : "Atlet Skuad";
+}
+const namaTampil = escapeHTML(namaBersih);
         const loadVal = r.sRPE || (r.rpeVal * r.durasi) || 0;
 
         return `
