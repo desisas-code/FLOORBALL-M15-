@@ -7261,20 +7261,101 @@ function trigger3DMuscleSelect(muscleKey) {
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                    <!-- KONTINER 3D ANATOMI INTERAKTIF -->
-<div class="lg:col-span-6 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 rounded-3xl p-5 flex flex-col items-center justify-between relative shadow-2xl border border-slate-800 min-h-[560px] overflow-hidden">
-    <div class="w-full flex items-center justify-between z-10">
-        <span class="bg-cyan-950/80 text-cyan-400 border border-cyan-500/40 text-[10px] font-mono px-3 py-1 rounded-full shadow-lg backdrop-blur-md flex items-center gap-1.5">
-            <i class="fa-solid fa-arrows-rotate animate-spin text-[10px]"></i> Drag / Putar 360° • Zoom • Klik Otot
+                    <!-- KONTINER PETA ANATOMI BLUEPRINT HUD -->
+<div class="lg:col-span-6 bg-[#070e1b] rounded-3xl p-5 flex flex-col items-center justify-between relative shadow-2xl border border-cyan-500/30 min-h-[580px] overflow-hidden">
+    
+    <!-- Latar Belakang Grid Blueprint -->
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+
+    <!-- Header Indikator -->
+    <div class="w-full flex items-center justify-between z-10 mb-2">
+        <span class="bg-cyan-950/90 text-cyan-400 border border-cyan-500/40 text-[10px] font-mono px-3 py-1 rounded-full shadow-lg backdrop-blur-md flex items-center gap-1.5">
+            <i class="fa-solid fa-crosshairs text-[10px] animate-pulse"></i> KLIK BAGIAN OTOT PADA DIAGRAM
         </span>
-        <span class="text-[10px] font-extrabold text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700">3D Fiber Anatomy</span>
+        <span class="text-[10px] font-mono font-bold text-slate-400 bg-slate-900 px-2.5 py-1 rounded-full border border-slate-800">HUD v2.0</span>
     </div>
 
-    <!-- Viewport Canvas 3D -->
-    <div id="anatomy-3d-canvas" class="w-full h-[430px] cursor-grab active:cursor-grabbing rounded-2xl relative my-1"></div>
+    <!-- VIEWPORT SVG ANATOMI HUD (Tampil Sempurna & Berwarna) -->
+    <div class="w-full flex items-center justify-center relative z-10 my-auto py-2">
+        <svg viewBox="0 0 280 480" class="w-full max-w-[250px] h-auto select-none filter drop-shadow-[0_0_10px_rgba(56,189,248,0.3)]">
+            
+            <!-- KEPALA & LEHER -->
+            <g fill="#16253b" stroke="#020617" stroke-width="2">
+                <ellipse cx="140" cy="35" rx="22" ry="28" />
+                <rect x="131" y="60" width="18" height="15" rx="4" />
+                <path d="M105 78 L140 85 L175 78 L160 92 L120 92 Z" fill="#111d2e" />
+                <path d="M120 220 L160 220 L155 255 L125 255 Z" fill="#111d2e" />
+            </g>
 
-    <!-- Navigasi Pintas Seleksi Otot (Terkecil -> Terbesar) -->
-    <!-- Navigasi Pintas Seleksi Otot (Terkecil -> Terbesar) -->
+            <!-- 1. STAPEDIUS & 2. POPLITEUS -->
+            <g id="hotspot-stapedius" onclick="triggerHUDMuscle('stapedius')" class="cursor-pointer group">
+                <circle cx="140" cy="22" r="4" fill="#38bdf8" class="transition-transform group-hover:scale-150" />
+            </g>
+            <g id="hotspot-popliteus" onclick="triggerHUDMuscle('popliteus')" class="cursor-pointer group">
+                <circle cx="128" cy="340" r="7" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <circle cx="152" cy="340" r="7" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 3. FOREARM -->
+            <g id="hotspot-forearm" onclick="triggerHUDMuscle('forearm')" class="cursor-pointer group">
+                <ellipse cx="80" cy="180" rx="9" ry="32" transform="rotate(12 80 180)" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <ellipse cx="200" cy="180" rx="9" ry="32" transform="rotate(-12 200 180)" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 4. ROTATOR CUFF -->
+            <g id="hotspot-rotator" onclick="triggerHUDMuscle('rotator')" class="cursor-pointer group">
+                <ellipse cx="98" cy="120" rx="10" ry="22" transform="rotate(25 98 120)" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <ellipse cx="182" cy="120" rx="10" ry="22" transform="rotate(-25 182 120)" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 5. DELTOID -->
+            <g id="hotspot-deltoid" onclick="triggerHUDMuscle('deltoid')" class="cursor-pointer group">
+                <path d="M102 82 C90 85 82 100 88 115 C96 112 108 102 114 90 Z" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.8" class="transition-all group-hover:fill-cyan-400" />
+                <path d="M178 82 C190 85 198 100 192 115 C184 112 172 102 166 90 Z" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.8" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 6. OBLIQUE & ABS -->
+            <g id="hotspot-oblique" onclick="triggerHUDMuscle('oblique')" class="cursor-pointer group">
+                <rect x="128" y="142" width="22" height="20" rx="3" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <rect x="152" y="142" width="22" height="20" rx="3" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <rect x="128" y="165" width="22" height="20" rx="3" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <rect x="152" y="165" width="22" height="20" rx="3" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <rect x="128" y="188" width="22" height="20" rx="3" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <rect x="152" y="188" width="22" height="20" rx="3" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 7. LATS / DADA -->
+            <g id="hotspot-lats" onclick="triggerHUDMuscle('lats')" class="cursor-pointer group">
+                <path d="M118 95 C128 92 152 92 162 95 C168 108 156 128 140 128 C124 128 112 108 118 95 Z" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.8" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 8. CALVES (BETIS) -->
+            <g id="hotspot-calves" onclick="triggerHUDMuscle('calves')" class="cursor-pointer group">
+                <ellipse cx="120" cy="410" rx="10" ry="40" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <ellipse cx="160" cy="410" rx="10" ry="40" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 9. HAMSTRINGS -->
+            <g id="hotspot-hamstring" onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer group">
+                <ellipse cx="123" cy="295" rx="11" ry="38" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <ellipse cx="157" cy="295" rx="11" ry="38" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 10. QUADS (PAHA) -->
+            <g id="hotspot-quads" onclick="triggerHUDMuscle('quads')" class="cursor-pointer group">
+                <ellipse cx="123" cy="295" rx="11" ry="38" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+                <ellipse cx="157" cy="295" rx="11" ry="38" fill="#1e3a8a" stroke="#38bdf8" stroke-width="1.5" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+            <!-- 11. GLUTEUS (BOKONG) -->
+            <g id="hotspot-glute" onclick="triggerHUDMuscle('glute')" class="cursor-pointer group">
+                <path d="M122 225 C132 215 168 215 178 225 C182 240 162 255 140 255 C118 255 98 240 122 225 Z" fill="#1e3a8a" stroke="#38bdf8" stroke-width="2" class="transition-all group-hover:fill-cyan-400" />
+            </g>
+
+        </svg>
+    </div>
+
+    <!-- Tombol Navigasi Cepat (Urut Terkecil ke Terbesar) -->
     <div class="w-full pt-3 border-t border-slate-800/80 flex flex-wrap gap-1.5 justify-center z-10">
         <span onclick="triggerHUDMuscle('stapedius')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">1. Stapedius</span>
         <span onclick="triggerHUDMuscle('popliteus')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">2. Popliteus</span>
@@ -7282,10 +7363,10 @@ function trigger3DMuscleSelect(muscleKey) {
         <span onclick="triggerHUDMuscle('rotator')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">4. Rotator</span>
         <span onclick="triggerHUDMuscle('deltoid')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">5. Bahu</span>
         <span onclick="triggerHUDMuscle('oblique')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">6. Abs/Core</span>
-        <span onclick="triggerHUDMuscle('calves')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold transition">7. Betis</span>
-        <span onclick="triggerHUDMuscle('lats')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold transition">8. Lats/Dada</span>
-        <span onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold transition">9. Hamstring</span>
-        <span onclick="triggerHUDMuscle('quads')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold transition">10. Quads</span>
+        <span onclick="triggerHUDMuscle('calves')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">7. Betis</span>
+        <span onclick="triggerHUDMuscle('lats')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">8. Lats/Dada</span>
+        <span onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">9. Hamstring</span>
+        <span onclick="triggerHUDMuscle('quads')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 font-bold transition">10. Quads</span>
         <span onclick="triggerHUDMuscle('glute')" class="cursor-pointer text-[9px] bg-cyan-950 hover:bg-cyan-900 text-cyan-300 px-3 py-1 rounded-lg border border-cyan-500/50 font-black transition shadow-sm">11. Gluteus</span>
     </div>
 </div>
