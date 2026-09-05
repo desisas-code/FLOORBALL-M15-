@@ -1706,6 +1706,84 @@ function autoFillGymDrill(presetKey) {
     if (document.getElementById('gym-set-rep')) document.getElementById('gym-set-rep').value = data.setRep;
 }
 
+		function selectGymProgramPackage(pkgKey) {
+    const packages = {
+        hypertrophy_aa: {
+            title: "Fase 1 (TPU): Anatomical Adaptation & Base Hypertrophy",
+            desc: "Fokus: Penguatan tendon/ligamen, stabilitas sendi, dan adaptasi beban awal sebelum intensitas tinggi.",
+            drills: [
+                { name: "Barbell Back Squat (Tempo 3-0-1)", sets: "3-4 Set × 10-12 Reps", load: "60-65% 1RM", rest: "60s" },
+                { name: "Dumbbell Romanian Deadlift (RDL)", sets: "3 Set × 12 Reps", load: "60% 1RM", rest: "60s" },
+                { name: "Push-Up to Plank Hold", sets: "3 Set × 15 Reps + 30s Hold", load: "Bodyweight", rest: "45s" },
+                { name: "Cable Pallof Press & Hold", sets: "3 Set × 12 Reps/Sisi", load: "Ringan-Sedang", rest: "45s" }
+            ]
+        },
+        max_strength: {
+            title: "Fase 2 (TPK): Maximum Strength (MxS)",
+            desc: "Fokus: Merekrut unit motorik maksimal otot tungkai dan panggul untuk pondasi power akselerasi.",
+            drills: [
+                { name: "Trap Bar Deadlift (Explosive Drive)", sets: "4-5 Set × 4-6 Reps", load: "80-85% 1RM", rest: "120s" },
+                { name: "Barbell Front Squat", sets: "4 Set × 5-6 Reps", load: "75-80% 1RM", rest: "90s" },
+                { name: "Weighted Pull-Up / Lat Pulldown", sets: "4 Set × 6 Reps", load: "75-80% 1RM", rest: "90s" },
+                { name: "Single-Arm Dumbbell Row", sets: "3 Set × 6-8 Reps/Sisi", load: "Beban Berat", rest: "60s" }
+            ]
+        },
+        conversion_power: {
+            title: "Fase 3 (Pra-Kompetisi): Conversion to Power & SAQ",
+            desc: "Fokus: Mentransfer kekuatan maksimal menjadi daya ledak rotasi drag shot dan akselerasi pivot.",
+            drills: [
+                { name: "Plyometric Box Jump (Landing Focus)", sets: "4 Set × 5 Reps", load: "Bodyweight", rest: "90s" },
+                { name: "Landmine Rotational Punch/Press", sets: "3 Set × 6 Reps/Sisi", load: "Cepat & Eksplosif", rest: "60s" },
+                { name: "Dumbbell Jump Squat", sets: "3 Set × 6 Reps", load: "20-30% 1RM", rest: "90s" },
+                { name: "Medicine Ball Rotational Wall Slam", sets: "4 Set × 8 Reps/Sisi", load: "4-6 kg Ball", rest: "60s" }
+            ]
+        },
+        gk_special: {
+            title: "Spesifik Posisi: Goalkeeper Conditioning & Mobility",
+            desc: "Fokus: Fleksibilitas adduktor, knee slides recovery, dan kecepatan reaksi otot gelang bahu.",
+            drills: [
+                { name: "Kneeling Jump to Balance Stance", sets: "4 Set × 5 Reps", load: "Bodyweight", rest: "60s" },
+                { name: "Cossack Squat / Lateral Hip Flow", sets: "3 Set × 8 Reps/Sisi", load: "Bodyweight / Light DB", rest: "45s" },
+                { name: "Resistance Band Rotator Cuff (Ext/Int)", sets: "3 Set × 15 Reps", load: "Light Band", rest: "30s" },
+                { name: "Medicine Ball Chest Pass from Kneeling", sets: "4 Set × 8 Reps", load: "3-5 kg Ball", rest: "45s" }
+            ]
+        }
+    };
+
+    const target = packages[pkgKey] || packages.hypertrophy_aa;
+    const detailBox = document.getElementById('gym-program-detail-card');
+
+    ['hypertrophy_aa', 'max_strength', 'conversion_power', 'gk_special'].forEach(k => {
+        const btn = document.getElementById(`btn-pkg-${k}`);
+        if (btn) {
+            if (k === pkgKey) btn.classList.add('border-cyan-400', 'bg-slate-800');
+            else btn.classList.remove('border-cyan-400');
+        }
+    });
+
+    if (detailBox) {
+        detailBox.innerHTML = `
+            <div class="border-b border-slate-800 pb-3">
+                <h4 class="font-black text-sm text-cyan-300 font-display">${target.title}</h4>
+                <p class="text-xs text-slate-400 mt-1">${target.desc}</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                ${target.drills.map(d => `
+                    <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-slate-200 block">${escapeHTML(d.name)}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">${d.load} • Rest: ${d.rest}</span>
+                        </div>
+                        <span class="bg-cyan-950 text-cyan-400 border border-cyan-500/40 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold shrink-0">
+                            ${d.sets}
+                        </span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+}
+		
 // KALKULATOR 1RM (ONE REP MAX)
 function calculate1RM() {
     const weight = parseFloat(document.getElementById('calc-weight')?.value || 0);
@@ -3397,14 +3475,14 @@ function renderMatchHeatmap() {
 
         <!-- 6. LAPANGAN TAKTIS SPASIAL & CONTROLLER AKSI -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-            <div class="col-span-12 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md">
+            <div class="lg:col-span-8 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md">
                 <div class="flex gap-2 mb-4">
                     <button onclick="setSpatialEventType('loss')" class="flex-1 py-2.5 rounded-2xl font-black text-xs transition-all ${state.matchLive.activeSpatialEventType === 'loss' ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Kehilangan</button>
                     <button onclick="setSpatialEventType('intercept')" class="flex-1 py-2.5 rounded-2xl font-black text-xs transition-all ${state.matchLive.activeSpatialEventType === 'intercept' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Cut Bola</button>
                     <button onclick="setSpatialEventType('shoot_att')" class="flex-1 py-2.5 rounded-2xl font-black text-xs transition-all ${state.matchLive.activeSpatialEventType === 'shoot_att' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">Shoot</button>
                 </div>
 
-                <div class="relative w-full aspect-[2/1] min-h-[420px] bg-[#0066B2] rounded-[24px] sm:rounded-[30px] border-[5px] sm:bo
+                <div onclick="handleCourtClick(event)" class="relative w-full aspect-[2/1] min-h-[380px] bg-[#0066B2] rounded-[24px] sm:rounded-[30px] border-[5px] sm:border-[8px] border-white shadow-2xl overflow-hidden cursor-crosshair">
                     <div id="court-heatmap-layer" class="absolute inset-0 pointer-events-none z-0"></div>
                     <div class="absolute inset-0 pointer-events-none z-10">
                         <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white/90"></div>
@@ -3423,15 +3501,16 @@ function renderMatchHeatmap() {
                     <div class="relative z-20 w-full h-full pointer-events-none">
                         ${state.matchLive.spatialEvents.map(ev => `
                             <div onclick="event.stopPropagation();" class="pointer-events-auto absolute w-5 h-5 sm:w-6 sm:h-6 bg-amber-400 text-slate-900 rounded-full flex items-center justify-center font-black text-[10px] shadow-lg -translate-x-1/2 -translate-y-1/2 border border-slate-900" style="left: ${ev.x}%; top: ${ev.y}%;">
-                                ${escapeHTML(state.atlet.find(a => a.id === ev.playerId)?.nama.charAt(0) || '?')}
+                                ${escapeHTML(state.atlet.find(a => String(a.id) === String(ev.playerId))?.nama.charAt(0) || '?')}
                             </div>
                         `).join('')}
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-4 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-
+            <div class="lg:col-span-4 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-[28px] border border-slate-200/80 shadow-md">
                 <div>
+
                     <div class="grid grid-cols-3 gap-1.5 mb-4">
                         ${activeOnCourtPlayerIds.map(pId => {
                             const pObj = state.atlet.find(a => a.id === pId);
@@ -6603,7 +6682,7 @@ function filterAnatomyGroup(groupKey) {
                 </button>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[700px]">
+                <table class="w-full text-left border-collapse min-w-[750px]">
                     <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
                         <tr>
                             <th class="p-4">Tanggal</th>
@@ -6612,45 +6691,54 @@ function filterAnatomyGroup(groupKey) {
                             <th class="p-4 text-center">Durasi</th>
                             <th class="p-4 text-center">Max HR</th>
                             <th class="p-4 text-center">Session Load</th>
+                            <th class="p-4 text-center w-20">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-${(() => {
-    const listRpe = loadStorage('rpeLogs', state.rpeLogs || []);
-    if (!listRpe || listRpe.length === 0) {
-        return `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan RPE yang masuk dari atlet.</td></tr>`;
-    }
-    return listRpe.map(r => {
-        const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
-let namaBersih = pObj ? pObj.nama : r.namaAtlet;
-if (!namaBersih || namaBersih.includes("GMT") || namaBersih.includes("2026")) {
-    namaBersih = pObj ? pObj.nama : "Atlet Skuad";
-}
-const namaTampil = escapeHTML(namaBersih);
-        const loadVal = r.sRPE || (r.rpeVal * r.durasi) || 0;
+                        ${(() => {
+                            const listRpe = loadStorage('rpeLogs', state.rpeLogs || []);
+                            if (!listRpe || listRpe.length === 0) {
+                                return `<tr><td colspan="7" class="p-8 text-center text-slate-400 italic font-semibold">Belum ada laporan RPE yang masuk dari atlet.</td></tr>`;
+                            }
+                            return listRpe.map(r => {
+                                const pObj = state.atlet.find(a => String(a.id) === String(r.atletId));
+                                let namaBersih = pObj ? pObj.nama : r.namaAtlet;
+                                if (!namaBersih || String(namaBersih).includes("GMT") || String(namaBersih).includes("2026")) {
+                                    namaBersih = pObj ? pObj.nama : "Atlet Skuad";
+                                }
+                                const namaTampil = escapeHTML(namaBersih);
+                                const loadVal = r.sRPE || (parseFloat(r.rpeVal || 0) * parseFloat(r.durasi || 0)) || 0;
 
-        return `
-        <tr class="hover:bg-blue-50/40 transition-colors">
-            <td class="p-4 font-mono font-bold text-slate-500">${r.tanggal || '-'}</td>
-            <td class="p-4 font-black text-slate-800">${namaTampil}</td>
-            <td class="p-4 text-center font-bold text-amber-700 bg-amber-50/50 rounded-xl">RPE ${r.rpeVal || 0}/10</td>
-            <td class="p-4 text-center font-mono font-bold text-slate-600">${r.durasi || 0} mnt</td>
-            <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
-            <td class="p-4 text-center font-black text-blue-900 font-mono">${loadVal} AU</td>
-            <td class="p-4 text-center">
-                <button onclick="deleteRpeLog('${r.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus Laporan">
-                   <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
-            </td>
-        </tr>
-   `;
-    }).join('');
-})()}
-</tbody>
+                                // Format Tanggal Rapi (YYYY-MM-DD)
+                                let displayDate = '-';
+                                if (r.tanggal) {
+                                    const d = new Date(r.tanggal);
+                                    displayDate = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : String(r.tanggal).substring(0, 10);
+                                }
+
+                                return `
+                                <tr class="hover:bg-blue-50/40 transition-colors">
+                                    <td class="p-4 font-mono font-bold text-slate-600 whitespace-nowrap">${displayDate}</td>
+                                    <td class="p-4 font-black text-slate-800">${namaTampil}</td>
+                                    <td class="p-4 text-center font-bold text-amber-700">
+                                        <span class="bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200/80">RPE ${r.rpeVal || 0}/10</span>
+                                    </td>
+                                    <td class="p-4 text-center font-mono font-bold text-slate-600">${r.durasi || 0} mnt</td>
+                                    <td class="p-4 text-center font-mono text-rose-600 font-bold">${r.hrMax ? r.hrMax + ' BPM' : '-'}</td>
+                                    <td class="p-4 text-center font-black text-blue-900 font-mono">${loadVal} AU</td>
+                                    <td class="p-4 text-center">
+                                        <button onclick="deleteRpeLog('${r.id}')" class="text-rose-500 bg-rose-50 w-8 h-8 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm border border-rose-100" title="Hapus Laporan">
+                                            <i class="fa-solid fa-trash-can text-xs"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                `;
+                            }).join('');
+                        })()}
+                    </tbody>
                 </table>
             </div>
         </div>
-    `;
 } else if (state.currentMenu === 'menu-10') {
     pageTitle.innerText = "Preskripsi, Program & Log Latihan Gym";
     const today = new Date().toISOString().split('T')[0];
