@@ -7274,18 +7274,19 @@ function trigger3DMuscleSelect(muscleKey) {
     <div id="anatomy-3d-canvas" class="w-full h-[430px] cursor-grab active:cursor-grabbing rounded-2xl relative my-1"></div>
 
     <!-- Navigasi Pintas Seleksi Otot (Terkecil -> Terbesar) -->
+    <!-- Navigasi Pintas Seleksi Otot (Terkecil -> Terbesar) -->
     <div class="w-full pt-3 border-t border-slate-800/80 flex flex-wrap gap-1.5 justify-center z-10">
-        <span onclick="trigger3DMuscleSelect('stapedius')" class="cursor-pointer text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-xl border border-slate-700 font-bold transition">1. Stapedius (Mikro)</span>
-        <span onclick="trigger3DMuscleSelect('popliteus')" class="cursor-pointer text-[10px] bg-emerald-950 hover:bg-emerald-900 text-emerald-400 px-2.5 py-1 rounded-xl border border-emerald-600/40 font-bold transition">2. Popliteus (Lutut)</span>
-        <span onclick="trigger3DMuscleSelect('forearm')" class="cursor-pointer text-[10px] bg-amber-950 hover:bg-amber-900 text-amber-300 px-2.5 py-1 rounded-xl border border-amber-500/40 font-bold transition">3. Forearm (Pergelangan)</span>
-        <span onclick="trigger3DMuscleSelect('rotator')" class="cursor-pointer text-[10px] bg-sky-950 hover:bg-sky-900 text-sky-300 px-2.5 py-1 rounded-xl border border-sky-500/40 font-bold transition">4. Rotator Cuff</span>
-        <span onclick="trigger3DMuscleSelect('deltoid')" class="cursor-pointer text-[10px] bg-blue-950 hover:bg-blue-900 text-cyan-300 px-2.5 py-1 rounded-xl border border-cyan-500/40 font-bold transition">5. Bahu (Deltoid)</span>
-        <span onclick="trigger3DMuscleSelect('oblique')" class="cursor-pointer text-[10px] bg-teal-950 hover:bg-teal-900 text-teal-300 px-2.5 py-1 rounded-xl border border-teal-500/40 font-bold transition">6. Abs / Core</span>
-        <span onclick="trigger3DMuscleSelect('calves')" class="cursor-pointer text-[10px] bg-indigo-950 hover:bg-indigo-900 text-indigo-300 px-2.5 py-1 rounded-xl border border-indigo-500/40 font-bold transition">7. Betis (Calves)</span>
-        <span onclick="trigger3DMuscleSelect('lats')" class="cursor-pointer text-[10px] bg-rose-950 hover:bg-rose-900 text-rose-300 px-2.5 py-1 rounded-xl border border-rose-500/40 font-bold transition">8. Lats / Dada</span>
-        <span onclick="trigger3DMuscleSelect('hamstring')" class="cursor-pointer text-[10px] bg-purple-950 hover:bg-purple-900 text-purple-300 px-2.5 py-1 rounded-xl border border-purple-500/40 font-bold transition">9. Hamstrings</span>
-        <span onclick="trigger3DMuscleSelect('quads')" class="cursor-pointer text-[10px] bg-fuchsia-950 hover:bg-fuchsia-900 text-fuchsia-300 px-2.5 py-1 rounded-xl border border-fuchsia-500/40 font-bold transition">10. Quads (Paha)</span>
-        <span onclick="trigger3DMuscleSelect('glute')" class="cursor-pointer text-[10px] bg-blue-900 hover:bg-blue-800 text-white px-3 py-1 rounded-xl border border-blue-400 font-black transition shadow-sm">11. Gluteus (Terbesar)</span>
+        <span onclick="triggerHUDMuscle('stapedius')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">1. Stapedius</span>
+        <span onclick="triggerHUDMuscle('popliteus')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">2. Popliteus</span>
+        <span onclick="triggerHUDMuscle('forearm')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">3. Forearm</span>
+        <span onclick="triggerHUDMuscle('rotator')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">4. Rotator</span>
+        <span onclick="triggerHUDMuscle('deltoid')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">5. Bahu</span>
+        <span onclick="triggerHUDMuscle('oblique')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition">6. Abs/Core</span>
+        <span onclick="triggerHUDMuscle('calves')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold transition">7. Betis</span>
+        <span onclick="triggerHUDMuscle('lats')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold transition">8. Lats/Dada</span>
+        <span onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold transition">9. Hamstring</span>
+        <span onclick="triggerHUDMuscle('quads')" class="cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold transition">10. Quads</span>
+        <span onclick="triggerHUDMuscle('glute')" class="cursor-pointer text-[9px] bg-cyan-950 hover:bg-cyan-900 text-cyan-300 px-3 py-1 rounded-lg border border-cyan-500/50 font-black transition shadow-sm">11. Gluteus</span>
     </div>
 </div>
 
@@ -7343,9 +7344,8 @@ function trigger3DMuscleSelect(muscleKey) {
     `;
 
     setTimeout(() => {
-        init3DAnatomyViewer();
-        trigger3DMuscleSelect('glute');
-    }, 80);
+    triggerHUDMuscle('glute');
+}, 50);
             } else if (state.currentMenu === 'menu-atlet-1') {
     pageTitle.innerText = "Dashboard Personal Atlet";
     const at = state.activeAtlet;
