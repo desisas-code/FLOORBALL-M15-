@@ -214,11 +214,6 @@
         console.log("Sync otomatis pending connection...");
       }
     }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      autoFetchFromSpreadsheet(); // Jalankan sekali saat pertama dimuat
-      setInterval(autoFetchFromSpreadsheet, 30000); // Polling setiap 30 detik
-    });
 		
     </script>
 
@@ -1191,18 +1186,6 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
     }
 }
 
-       window.addEventListener('DOMContentLoaded', async () => {
-    // 1. Muat data lokal jika ada
-    state.atlet = loadStorage('atlet', []); 
-    
-    // 2. Langsung tarik data terbaru dari Google Apps Script / Firebase
-    if (typeof loadAtletFromSheet === 'function') {
-        await loadAtletFromSheet();
-    }
-    
-    // 3. Set tampilan login
-    selectLoginRole('pelatih');
-});
         async function syncDataToSpreadsheet() {
     const toast = showToast("Menyinkronkan SELURUH data ke Google Spreadsheet...", "loading");
     
@@ -2106,21 +2089,21 @@ function exportGymLogsCSV() {
 function deleteRiwayatValidasi(id) {
     if (!confirm("Apakah Anda yakin ingin menghapus riwayat validasi ini?")) return;
 
-    // Filter hapus data dari state
-    if (state.laporanValidasi) {
-        state.laporanValidasi = state.laporanValidasi.filter(item => String(item.id) !== String(id));
+    // 1. Hapus dari state
+    state.laporanValidasi = (state.laporanValidasi || []).filter(item => String(item.id) !== String(id));
+
+    // 2. Simpan ke LocalStorage sesuai key sistem
+    saveStorage('laporanValidasi', state.laporanValidasi);
+
+    // 3. Backup otomatis ke Google Spreadsheet
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
     }
 
-    // Simpan ke LocalStorage
-    if (typeof saveStateToLocalStorage === 'function') {
-        saveStateToLocalStorage();
-    } else {
-        localStorage.setItem('floorball_state', JSON.stringify(state));
-    }
-
-    // Re-render tampilan halaman dan update grafik
+    // 4. Render ulang UI
+    renderSidebar();
     renderContent();
-    renderChartsForMenu(state.currentMenu);
+    showToast("Riwayat validasi berhasil dihapus!", "success");
 }
 		function deleteRpeLog(id) {
     if (!confirm("Apakah Anda yakin ingin menghapus catatan laporan RPE ini?")) return;
@@ -4797,6 +4780,32 @@ function init3DAnatomyViewer() {
         }
     });
 
+	function trigger3DMuscleSelect(muscleKey) {
+    if (!muscleKey) return;
+
+    // Reset warna semua mesh 3D ke warna aslinya
+    Object.values(muscleMeshMap).forEach(meshList => {
+        meshList.forEach(mesh => {
+            if (mesh.material && mesh.userData.originalColor !== undefined) {
+                mesh.material.color.setHex(mesh.userData.originalColor);
+            }
+        });
+    });
+
+    // Sorot mesh 3D yang dipilih dengan warna neon cyan
+    if (muscleMeshMap[muscleKey]) {
+        muscleMeshMap[muscleKey].forEach(mesh => {
+            if (mesh.material) {
+                mesh.material.color.setHex(0x00f2fe);
+            }
+        });
+    }
+
+    // Sinkronkan ke kartu detail anatomi
+    if (typeof highlightMuscleGroup === 'function') {
+        highlightMuscleGroup(muscleKey);
+    }
+}
     function animate() {
         animationFrameId3D = requestAnimationFrame(animate);
         controls3D.update();
@@ -4830,6 +4839,34 @@ function triggerHUDMuscle(muscleKey) {
     }
 
     // 3. Sinkronkan dengan kartu analisis
+    if (typeof highlightMuscleGroup === 'function') {
+        highlightMuscleGroup(muscleKey);
+    }
+}
+		function trigger3DMuscleSelect(muscleKey) {
+    if (!muscleKey) return;
+
+    // Reset warna semua bagian 3D ke warna bawaan
+    if (typeof muscleMeshMap !== 'undefined') {
+        Object.values(muscleMeshMap).forEach(meshList => {
+            meshList.forEach(mesh => {
+                if (mesh.material && mesh.userData && mesh.userData.originalColor !== undefined) {
+                    mesh.material.color.setHex(mesh.userData.originalColor);
+                }
+            });
+        });
+
+        // Beri efek sorot neon cyan pada bagian yang diklik
+        if (muscleMeshMap[muscleKey]) {
+            muscleMeshMap[muscleKey].forEach(mesh => {
+                if (mesh.material) {
+                    mesh.material.color.setHex(0x00f2fe);
+                }
+            });
+        }
+    }
+
+    // Tampilkan informasi otot di kartu detail
     if (typeof highlightMuscleGroup === 'function') {
         highlightMuscleGroup(muscleKey);
     }
@@ -8135,21 +8172,36 @@ const myReports = (state.laporanValidasi || []).filter(l => {
 
         }
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
-  window.addEventListener("DOMContentLoaded", () => {
-    // PULIHKAN SESI LOGIN DARI LOCALSTORAGE
-const savedAtlet = loadStorage('activeAtlet');
-if (savedAtlet) {
-    state.activeAtlet = savedAtlet;    }
+  window.addEventListener("DOMContentLoaded", async () => {
+  // 1. Pulihkan sesi login aktif
+  const savedAtlet = loadStorage('activeAtlet');
+  if (savedAtlet) {
+    state.activeAtlet = savedAtlet;
+  }
+  const savedUser = loadStorage("currentUser");
+  if (savedUser) {
+    state.currentUser = savedUser;
+  }
 
-    const savedUser = loadStorage("currentUser");
-    if (savedUser) {
-      state.currentUser = savedUser;
-    }
+  // 2. Muat data atlet lokal
+  state.atlet = loadStorage('atlet', []);
 
+  // 3. Render tampilan awal
+  selectLoginRole(state.loginRole || 'pelatih');
+  if (typeof renderContent === 'function') {
     renderContent();
-    autoFetchFromSpreadsheet();
-    setInterval(autoFetchFromSpreadsheet, 30000);
-  });
+  }
+
+  // 4. Sinkronisasi data dari spreadsheet (satu kali di awal)
+  if (typeof loadAtletFromSheet === 'function') {
+    await loadAtletFromSheet();
+  } else if (typeof autoFetchFromSpreadsheet === 'function') {
+    await autoFetchFromSpreadsheet();
+  }
+
+  // 5. Polling tunggal setiap 30 detik
+  setInterval(autoFetchFromSpreadsheet, 30000);
+});
 
  function openAtletRadarModal(atletId) {
   const atlet = state.atlet.find(a => String(a.id) === String(atletId));
