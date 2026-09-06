@@ -4843,34 +4843,7 @@ function triggerHUDMuscle(muscleKey) {
         highlightMuscleGroup(muscleKey);
     }
 }
-		function trigger3DMuscleSelect(muscleKey) {
-    if (!muscleKey) return;
-
-    // Reset warna semua bagian 3D ke warna bawaan
-    if (typeof muscleMeshMap !== 'undefined') {
-        Object.values(muscleMeshMap).forEach(meshList => {
-            meshList.forEach(mesh => {
-                if (mesh.material && mesh.userData && mesh.userData.originalColor !== undefined) {
-                    mesh.material.color.setHex(mesh.userData.originalColor);
-                }
-            });
-        });
-
-        // Beri efek sorot neon cyan pada bagian yang diklik
-        if (muscleMeshMap[muscleKey]) {
-            muscleMeshMap[muscleKey].forEach(mesh => {
-                if (mesh.material) {
-                    mesh.material.color.setHex(0x00f2fe);
-                }
-            });
-        }
-    }
-
-    // Tampilkan informasi otot di kartu detail
-    if (typeof highlightMuscleGroup === 'function') {
-        highlightMuscleGroup(muscleKey);
-    }
-}
+		
 		function renderContent() {
     const container = document.getElementById('main-container');
     const pageTitle = document.getElementById('page-title');
