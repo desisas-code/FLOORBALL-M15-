@@ -1029,89 +1029,141 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
         }
 
 		// Variable Global untuk Tracking GPS & Aktivitas
-let gpsWatchId = null;
-let lastCoord = null;
-let totalDistanceKm = 0;
+// VARIABEL TRACKER OFFLINE
+let liveTrackingWatchId = null;
+let lastRecordedCoord = null;
+let liveRunMetrics = {
+    distanceKm: 0,
+    startTime: null,
+    timerInterval: null,
+    maxSpeedKmh: 0,
+    vehicleDetected: false,
+    currentActivity: "Diam / Siap"
+};
 
-// Fungsi Mulai Tracking Live dengan Deteksi Aktivitas (Cukup simpan 1 ini saja)
-function startLiveGpsTracking() {
+// 1. MULAI TRACKING LARI (OFFLINE & REALTIME)
+function toggleLiveRunTracker() {
+    const btn = document.getElementById('btn-toggle-run-tracker');
     const badge = document.getElementById('gps-status-badge');
+
     if (!navigator.geolocation) {
-        showToast("GPS tidak didukung browser HP ini!", "error");
+        showToast("Browser/HP tidak mendukung fitur GPS!", "error");
         return;
     }
-    
-    totalDistanceKm = 0;
-    lastCoord = null;
 
-    if (badge) {
-        badge.className = 'w-full mt-2.5 px-3.5 py-2.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-2xl';
-        badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600 mr-1"></i> Tracking GPS Aktif... Melacak Aktivitas`;
+    // JIKA SEDANG BERJALAN -> STOP TRACKING
+    if (liveTrackingWatchId !== null) {
+        navigator.geolocation.clearWatch(liveTrackingWatchId);
+        liveTrackingWatchId = null;
+        if (liveRunMetrics.timerInterval) clearInterval(liveRunMetrics.timerInterval);
+
+        if (btn) {
+            btn.className = "w-full px-4 py-3.5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2";
+            btn.innerHTML = `<i class="fa-solid fa-play text-cyan-400"></i> Mulai Tracking Sesi Lari`;
+        }
+
+        showToast(`Tracking selesai! Total: ${liveRunMetrics.distanceKm.toFixed(2)} km`, "success");
+        return;
     }
 
-    gpsWatchId = navigator.geolocation.watchPosition(
+    // RESET METRIK BARU
+    liveRunMetrics.distanceKm = 0;
+    liveRunMetrics.maxSpeedKmh = 0;
+    liveRunMetrics.vehicleDetected = false;
+    liveRunMetrics.startTime = Date.now();
+    lastRecordedCoord = null;
+
+    if (btn) {
+        btn.className = "w-full px-4 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 animate-pulse";
+        btn.innerHTML = `<i class="fa-solid fa-stop text-white"></i> Hentikan Sesi Lari (Selesai)`;
+    }
+
+    // TIMER DURASI OFFLINE
+    liveRunMetrics.timerInterval = setInterval(() => {
+        const elapsedMins = Math.floor((Date.now() - liveRunMetrics.startTime) / 60000);
+        const durasiInput = document.getElementById('run-durasi');
+        if (durasiInput && elapsedMins > 0) {
+            durasiInput.value = elapsedMins;
+        }
+    }, 1000);
+
+    // KUNCI SATELIT GPS OFFLINE
+    liveTrackingWatchId = navigator.geolocation.watchPosition(
         (position) => {
             const { latitude, longitude, accuracy, speed } = position.coords;
-            if (accuracy > 15) return;
+            const now = Date.now();
 
-            const currentTime = Date.now();
+            // Abaikan sinyal GPS yang tidak akurat (> 25 meter)
+            if (accuracy > 25) return;
 
-            if (lastCoord) {
-                const timeDiffHours = (currentTime - lastCoord.timestamp) / (1000 * 3600);
-                const dist = calculateHaversineDistance(lastCoord.lat, lastCoord.lng, latitude, longitude);
-                let currentSpeedKmh = speed ? (speed * 3.6) : (timeDiffHours > 0 ? (dist / timeDiffHours) : 0);
+            let currentSpeedKmh = speed ? (speed * 3.6) : 0;
 
-                if (dist > 0.003) { 
-                    totalDistanceKm += dist;
-                    lastCoord = { lat: latitude, lng: longitude, timestamp: currentTime };
-                }
-
-                let jenisAktivitas = "Diam / Istirahat";
-                let badgeStyle = "bg-emerald-50 text-emerald-900 border-emerald-200";
-                let iconAktivitas = "fa-person-walking";
-
-                if (currentSpeedKmh > 25) {
-                    jenisAktivitas = "TERDETEKSI NAIK MOTOR / KENDARAAN!";
-                    badgeStyle = "bg-rose-100 text-rose-900 border-rose-300 animate-bounce";
-                    iconAktivitas = "fa-motorcycle text-rose-600";
-                    showToast("Peringatan: Kecepatan terlalu tinggi (Terdeteksi naik kendaraan)!", "error");
-                } else if (currentSpeedKmh >= 12) {
-                    jenisAktivitas = "Berlari Cepat (Sprint)";
-                    badgeStyle = "bg-blue-50 text-blue-900 border-blue-200";
-                    iconAktivitas = "fa-person-running text-blue-600";
-                } else if (currentSpeedKmh >= 6) {
-                    jenisAktivitas = "Jogging (Aerobic)";
-                    badgeStyle = "bg-emerald-50 text-emerald-900 border-emerald-200";
-                    iconAktivitas = "fa-person-running text-emerald-600";
-                } else if (currentSpeedKmh > 1.5) {
-                    jenisAktivitas = "Berjalan";
-                    badgeStyle = "bg-amber-50 text-amber-900 border-amber-200";
-                    iconAktivitas = "fa-person-walking text-amber-600";
-                }
-
-                state.currentGpsLocation = `${latitude.toFixed(5)}, ${longitude.toFixed(5)} (${jenisAktivitas})`;
+            if (lastRecordedCoord) {
+                const dist = calculateHaversineDistance(
+                    lastRecordedCoord.lat, lastRecordedCoord.lng,
+                    latitude, longitude
+                );
+                const timeDiffHours = (now - lastRecordedCoord.time) / (1000 * 3600);
                 
-                const distDisplay = document.getElementById('run-jarak-display');
-                if (distDisplay) distDisplay.innerText = `${totalDistanceKm.toFixed(2)} km`;
+                if (!speed && timeDiffHours > 0) {
+                    currentSpeedKmh = dist / timeDiffHours;
+                }
 
-                if (badge) {
-                    badge.className = `w-full mt-2.5 px-3.5 py-2.5 rounded-2xl border ${badgeStyle}`;
-                    badge.innerHTML = `
-                        <div class="flex items-center justify-between font-bold text-xs">
-                            <span><i class="fa-solid ${iconAktivitas} mr-1"></i> ${jenisAktivitas}</span>
-                            <span class="font-mono">${totalDistanceKm.toFixed(2)} KM (${currentSpeedKmh.toFixed(1)} km/h)</span>
-                        </div>
-                    `;
+                // Filter noise GPS (hanya tambah jarak jika bergerak > 3 meter)
+                if (dist > 0.003) {
+                    liveRunMetrics.distanceKm += dist;
+                    lastRecordedCoord = { lat: latitude, lng: longitude, time: now };
                 }
             } else {
-                lastCoord = { lat: latitude, lng: longitude, timestamp: currentTime };
+                lastRecordedCoord = { lat: latitude, lng: longitude, time: now };
             }
+
+            if (currentSpeedKmh > liveRunMetrics.maxSpeedKmh) {
+                liveRunMetrics.maxSpeedKmh = currentSpeedKmh;
+            }
+
+            // DETEKSI AKTIVITAS BERDASARKAN KECEPATAN SENSOR GPS
+            let activity = "Diam / Istirahat";
+            let badgeStyle = "bg-slate-100 text-slate-700 border-slate-300";
+            let iconAct = "fa-person";
+
+            if (currentSpeedKmh > 25) {
+                activity = "TERDETEKSI NAIK KENDARAAN / MOTOR!";
+                badgeStyle = "bg-rose-100 text-rose-800 border-rose-400 animate-bounce";
+                iconAct = "fa-motorcycle text-rose-600";
+                liveRunMetrics.vehicleDetected = true;
+            } else if (currentSpeedKmh >= 11) {
+                activity = "Berlari Cepat (Sprint)";
+                badgeStyle = "bg-blue-100 text-blue-900 border-blue-300";
+                iconAct = "fa-person-running text-blue-600";
+            } else if (currentSpeedKmh >= 5.5) {
+                activity = "Jogging (Aerobic)";
+                badgeStyle = "bg-emerald-100 text-emerald-900 border-emerald-300";
+                iconAct = "fa-person-running text-emerald-600";
+            } else if (currentSpeedKmh >= 1.2) {
+                activity = "Berjalan";
+                badgeStyle = "bg-amber-100 text-amber-900 border-amber-300";
+                iconAct = "fa-person-walking text-amber-600";
+            }
+
+            liveRunMetrics.currentActivity = activity;
+
+            state.currentGpsLocation = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} [Status: ${activity}, Speed: ${currentSpeedKmh.toFixed(1)} km/h]`;
+
+            if (badge) {
+                badge.className = `w-full mt-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-center border ${badgeStyle}`;
+                badge.innerHTML = `<i class="fa-solid ${iconAct} mr-1.5"></i> ${activity} • ${liveRunMetrics.distanceKm.toFixed(2)} KM (${currentSpeedKmh.toFixed(1)} km/h)`;
+            }
+
+            const distDisplay = document.getElementById('run-jarak-display');
+            const speedDisplay = document.getElementById('run-speed-display');
+            if (distDisplay) distDisplay.innerText = `${liveRunMetrics.distanceKm.toFixed(2)} km`;
+            if (speedDisplay) speedDisplay.innerText = `${currentSpeedKmh.toFixed(1)} km/h`;
         },
         (error) => {
-            console.warn("GPS Tracking Error:", error);
-            showToast("Gagal mengambil sinyal GPS Live!", "error");
+            console.warn("GPS Watch Error:", error);
         },
-        { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
     );
 }
 
@@ -3990,8 +4042,8 @@ function renderMatchHeatmap() {
     const inputDurasi = parseFloat(document.getElementById('run-durasi')?.value);
     const durasiVal = !isNaN(inputDurasi) && inputDurasi > 0 ? inputDurasi : (matchLog ? parseFloat(matchLog.waktu) : 30);
     const jarakVal = matchLog ? parseFloat(matchLog.jarak) : 4.31;
-    const isMotorDetected = state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR");
-    const finalJarak = (typeof totalDistanceKm !== 'undefined' && totalDistanceKm > 0) ? parseFloat(totalDistanceKm.toFixed(2)) : jarakVal;
+    const isMotorDetected = (typeof liveRunMetrics !== 'undefined' && liveRunMetrics.vehicleDetected) || (state.currentGpsLocation && state.currentGpsLocation.includes("MOTOR"));
+	const finalJarak = (typeof liveRunMetrics !== 'undefined' && liveRunMetrics.distanceKm > 0) ? parseFloat(liveRunMetrics.distanceKm.toFixed(2)) : jarakVal;
 
     const newReport = {
         id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -7687,12 +7739,12 @@ const myReports = (state.laporanValidasi || []).filter(l => {
                                 <span>1. Titik Lokasi GPS <span class="text-rose-500">*</span></span>
                                 <i class="fa-solid fa-location-crosshairs text-blue-900 text-sm"></i>
                             </label>
-                            <button type="button" onclick="getAtletGpsLocation()" class="w-full px-4 py-3.5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-800 hover:to-indigo-900 text-white font-black text-xs shadow-lg shadow-blue-900/20 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-crosshairs text-cyan-400"></i> Kunci Koordinat GPS
-                            </button>
-                            <div id="gps-status-badge" class="w-full mt-2.5 px-3.5 py-2.5 bg-white text-slate-400 border border-slate-200/90 rounded-2xl text-xs font-semibold text-center shadow-inner">
-                                Belum Diambil (Klik Tombol Di Atas)
-                            </div>
+                            <button type="button" id="btn-toggle-run-tracker" onclick="toggleLiveRunTracker()" class="w-full px-4 py-3.5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-800 hover:to-indigo-900 text-white font-black text-xs shadow-lg shadow-blue-900/20 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
+    <i class="fa-solid fa-play text-cyan-400"></i> Mulai Tracking Sesi Lari
+</button>
+<div id="gps-status-badge" class="w-full mt-2.5 px-3.5 py-2.5 bg-white text-slate-500 border border-slate-200/90 rounded-2xl text-xs font-semibold text-center shadow-inner">
+    Tekan tombol di atas sebelum mulai berlari (Bekerja Offline)
+</div>
                         </div>
 
                         <div class="p-5 rounded-3xl bg-emerald-50/60 border border-emerald-200/80 shadow-sm">
