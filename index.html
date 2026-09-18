@@ -1718,7 +1718,7 @@ function exportGymLogsCSV() {
             const toast = showToast('Memverifikasi akses...', 'loading');
 
             setTimeout(() => {
-                if(toast) toast.remove();
+                if (toast) toast.remove();
                 if (state.loginRole === 'pelatih') {
                     const passInputElem = document.getElementById('auth-input-password');
                     const passInput = passInputElem ? passInputElem.value : '';
@@ -1729,14 +1729,17 @@ function exportGymLogsCSV() {
                     state.currentRole = 'Pelatih';
                     state.currentMenu = 'menu-1';
                     state.activeAtlet = null;
-                    
-                    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
-                    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
-                    if(document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
-                    if(document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
 
-                    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-                    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+                    // TAMBAHKAN BARIS INI: Simpan sesi Pelatih ke localStorage
+                    saveStorage('authSession', { role: 'Pelatih', activeAtlet: null });
+                    
+                    if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
+                    if (document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
+                    if (document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
+                    if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
+
+                    if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+                    if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
                     
                     renderSidebar();
                     renderContent();
@@ -1758,14 +1761,17 @@ function exportGymLogsCSV() {
                     state.currentRole = 'Atlet';
                     state.currentMenu = 'menu-atlet-1';
 
-                    const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                    if(document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
-                    if(document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
-                    if(document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
-                    if(document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
+                    // TAMBAHKAN BARIS INI: Simpan sesi Atlet ke localStorage
+                    saveStorage('authSession', { role: 'Atlet', activeAtlet: targetAtlet });
 
-                    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-                    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+                    const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
+                    if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
+                    if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
+                    if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
+
+                    if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+                    if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
                     
                     renderSidebar();
                     renderContent();
@@ -1775,7 +1781,7 @@ function exportGymLogsCSV() {
         }
 
         function logout() {
-    cleanupThreeJS(); // Bersihkan Three.js saat sesi logout
+    cleanupThreeJS(); 
 
     if (state.matchLive.dribbleTimer.intervalId) {
         clearInterval(state.matchLive.dribbleTimer.intervalId);
@@ -1787,6 +1793,9 @@ function exportGymLogsCSV() {
     }
     if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.add('hidden');
     if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.remove('hidden');
+
+    localStorage.removeItem('cf_authSession');
+
     state.activeAtlet = null;
     selectLoginRole('pelatih');
     showToast('Anda telah keluar dari aplikasi.', 'success');
