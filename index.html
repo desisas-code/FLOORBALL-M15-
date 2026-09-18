@@ -965,7 +965,12 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
 
         async function syncDataToSpreadsheet() {
     const toast = showToast("Menyinkronkan SELURUH data ke Google Spreadsheet...", "loading");
-    
+
+    // 1. Buat daftar tabel rincian periodisasi mingguan
+    const dynamicPeriodisasiList = (typeof generateDynamicPeriodisasi === 'function' && state.periodisasiConfig) 
+        ? generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks) 
+        : [];
+
     // Kirim seluruh objek state dari semua menu ke Apps Script Backend
     const payload = {
         atlet: state.atlet || [],
@@ -973,12 +978,14 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
         tesFisik: state.tesFisik || [],
         tesTeknik: state.tesTeknik || [],
         periodisasiConfig: state.periodisasiConfig || null,
+        periodisasiList: dynamicPeriodisasiList, // <-- Rincian 34 Minggu masuk ke sini
         programLatihan: (state.programLatihan && state.programLatihan.length > 0) ? state.programLatihan : (state.joggingLogs || []),
         matchLive: state.matchLive || {},
         joggingLogs: state.joggingLogs || [],
         masLogs: state.masLogs || [],
         laporanValidasi: state.laporanValidasi || [],
         rpeLogs: state.rpeLogs || [],
+        gymLogs: state.gymLogs || [], // <-- Log Gym
         lastSynced: new Date().toISOString()
     };
 
