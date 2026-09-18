@@ -548,7 +548,7 @@ function destroySingleChart(chartKey) {
 }
 
     function renderChartsForMenu(menuId) {
-    destroySingleChart(menuId);
+    destroyAllCharts();
 		
     if (menuId === 'menu-1') {
         const canvasPos = document.getElementById('chart-posisi-atlet');
@@ -634,496 +634,112 @@ if (canvasPos) {
                         }
                     });
                 }
+				}
+              // ---> TEMPEL KODE DARI GAMBAR DI SINI <---
+              else if (menuId === 'menu-3') {
+                  const ctxRadar = document.getElementById('chart-radar-fisik')?.getContext('2d');
+                  if (ctxRadar) {
+                      chartInstances['radarFisik'] = new Chart(ctxRadar, {
+                          type: 'radar',
+                          data: {
+                              labels: ['Vo2Max', 'Flexibility', 'Strength', 'Power', 'Agility', 'Speed'],
+                              datasets: [{
+                                  label: 'Rerata Skuad',
+                                  data: [75, 68, 72, 80, 70, 74],
+                                  backgroundColor: 'rgba(56, 189, 248, 0.25)',
+                                  borderColor: '#0284c7'
+                              }]
+                          },
+                          options: { responsive: true, maintainAspectRatio: false }
+                      });
+                  }
+              } 
+              else if (menuId === 'menu-4') {
+                  const ctxBompa = document.getElementById('chart-periodisasi-bompa')?.getContext('2d');
+                  if (ctxBompa) {
+                      const list = generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks);
+                      chartInstances['bompa'] = new Chart(ctxBompa, {
+                          type: 'line',
+                          data: {
+                              labels: list.map(m => `W${m.mingguKe}`),
+                              datasets: [
+                                  { label: 'Volume (%)', data: list.map(m => m.volumePct), borderColor: '#3b82f6', tension: 0.3 },
+                                  { label: 'Intensitas (%)', data: list.map(m => m.intensitasPct), borderColor: '#ef4444', tension: 0.3 }
+                              ]
+                          },
+                          options: { responsive: true, maintainAspectRatio: false }
+                      });
+                  }
+              }
             }
 
     // =========================================================================
-    // 3. TES FISIK & TEKNIK (Radar Kebugaran + Bar Norma)
-    // =========================================================================
-    if (menuId === 'menu-3') {
-        // 3A. DIAGRAM RADAR
-        const canvasRadar = document.getElementById('chart-radar-fisik');
-        if (canvasRadar) {
-            const oldRadar = Chart.getChart(canvasRadar);
-            if (oldRadar) oldRadar.destroy();
+// CLEANUP THREE.JS UNTUK MENCEGAH MEMORY LEAK SAAT BERPINDAH MENU
+// =========================================================================
+function cleanupThreeJS() {
+    // 1. Batalkan loop animasi aktif
+    if (animationFrameId3D) {
+        cancelAnimationFrame(animationFrameId3D);
+        animationFrameId3D = null;
+    }
 
-            // Hitung agregasi rerata dinamis dari state.tesFisik
-            const calcAvgScore = (key, fallback) => {
-                const logs = (state.tesFisik || []).filter(t => t.keyTes === key);
-                if (!logs.length) return fallback;
-                const sum = logs.reduce((acc, cur) => acc + (parseFloat(cur.skor) || 0), 0);
-                return Math.round(sum / logs.length);
-            };
+    // 2. Lepaskan OrbitControls
+    if (controls3D) {
+        controls3D.dispose();
+        controls3D = null;
+    }
 
-            const dataRadarValues = [
-                calcAvgScore('yoyo', 78),
-                calcAvgScore('vsit', 82),
-                calcAvgScore('push_up', 70),
-                calcAvgScore('vjump', 85),
-                calcAvgScore('ttest', 68),
-                calcAvgScore('plank', 90)
-            ];
-
-            chartInstances['radarFisik'] = new Chart(canvasRadar.getContext('2d'), {
-                type: 'radar',
-                data: {
-                    labels: ['VO2Max (Yo-Yo)', 'Flexibility (V-Sit)', 'Upper Power (Push Up)', 'Leg Power (V-Jump)', 'Agility (T-Test)', 'Core (Plank)'],
-                    datasets: [{
-                        label: 'Rerata Skuad Saat Ini',
-                        data: dataRadarValues,
-                        backgroundColor: 'rgba(56, 189, 248, 0.25)',
-                        borderColor: '#0284C7',
-                        pointBackgroundColor: '#0284C7',
-                        pointBorderColor: '#ffffff',
-                        borderWidth: 2.5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        r: {
-                            angleLines: { color: 'rgba(226, 232, 240, 0.8)' },
-                            grid: { color: 'rgba(226, 232, 240, 0.8)' },
-                            pointLabels: { font: { size: 10, weight: 'bold', family: "'Plus Jakarta Sans', sans-serif" }, color: '#334155' },
-                            ticks: { display: false },
-                            suggestedMin: 0,
-                            suggestedMax: 100
-                        }
+    // 3. Traversal dan dispose seluruh geometry, material, dan tekstur di Scene
+    if (scene3D) {
+        scene3D.traverse((object) => {
+            if (object.isMesh) {
+                if (object.geometry) {
+                    object.geometry.dispose();
+                }
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach((mat) => {
+                            cleanMaterial(mat);
+                            mat.dispose();
+                        });
+                    } else {
+                        cleanMaterial(object.material);
+                        object.material.dispose();
                     }
                 }
-            });
-        }
-
-        // 3B. DIAGRAM BAR DISTRIBUSI NORMA
-        const canvasNormaBar = document.getElementById('chart-norma-bar');
-        if (canvasNormaBar) {
-            const oldNorma = Chart.getChart(canvasNormaBar);
-            if (oldNorma) oldNorma.destroy();
-
-            let countSB = 0, countB = 0, countS = 0, countK = 0, countSK = 0;
-            (state.tesFisik || []).forEach(t => {
-                const at = (state.atlet || []).find(a => String(a.id) === String(t.atletId));
-                const kat = hitungKategoriNorma(t.keyTes, t.skor, at?.gender, at?.posisi);
-                if (kat === 'SB') countSB++;
-                else if (kat === 'B') countB++;
-                else if (kat === 'S') countS++;
-                else if (kat === 'K') countK++;
-                else if (kat === 'SK') countSK++;
-            });
-
-            chartInstances['normaBar'] = new Chart(canvasNormaBar.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Sangat Baik (SB)', 'Baik (B)', 'Sedang (S)', 'Kurang (K)', 'Sangat Kurang (SK)'],
-                    datasets: [{
-                        label: 'Jumlah Evaluasi',
-                        data: [countSB, countB, countS, countK, countSK],
-                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#F97316', '#EF4444'],
-                        borderRadius: 8,
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { font: { size: 10, weight: 'bold' } }, grid: { display: false } },
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#F1F5F9' } }
-                    }
-                }
-            });
-        }
-    }
-
-    // =========================================================================
-    // 4. PERIODISASI LATIHAN (Volume vs Intensitas Bompa)
-    // =========================================================================
-    if (menuId === 'menu-4') {
-        const canvasPer = document.getElementById('chart-periodisasi-bompa');
-        if (canvasPer) {
-            const oldPer = Chart.getChart(canvasPer);
-            if (oldPer) oldPer.destroy();
-
-            const ctxPer = canvasPer.getContext('2d');
-            const list = generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks);
-
-            const gradientVol = ctxPer.createLinearGradient(0, 0, 0, 300);
-            gradientVol.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
-            gradientVol.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
-
-            const gradientInt = ctxPer.createLinearGradient(0, 0, 0, 300);
-            gradientInt.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
-            gradientInt.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
-
-            chartInstances['periodisasi'] = new Chart(ctxPer, {
-                type: 'line',
-                data: {
-                    labels: list.map(l => 'W' + l.mingguKe),
-                    datasets: [
-                        {
-                            label: 'Volume (%)',
-                            data: list.map(l => l.volumePct),
-                            borderColor: '#2563EB',
-                            backgroundColor: gradientVol,
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 3,
-                            pointBackgroundColor: '#2563EB',
-                            pointBorderColor: '#ffffff',
-                            pointRadius: 4
-                        },
-                        {
-                            label: 'Intensitas (%)',
-                            data: list.map(l => l.intensitasPct),
-                            borderColor: '#EF4444',
-                            backgroundColor: gradientInt,
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 3,
-                            pointBackgroundColor: '#EF4444',
-                            pointBorderColor: '#ffffff',
-                            pointRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 100,
-                            ticks: { stepSize: 20, callback: v => v + '%', font: { size: 10, weight: 'bold' } },
-                            grid: { color: '#F1F5F9' }
-                        },
-                        x: { ticks: { font: { size: 10, weight: 'bold' } }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-    }
-
-    // =========================================================================
-    // 5. PROGRAM LATIHAN (Target RPE Mingguan)
-    // =========================================================================
-    if (menuId === 'menu-5') {
-        const canvasProg = document.getElementById('chart-program-rpe');
-        if (canvasProg) {
-            const oldProg = Chart.getChart(canvasProg);
-            if (oldProg) oldProg.destroy();
-
-            chartInstances['progRpe'] = new Chart(canvasProg.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
-                    datasets: [{
-                        label: 'Target RPE Harian',
-                        data: [6, 4, 6, 2, 6, 7, 1],
-                        backgroundColor: '#F59E0B',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { min: 0, max: 10, ticks: { stepSize: 2 } } }
-                }
-            });
-        }
-    }
-
-    // =========================================================================
-    // 6. MATCH LIVE (Perbandingan Aksi Tim)
-    // =========================================================================
-    if (menuId === 'menu-6') {
-        const canvasMatch = document.getElementById('chart-match-actions');
-        if (canvasMatch) {
-            const oldMatch = Chart.getChart(canvasMatch);
-            if (oldMatch) oldMatch.destroy();
-
-            let passAcc = 0, passFail = 0, recAcc = 0, recFail = 0;
-            Object.values(state.matchLive.playerStats || {}).forEach(s => {
-                passAcc += s.passAcc || 0;
-                passFail += s.passFail || 0;
-                recAcc += s.recAcc || 0;
-                recFail += s.recFail || 0;
-            });
-
-            chartInstances['matchActions'] = new Chart(canvasMatch.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Passing Sukses', 'Passing Gagal', 'Receiving Sukses', 'Receiving Gagal'],
-                    datasets: [{
-                        label: 'Total Aksi Tim',
-                        data: [passAcc, passFail, recAcc, recFail],
-                        backgroundColor: ['#10B981', '#EF4444', '#3B82F6', '#F59E0B'],
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-    }
-
-    // =========================================================================
-    // 7. JOGGING & MAS (Volume Jarak KM Riil)
-    // =========================================================================
-    if (menuId === 'menu-7') {
-        const canvasJogging = document.getElementById('chart-jogging-mas');
-        if (canvasJogging) {
-            const oldJogging = Chart.getChart(canvasJogging);
-            if (oldJogging) oldJogging.destroy();
-
-            // Membaca state.joggingLogs yang valid
-            const logs = state.joggingLogs || [];
-            const labels = logs.length > 0 ? logs.slice(-7).map((_, i) => `Sesi ${i + 1}`) : ['S1', 'S2', 'S3', 'S4', 'S5'];
-            const dataJarak = logs.length > 0 ? logs.slice(-7).map(j => parseFloat(j.jarak) || 0) : [3, 4, 3.5, 5, 4.2];
-
-            chartInstances['jogging'] = new Chart(canvasJogging.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Jarak (KM)',
-                        data: dataJarak,
-                        borderColor: '#0284C7',
-                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        borderWidth: 2.5,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { font: { size: 10, weight: 'bold' } } },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: v => v + ' km', font: { size: 10 } }
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-    // =========================================================================
-    // 8. VALIDASI LAPORAN (Proporsi Status)
-    // =========================================================================
-    if (menuId === 'menu-8') {
-        const canvasVal = document.getElementById('chart-validasi-status');
-        if (canvasVal) {
-            const oldVal = Chart.getChart(canvasVal);
-            if (oldVal) oldVal.destroy();
-
-            const logs = state.laporanValidasi || [];
-            const pending = logs.filter(l => l.status === 'Menunggu').length;
-            const approved = logs.filter(l => l.status === 'Disetujui').length;
-            const rejected = logs.filter(l => l.status === 'Ditolak').length;
-
-            chartInstances['validasiStatus'] = new Chart(canvasVal.getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: ['Menunggu', 'Disetujui', 'Ditolak'],
-                    datasets: [{
-                        data: [pending, approved, rejected],
-                        backgroundColor: ['#F59E0B', '#10B981', '#EF4444'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } }
-                        }
-                    }
-                }
-            });
-        }
-    }
-function renderAcwrChart(canvasId, labels, dataValues) {
-    if (chartInstances['acwrBar']) {
-        chartInstances['acwrBar'].destroy();
-        delete chartInstances['acwrBar'];
-    }
-
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    chartInstances['acwrBar'] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Rasio ACWR',
-                data: dataValues,
-                backgroundColor: '#0284C7',
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            interaction: {
-                mode: 'nearest',
-                intersect: false
             }
+        });
+
+        // Kosongkan scene
+        while (scene3D.children.length > 0) {
+            scene3D.remove(scene3D.children[0]);
         }
-    });
-}
-    // 9. ACWR & RPE
-    if (menuId === 'menu-9') {
-        // Chart 1: Tren sRPE
-        const canvasSrpe = document.getElementById('chart-srpe-trend');
-    if (canvasSrpe) {
-      // 1. Hancurkan chart lama jika sudah ada
-      const existingSrpe = Chart.getChart(canvasSrpe);
-      if (existingSrpe) {
-        existingSrpe.destroy();
-      }
-
-      // 2. Buat chart baru
-      chartInstances['srpeTrend'] = new Chart(canvasSrpe.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4', 'Minggu 5', 'Minggu 6'],
-                    datasets: [{
-                        label: 'Rerata sRPE (AU)',
-                        data: [1200, 1450, 1300, 1600, 1800, 1500],
-                        borderColor: '#0284C7',
-                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        borderWidth: 2.5,
-                        pointRadius: 4
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { callback: v => v + ' AU', font: { size: 10 } } },
-                        x: { ticks: { font: { size: 10, weight: 'bold' } } }
-                    }
-                }
-            });
-        }
-
-        // Chart 2: Rasio ACWR Per Atlet
-    const canvasAcwr = document.getElementById('chart-acwr-bar');
-    if (canvasAcwr) {
-      // 1. Hancurkan chart lama jika ada
-      const existingAcwr = Chart.getChart(canvasAcwr);
-      if (existingAcwr) {
-        existingAcwr.destroy();
-      }
-
-      const atletList = state.atlet || [];
-      const labels = atletList.map(a => a.nama.split(' ')[0]);
-      const acwrValues = atletList.map(() => (Math.random() * (1.6 - 0.7) + 0.7).toFixed(2));
-
-      chartInstances['acwrBar'] = new Chart(canvasAcwr.getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Rasio ACWR',
-            data: acwrValues,
-            backgroundColor: acwrValues.map(v => v > 1.5 ? '#EF4444' : (v > 1.3 ? '#F59E0B' : '#10B981')),
-            borderRadius: 6
-          }]
-        },
-        options: {
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
-                    scales: { 
-                        x: { ticks: { font: { size: 9, weight: 'bold' }, maxRotation: 45, minRotation: 45 } },
-                        y: { min: 0, max: 2.0, ticks: { stepSize: 0.4 } } 
-                    } 
-                }
-            });
-        }
+        scene3D = null;
     }
 
-    // DASHBOARD ATLET (menu-atlet-1 sampai menu-atlet-5)
-    if (menuId.startsWith('menu-atlet-')) {
-        const ctxAtlet = document.getElementById('chart-atlet-personal')?.getContext('2d');
-        if (ctxAtlet && state.activeAtlet) {
-            const myRpe = state.rpeLogs.filter(r => String(r.atletId) === String(state.activeAtlet.id)).slice(0, 7).reverse();
-            chartInstances['atletPersonal'] = new Chart(ctxAtlet, {
-                type: 'line',
-                data: {
-                    labels: myRpe.map(r => r.tanggal || 'Sesi'),
-                    datasets: [{
-                        label: 'Session Load (sRPE)',
-                        data: myRpe.map(r => r.sRPE),
-                        borderColor: '#3B82F6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+    // 4. Dispose WebGLRenderer & hapus elemen canvas dari DOM
+    if (renderer3D) {
+        renderer3D.dispose();
+        if (renderer3D.domElement && renderer3D.domElement.parentNode) {
+            renderer3D.domElement.parentNode.removeChild(renderer3D.domElement);
+        }
+        renderer3D = null;
+    }
+
+    // 5. Reset referensi objek & kamera
+    camera3D = null;
+    muscleMeshMap = {};
+}
+
+// Helper untuk membersihkan tekstur material
+function cleanMaterial(material) {
+    for (const key of Object.keys(material)) {
+        const value = material[key];
+        if (value && typeof value === 'object' && 'minFilter' in value) {
+            value.dispose();
         }
     }
 }
-        const menuLatihanHarian = {
-    "AA": [ // TPU: Anatomical Adaptation & Base Aerobic
-        { hari: "Senin", sesi: "Anatomical Adaptation (AA)", materi: "Core Stability (Plank, Anti-rotation), Joint Stability, Passing-Receiving Stationary", durasi: "90 Mnt", rpeTarget: "5-6" },
-        { hari: "Selasa", sesi: "Aerobic Base / Active Recovery", materi: "Low-Intensity Aerobic Run (Zone 2 MAS), Hamstring & Hip Mobility", durasi: "45 Mnt", rpeTarget: "3-4" },
-        { hari: "Rabu", sesi: "Teknik & Stickwork Dasar", materi: "Continuous Stickhandling, Ball Control in Motion, Basic Positioning (DL/DR/FL/FR/C)", durasi: "90 Mnt", rpeTarget: "5-6" },
-        { hari: "Kamis", sesi: "Rest Aktif", materi: "Active Stretching, Foam Rolling & Mobility Drill", durasi: "-", rpeTarget: "1-2" },
-        { hari: "Jumat", sesi: "General Strength & Gym", materi: "Bodyweight / Light Load Split (Squat, Lunge, Push Up, Wrist Rotations)", durasi: "75 Mnt", rpeTarget: "6" },
-        { hari: "Sabtu", sesi: "Simulasi Game Tempo Rendah", materi: "Small Sided Games (3v3 / 4v4) - Fokus Komunikasi Line & Formasi", durasi: "90 Mnt", rpeTarget: "6-7" },
-        { hari: "Minggu", sesi: "Rest Total", materi: "Complete Rest, Hydration & Nutrition Recovery", durasi: "-", rpeTarget: "1" }
-    ],
-    "Strength": [ // TPK: Maximum Strength & Conversion to Power
-        { hari: "Senin", sesi: "Maximum Strength (MxS)", materi: "Squat, Romanian Deadlift, Drag Shot Wrist Mechanics under Load", durasi: "90 Mnt", rpeTarget: "7-8" },
-        { hari: "Selasa", sesi: "Anaerobic Conditioning & RSA", materi: "Repeated Sprint Ability (RSA) 6x20m, Wall-pass Drill under Pressure", durasi: "90 Mnt", rpeTarget: "8" },
-        { hari: "Rabu", sesi: "Active Recovery", materi: "Aerobic Jogging Zone 1-2, Hip & Ankle Flexibility", durasi: "45 Mnt", rpeTarget: "3-4" },
-        { hari: "Kamis", sesi: "Upper Body & Core Power", materi: "Plyo Push Ups, Anti-Rotational Core Hold, Wrist Explosive Drill", durasi: "75 Mnt", rpeTarget: "7-8" },
-        { hari: "Jumat", sesi: "Conversion to Power (Shooting)", materi: "Explosive Drag Shot & Wrist Shot dari Jarak 5m & 7m", durasi: "90 Mnt", rpeTarget: "8" },
-        { hari: "Sabtu", sesi: "Match Conditioning", materi: "Controlled Full Game (5v5) - Fokus Power Stance & Physical Contact", durasi: "90 Mnt", rpeTarget: "8-9" },
-        { hari: "Minggu", sesi: "Rest Total", materi: "Complete Rest & Muscle Recovery", durasi: "-", rpeTarget: "1" }
-    ],
-    "Speed & Agility": [ // K1: Pra-Kompetisi (SAQ & Match Specific)
-        { hari: "Senin", sesi: "SAQ & Acceleration Drill", materi: "Sprint Akselerasi 5-10m, T-Test Agility, Lateral Shuffle Quick Direction", durasi: "75 Mnt", rpeTarget: "8-9" },
-        { hari: "Selasa", sesi: "Fast Break & Set-Piece Taktik", materi: "Transisi Cepat Counter Attack, Powerplay Drill, Free-hit Routines", durasi: "90 Mnt", rpeTarget: "7-8" },
-        { hari: "Rabu", sesi: "Rest / Recovery Syaraf", materi: "Foam Rolling, Contrast Bath & Sleep Optimization", durasi: "-", rpeTarget: "1-2" },
-        { hari: "Kamis", sesi: "Eksplosivitas & Reaction Speed", materi: "Kneeling Jump, Box Jump, High-Velocity Quick Release Shooting", durasi: "60 Mnt", rpeTarget: "8-9" },
-        { hari: "Jumat", sesi: "Taktik Spesifik Posisi", materi: "Slot Area Finish Drill (FL/FR/C), High-Pressure Outlet Pass (DL/DR/GK)", durasi: "75 Mnt", rpeTarget: "8" },
-        { hari: "Sabtu", sesi: "Simulasi Game High-Tempo", materi: "Match Full Court (3x20 Mnt) - High Intensity Shift Rotation (45s)", durasi: "100 Mnt", rpeTarget: "9" },
-        { hari: "Minggu", sesi: "Rest Total", materi: "Complete Rest", durasi: "-", rpeTarget: "1" }
-    ],
-    "Tapering": [ // K2: Peaking, Tapering & Match Day
-        { hari: "Senin", sesi: "Sharpening & Fine-Tuning", materi: "Powerplay Precision, Penalty Kill Organization, Set Piece Polish", durasi: "60 Mnt", rpeTarget: "6" },
-        { hari: "Selasa", sesi: "Light Reaction & Quickness", materi: "Short Sprint 5m, Light Gate Agility, Low Volume High Sharpness", durasi: "45 Mnt", rpeTarget: "5-6" },
-        { hari: "Rabu", sesi: "Rest / Mental Prep", materi: "Massage, Hydration, Video Analysis & Mental Preparation", durasi: "-", rpeTarget: "1" },
-        { hari: "Kamis", sesi: "Tactical Polish", materi: "Shooting Accuracy, Communication Polish antar Line-Up", durasi: "45 Mnt", rpeTarget: "5" },
-        { hari: "Jumat", sesi: "Captain's Run", materi: "Walkthrough Tactics, Activation Drills, Light Dynamic Stretching", durasi: "30 Mnt", rpeTarget: "3-4" },
-        { hari: "Sabtu", sesi: "MATCH DAY / COMPETITION", materi: "PERTANDINGAN UTAMA / FINAL SIMULATION", durasi: "Gameday", rpeTarget: "9-10" },
-        { hari: "Minggu", sesi: "Post-Match Recovery", materi: "Ice Bath, Hydrotherapy, Light Walk & Regeneration", durasi: "45 Mnt", rpeTarget: "2" }
-    ]
-};
 
         function queueFailedSync(payload) {
             let pendingQueue = loadStorage('pendingSyncQueue', []);
@@ -1982,20 +1598,22 @@ function exportGymLogsCSV() {
         }
 
         function logout() {
-            if (state.matchLive.dribbleTimer.intervalId) {
-                clearInterval(state.matchLive.dribbleTimer.intervalId);
-                state.matchLive.dribbleTimer.isRunning = false;
-            }
-            if (state.matchLive.matchTimer && state.matchLive.matchTimer.intervalId) {
-                clearInterval(state.matchLive.matchTimer.intervalId);
-                state.matchLive.matchTimer.isRunning = false;
-            }
-            if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.add('hidden');
-            if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.remove('hidden');
-            state.activeAtlet = null;
-            selectLoginRole('pelatih');
-            showToast('Anda telah keluar dari aplikasi.', 'success');
-        }
+    cleanupThreeJS(); // Bersihkan Three.js saat sesi logout
+
+    if (state.matchLive.dribbleTimer.intervalId) {
+        clearInterval(state.matchLive.dribbleTimer.intervalId);
+        state.matchLive.dribbleTimer.isRunning = false;
+    }
+    if (state.matchLive.matchTimer && state.matchLive.matchTimer.intervalId) {
+        clearInterval(state.matchLive.matchTimer.intervalId);
+        state.matchLive.matchTimer.isRunning = false;
+    }
+    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.add('hidden');
+    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.remove('hidden');
+    state.activeAtlet = null;
+    selectLoginRole('pelatih');
+    showToast('Anda telah keluar dari aplikasi.', 'success');
+}
 
         function showToast(message, type = 'loading') {
             const container = document.getElementById('toast-container');
@@ -2066,6 +1684,9 @@ function exportGymLogsCSV() {
         }
 
         function navigate(menuId) {
+    // Hentikan dan bersihkan Three.js jika meninggalkan menu anatomi 3D
+    cleanupThreeJS();
+
     // Hentikan Dribble Timer jika berjalan
     if (state.matchLive.dribbleTimer && state.matchLive.dribbleTimer.intervalId) {
         clearInterval(state.matchLive.dribbleTimer.intervalId);
@@ -3676,6 +3297,27 @@ function renderMatchHeatmap() {
             state.selectedProgramWeek = parseInt(val);
             updateProgramLatihanUI();
         }
+
+        const menuLatihanHarian = {
+            AA: [
+                { hari: 'Senin', sesi: 'Kekuatan Adaptasi', materi: 'Bodyweight Squat, Core Plank, Wall-Pass Drill', durasi: '75 mnt', rpeTarget: 5 },
+                { hari: 'Selasa', sesi: 'Aerobik Dasar', materi: 'Continuous Jogging Zona 2, Static Stretching', durasi: '60 mnt', rpeTarget: 4 },
+                { hari: 'Rabu', sesi: 'Teknik Stickwork', materi: 'Slalom Cone, Forehand-Backhand Handling', durasi: '90 mnt', rpeTarget: 6 },
+                { hari: 'Kamis', sesi: 'Recovery Aktif', materi: 'Mobility Flow, Foam Rolling, Stretching', durasi: '45 mnt', rpeTarget: 2 },
+                { hari: 'Jumat', sesi: 'Sirkuit Fisik', materi: 'Push Up, Lunges, Agility Ladder Drill', durasi: '75 mnt', rpeTarget: 6 },
+                { hari: 'Sabtu', sesi: 'Simulasi Game', materi: 'Small Sided Games (3v3 / 4v4 Shift Match)', durasi: '90 mnt', rpeTarget: 7 },
+                { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest Day / Pemulihan Fisiologis', durasi: '0 mnt', rpeTarget: 1 }
+            ],
+            Strength: [
+                { hari: 'Senin', sesi: 'Max Strength (Lower)', materi: 'Back Squat 80% 1RM, Bulgarian Split Squat', durasi: '80 mnt', rpeTarget: 8 },
+                { hari: 'Selasa', sesi: 'Interval MAS', materi: '15s Sprint / 15s Jog MAS Conditioning', durasi: '60 mnt', rpeTarget: 7 },
+                { hari: 'Rabu', sesi: 'Taktik & Set-Piece', materi: 'Powerplay, Shorthanded Defense, Drag Shot', durasi: '90 mnt', rpeTarget: 6 },
+                { hari: 'Kamis', sesi: 'Recovery Aktif', materi: 'Low-Intensity Aerobic, Yoga Flow', durasi: '45 mnt', rpeTarget: 3 },
+                { hari: 'Jumat', sesi: 'Max Strength (Upper)', materi: 'Bench Press, Pull-Up, Landmine Rotation', durasi: '80 mnt', rpeTarget: 8 },
+                { hari: 'Sabtu', sesi: 'High-Tempo Match', materi: 'Full Court Scrimmage 3 x 20 Menit', durasi: '90 mnt', rpeTarget: 9 },
+                { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest Day', durasi: '0 mnt', rpeTarget: 1 }
+            ]
+        };
 
         function updateProgramLatihanUI() {
     const area = document.getElementById('program-result-area');
