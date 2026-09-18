@@ -2770,39 +2770,48 @@ function updateMatchScore(team, delta, triggerGKConceded = true) {
         }
 
         function handleCourtClick(e) {
-            const court = e.currentTarget;
-            const rect = court.getBoundingClientRect();
-            
-            let clientX = e.clientX;
-            let clientY = e.clientY;
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            }
+    const court = e.currentTarget;
+    const rect = court.getBoundingClientRect();
+    
+    let clientX = e.clientX;
+    let clientY = e.clientY;
+    if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    }
 
-            const x = Math.round(((clientX - rect.left) / rect.width) * 100);
-            const y = Math.round(((clientY - rect.top) / rect.height) * 100);
+    const x = Math.round(((clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((clientY - rect.top) / rect.height) * 100);
 
-            const activePlayer = state.atlet.find(a => a.id === state.matchLive.activePlayerId);
-            if (!activePlayer) return;
+    const activePlayer = state.atlet.find(a => a.id === state.matchLive.activePlayerId);
+    if (!activePlayer) return;
 
-            const typeNames = { loss: 'Kehilangan Bola', intercept: 'Cut Bola', shoot_att: 'Percobaan Shoot' };
-            
-            state.matchLive.spatialEvents.unshift({
-                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), x, y, type: state.matchLive.activeSpatialEventType,
-                playerId: activePlayer.id, timestamp: new Date().toLocaleTimeString()
-            });
+    const typeNames = { loss: 'Kehilangan Bola', intercept: 'Cut Bola', shoot_att: 'Percobaan Shoot' };
+    
+    // SAMAKAN SATU ID UNTUK KEDUA DATA
+    const sharedId = 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
 
-            state.matchLive.logs.unshift({
-                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), time: new Date().toLocaleTimeString(),
-                playerId: activePlayer.id, type: 'spatial', desc: `[Spatial] ${escapeHTML(activePlayer.nama)} - ${typeNames[state.matchLive.activeSpatialEventType]} di (${x}%, ${y}%)`
-            });
+    state.matchLive.spatialEvents.unshift({
+        id: sharedId, 
+        x, y, 
+        type: state.matchLive.activeSpatialEventType,
+        playerId: activePlayer.id, 
+        timestamp: new Date().toLocaleTimeString()
+    });
 
-            saveStorage('matchLive', state.matchLive);
-     renderMatchLiveUI();
-     renderMatchHeatmap();
-     showToast(`Event dicatat untuk ${escapeHTML(activePlayer.nama)}!`, 'success');
- }
+    state.matchLive.logs.unshift({
+        id: sharedId, 
+        time: new Date().toLocaleTimeString(),
+        playerId: activePlayer.id, 
+        type: 'spatial', 
+        desc: `[Spatial] ${escapeHTML(activePlayer.nama)} - ${typeNames[state.matchLive.activeSpatialEventType]} di (${x}%, ${y}%)`
+    });
+
+    saveStorage('matchLive', state.matchLive);
+    renderMatchLiveUI();
+    renderMatchHeatmap();
+    showToast(`Event dicatat untuk ${escapeHTML(activePlayer.nama)}!`, 'success');
+}
 
 		let matchHeatmapInstance = null;
 
@@ -2908,6 +2917,17 @@ function renderMatchHeatmap() {
             showToast('Log aktivitas dihapus', 'success');
         }
 
+        function deleteSpatialEvent(id) {
+            // Hapus dari data lapangan dan dari riwayat log
+            state.matchLive.spatialEvents = (state.matchLive.spatialEvents || []).filter(ev => ev.id !== id);
+            state.matchLive.logs = (state.matchLive.logs || []).filter(l => l.id !== id);
+            
+            saveStorage('matchLive', state.matchLive);
+            renderMatchLiveUI();
+            renderMatchHeatmap();
+            showToast('Penanda lapangan berhasil dihapus!', 'success');
+        }
+		
         function toggleDribbleTimer() {
             const timer = state.matchLive.dribbleTimer;
             const playerId = state.matchLive.activePlayerId;
@@ -3238,10 +3258,13 @@ function renderMatchHeatmap() {
                     </div>
                     <div class="relative z-20 w-full h-full pointer-events-none">
                         ${state.matchLive.spatialEvents.map(ev => `
-                            <div onclick="event.stopPropagation();" class="pointer-events-auto absolute w-5 h-5 sm:w-6 sm:h-6 bg-amber-400 text-slate-900 rounded-full flex items-center justify-center font-black text-[10px] shadow-lg -translate-x-1/2 -translate-y-1/2 border border-slate-900" style="left: ${ev.x}%; top: ${ev.y}%;">
-                                ${escapeHTML(state.atlet.find(a => String(a.id) === String(ev.playerId))?.nama.charAt(0) || '?')}
-                            </div>
-                        `).join('')}
+    <div onclick="event.stopPropagation(); deleteSpatialEvent('${ev.id}')" 
+         title="Klik untuk menghapus titik ini"
+         class="pointer-events-auto absolute w-5 h-5 sm:w-6 sm:h-6 bg-amber-400 hover:bg-rose-500 hover:text-white cursor-pointer text-slate-900 rounded-full flex items-center justify-center font-black text-[10px] shadow-lg -translate-x-1/2 -translate-y-1/2 border border-slate-900 transition-all hover:scale-125" 
+         style="left: ${ev.x}%; top: ${ev.y}%;">
+        ${escapeHTML(state.atlet.find(a => String(a.id) === String(ev.playerId))?.nama.charAt(0) || '?')}
+    </div>
+`).join('')}
                     </div>
                 </div>
             </div>
