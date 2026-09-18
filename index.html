@@ -636,176 +636,186 @@ if (canvasPos) {
                 }
             }
 
+    // =========================================================================
     // 3. TES FISIK & TEKNIK (Radar Kebugaran + Bar Norma)
-if (menuId === 'menu-3') {
-    // 3A. DIAGRAM RADAR
-    const ctxRadar = document.getElementById('chart-radar-fisik')?.getContext('2d');
-    if (ctxRadar) {
-        chartInstances['radarFisik'] = new Chart(ctxRadar, {
-            type: 'radar',
-            data: {
-                labels: ['VO2Max (Yo-Yo)', 'Flexibility (V-Sit)', 'Upper Power (Push Up)', 'Leg Power (V-Jump)', 'Agility (T-Test)', 'Core (Plank)'],
-                datasets: [{
-                    label: 'Rerata Skuad Saat Ini',
-                    data: [78, 82, 70, 85, 68, 90],
-                    backgroundColor: 'rgba(56, 189, 248, 0.25)',
-                    borderColor: '#0284C7',
-                    pointBackgroundColor: '#0284C7',
-                    pointBorderColor: '#ffffff',
-                    pointHoverBackgroundColor: '#ffffff',
-                    pointHoverBorderColor: '#0284C7',
-                    borderWidth: 2.5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+    // =========================================================================
+    if (menuId === 'menu-3') {
+        // 3A. DIAGRAM RADAR
+        const canvasRadar = document.getElementById('chart-radar-fisik');
+        if (canvasRadar) {
+            const oldRadar = Chart.getChart(canvasRadar);
+            if (oldRadar) oldRadar.destroy();
+
+            // Hitung agregasi rerata dinamis dari state.tesFisik
+            const calcAvgScore = (key, fallback) => {
+                const logs = (state.tesFisik || []).filter(t => t.keyTes === key);
+                if (!logs.length) return fallback;
+                const sum = logs.reduce((acc, cur) => acc + (parseFloat(cur.skor) || 0), 0);
+                return Math.round(sum / logs.length);
+            };
+
+            const dataRadarValues = [
+                calcAvgScore('yoyo', 78),
+                calcAvgScore('vsit', 82),
+                calcAvgScore('push_up', 70),
+                calcAvgScore('vjump', 85),
+                calcAvgScore('ttest', 68),
+                calcAvgScore('plank', 90)
+            ];
+
+            chartInstances['radarFisik'] = new Chart(canvasRadar.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: ['VO2Max (Yo-Yo)', 'Flexibility (V-Sit)', 'Upper Power (Push Up)', 'Leg Power (V-Jump)', 'Agility (T-Test)', 'Core (Plank)'],
+                    datasets: [{
+                        label: 'Rerata Skuad Saat Ini',
+                        data: dataRadarValues,
+                        backgroundColor: 'rgba(56, 189, 248, 0.25)',
+                        borderColor: '#0284C7',
+                        pointBackgroundColor: '#0284C7',
+                        pointBorderColor: '#ffffff',
+                        borderWidth: 2.5
+                    }]
                 },
-                scales: {
-                    r: {
-                        angleLines: { color: 'rgba(226, 232, 240, 0.8)' },
-                        grid: { color: 'rgba(226, 232, 240, 0.8)' },
-                        pointLabels: { font: { size: 10, weight: 'bold', family: "'Plus Jakarta Sans', sans-serif" }, color: '#334155' },
-                        ticks: { display: false },
-                        suggestedMin: 0,
-                        suggestedMax: 100
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(226, 232, 240, 0.8)' },
+                            grid: { color: 'rgba(226, 232, 240, 0.8)' },
+                            pointLabels: { font: { size: 10, weight: 'bold', family: "'Plus Jakarta Sans', sans-serif" }, color: '#334155' },
+                            ticks: { display: false },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // 3B. DIAGRAM BAR DISTRIBUSI NORMA
-    const ctxNormaBar = document.getElementById('chart-norma-bar')?.getContext('2d');
-    if (ctxNormaBar) {
-        let countSB = 0, countB = 0, countS = 0, countK = 0, countSK = 0;
-        state.tesFisik.forEach(t => {
-            const at = state.atlet.find(a => String(a.id) === String(t.atletId));
-            const kat = hitungKategoriNorma(t.keyTes, t.skor, at?.gender, at?.posisi);
-            if (kat === 'SB') countSB++;
-            else if (kat === 'B') countB++;
-            else if (kat === 'S') countS++;
-            else if (kat === 'K') countK++;
-            else if (kat === 'SK') countSK++;
-        });
+        // 3B. DIAGRAM BAR DISTRIBUSI NORMA
+        const canvasNormaBar = document.getElementById('chart-norma-bar');
+        if (canvasNormaBar) {
+            const oldNorma = Chart.getChart(canvasNormaBar);
+            if (oldNorma) oldNorma.destroy();
 
-        chartInstances['normaBar'] = new Chart(ctxNormaBar, {
-            type: 'bar',
-            data: {
-                labels: ['Sangat Baik (SB)', 'Baik (B)', 'Sedang (S)', 'Kurang (K)', 'Sangat Kurang (SK)'],
-                datasets: [{
-                    label: 'Jumlah Evaluasi',
-                    data: [countSB, countB, countS, countK, countSK],
-                    backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#F97316', '#EF4444'],
-                    borderRadius: 8,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+            let countSB = 0, countB = 0, countS = 0, countK = 0, countSK = 0;
+            (state.tesFisik || []).forEach(t => {
+                const at = (state.atlet || []).find(a => String(a.id) === String(t.atletId));
+                const kat = hitungKategoriNorma(t.keyTes, t.skor, at?.gender, at?.posisi);
+                if (kat === 'SB') countSB++;
+                else if (kat === 'B') countB++;
+                else if (kat === 'S') countS++;
+                else if (kat === 'K') countK++;
+                else if (kat === 'SK') countSK++;
+            });
+
+            chartInstances['normaBar'] = new Chart(canvasNormaBar.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Sangat Baik (SB)', 'Baik (B)', 'Sedang (S)', 'Kurang (K)', 'Sangat Kurang (SK)'],
+                    datasets: [{
+                        label: 'Jumlah Evaluasi',
+                        data: [countSB, countB, countS, countK, countSK],
+                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#F97316', '#EF4444'],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
                 },
-                scales: {
-                    x: {
-                        ticks: { font: { size: 10, weight: 'bold' } },
-                        grid: { display: false }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 10 } },
-                        grid: { color: '#F1F5F9' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { font: { size: 10, weight: 'bold' } }, grid: { display: false } },
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#F1F5F9' } }
                     }
                 }
-            }
-        });
+            });
+        }
     }
-}
 
-    // 4. PERIODISASI LATIHAN (Diagram Volume vs Intensitas Bompa Model)
-if (menuId === 'menu-4') {
-    const ctxPer = document.getElementById('chart-periodisasi-bompa')?.getContext('2d');
-    if (ctxPer) {
-        const list = generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks);
-        
-        // Gradasi Warna Area Chart Volume (Blue/Cyan)
-        const gradientVol = ctxPer.createLinearGradient(0, 0, 0, 300);
-        gradientVol.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
-        gradientVol.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+    // =========================================================================
+    // 4. PERIODISASI LATIHAN (Volume vs Intensitas Bompa)
+    // =========================================================================
+    if (menuId === 'menu-4') {
+        const canvasPer = document.getElementById('chart-periodisasi-bompa');
+        if (canvasPer) {
+            const oldPer = Chart.getChart(canvasPer);
+            if (oldPer) oldPer.destroy();
 
-        // Gradasi Warna Area Chart Intensitas (Rose/Red)
-        const gradientInt = ctxPer.createLinearGradient(0, 0, 0, 300);
-        gradientInt.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
-        gradientInt.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+            const ctxPer = canvasPer.getContext('2d');
+            const list = generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks);
 
-        chartInstances['periodisasi'] = new Chart(ctxPer, {
-            type: 'line',
-            data: {
-                labels: list.map(l => 'W' + l.mingguKe),
-                datasets: [
-                    { 
-                        label: 'Volume (%)', 
-                        data: list.map(l => l.volumePct), 
-                        borderColor: '#2563EB', 
-                        backgroundColor: gradientVol, 
-                        fill: true, 
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointBackgroundColor: '#2563EB',
-                        pointBorderColor: '#ffffff',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    },
-                    { 
-                        label: 'Intensitas (%)', 
-                        data: list.map(l => l.intensitasPct), 
-                        borderColor: '#EF4444', 
-                        backgroundColor: gradientInt, 
-                        fill: true, 
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointBackgroundColor: '#EF4444',
-                        pointBorderColor: '#ffffff',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }
-                ]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: { 
-                    y: { 
-                        min: 0, 
-                        max: 100,
-                        ticks: { 
-                            stepSize: 20,
-                            callback: v => v + '%',
-                            font: { size: 10, weight: 'bold', family: "'Plus Jakarta Sans', sans-serif" }
+            const gradientVol = ctxPer.createLinearGradient(0, 0, 0, 300);
+            gradientVol.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
+            gradientVol.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+            const gradientInt = ctxPer.createLinearGradient(0, 0, 0, 300);
+            gradientInt.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
+            gradientInt.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+
+            chartInstances['periodisasi'] = new Chart(ctxPer, {
+                type: 'line',
+                data: {
+                    labels: list.map(l => 'W' + l.mingguKe),
+                    datasets: [
+                        {
+                            label: 'Volume (%)',
+                            data: list.map(l => l.volumePct),
+                            borderColor: '#2563EB',
+                            backgroundColor: gradientVol,
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#2563EB',
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 4
                         },
-                        grid: { color: '#F1F5F9' }
-                    },
-                    x: {
-                        ticks: { font: { size: 10, weight: 'bold', family: "'Plus Jakarta Sans', sans-serif" } },
-                        grid: { display: false }
+                        {
+                            label: 'Intensitas (%)',
+                            data: list.map(l => l.intensitasPct),
+                            borderColor: '#EF4444',
+                            backgroundColor: gradientInt,
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#EF4444',
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { stepSize: 20, callback: v => v + '%', font: { size: 10, weight: 'bold' } },
+                            grid: { color: '#F1F5F9' }
+                        },
+                        x: { ticks: { font: { size: 10, weight: 'bold' } }, grid: { display: false } }
                     }
-                } 
-            }
-        });
+                }
+            });
+        }
     }
-}
 
-    // 5. PROGRAM LATIHAN (Distribusi RPE Target Mingguan)
+    // =========================================================================
+    // 5. PROGRAM LATIHAN (Target RPE Mingguan)
+    // =========================================================================
     if (menuId === 'menu-5') {
-        const ctxProg = document.getElementById('chart-program-rpe')?.getContext('2d');
-        if (ctxProg) {
-            chartInstances['progRpe'] = new Chart(ctxProg, {
+        const canvasProg = document.getElementById('chart-program-rpe');
+        if (canvasProg) {
+            const oldProg = Chart.getChart(canvasProg);
+            if (oldProg) oldProg.destroy();
+
+            chartInstances['progRpe'] = new Chart(canvasProg.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
@@ -816,21 +826,33 @@ if (menuId === 'menu-4') {
                         borderRadius: 6
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 10 } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 10, ticks: { stepSize: 2 } } }
+                }
             });
         }
     }
 
-    // 6. MATCH LIVE (Perbandingan Aksi Match)
+    // =========================================================================
+    // 6. MATCH LIVE (Perbandingan Aksi Tim)
+    // =========================================================================
     if (menuId === 'menu-6') {
-        const ctxMatch = document.getElementById('chart-match-actions')?.getContext('2d');
-        if (ctxMatch) {
+        const canvasMatch = document.getElementById('chart-match-actions');
+        if (canvasMatch) {
+            const oldMatch = Chart.getChart(canvasMatch);
+            if (oldMatch) oldMatch.destroy();
+
             let passAcc = 0, passFail = 0, recAcc = 0, recFail = 0;
-            Object.values(state.matchLive.playerStats).forEach(s => {
-                passAcc += s.passAcc || 0; passFail += s.passFail || 0;
-                recAcc += s.recAcc || 0; recFail += s.recFail || 0;
+            Object.values(state.matchLive.playerStats || {}).forEach(s => {
+                passAcc += s.passAcc || 0;
+                passFail += s.passFail || 0;
+                recAcc += s.recAcc || 0;
+                recFail += s.recFail || 0;
             });
-            chartInstances['matchActions'] = new Chart(ctxMatch, {
+
+            chartInstances['matchActions'] = new Chart(canvasMatch.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: ['Passing Sukses', 'Passing Gagal', 'Receiving Sukses', 'Receiving Gagal'],
@@ -841,85 +863,98 @@ if (menuId === 'menu-4') {
                         borderRadius: 6
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
             });
         }
     }
 
-    // 7. JOGGING & MAS (Grafik Volume & Pace)
-            if (menuId === 'menu-7') {
-                const ctx = document.getElementById('chart-jogging-mas')?.getContext('2d');
-                if (ctx) {
-                    const logs = state.jogging || [];
-                    const labels = logs.length > 0 ? logs.map((_, i) => `Sesi ${i + 1}`) : ['Sesi 1', 'Sesi 2', 'Sesi 3', 'Sesi 4', 'Sesi 5'];
-                    const dataJarak = logs.length > 0 ? logs.map(j => parseFloat(j.jarak) || 0) : [3, 4, 3.5, 5, 4.2];
+    // =========================================================================
+    // 7. JOGGING & MAS (Volume Jarak KM Riil)
+    // =========================================================================
+    if (menuId === 'menu-7') {
+        const canvasJogging = document.getElementById('chart-jogging-mas');
+        if (canvasJogging) {
+            const oldJogging = Chart.getChart(canvasJogging);
+            if (oldJogging) oldJogging.destroy();
 
-                    chartInstances['jogging'] = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels,
-                            datasets: [{
-                                label: 'Jarak (KM)',
-                                data: dataJarak,
-                                borderColor: '#0284C7',
-                                backgroundColor: 'rgba(2, 132, 199, 0.1)',
-                                fill: true,
-                                tension: 0.3,
-                                borderWidth: 2.5,
-                                pointRadius: 4
-                            }]
-                        },
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false }
-                            },
-                            scales: {
-                                x: { ticks: { font: { size: 10, weight: 'bold' } } },
-                                y: { 
-                                    beginAtZero: true,
-                                    ticks: { callback: v => v + ' km', font: { size: 10 } } 
-                                }
-                            }
+            // Membaca state.joggingLogs yang valid
+            const logs = state.joggingLogs || [];
+            const labels = logs.length > 0 ? logs.slice(-7).map((_, i) => `Sesi ${i + 1}`) : ['S1', 'S2', 'S3', 'S4', 'S5'];
+            const dataJarak = logs.length > 0 ? logs.slice(-7).map(j => parseFloat(j.jarak) || 0) : [3, 4, 3.5, 5, 4.2];
+
+            chartInstances['jogging'] = new Chart(canvasJogging.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Jarak (KM)',
+                        data: dataJarak,
+                        borderColor: '#0284C7',
+                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2.5,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { font: { size: 10, weight: 'bold' } } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => v + ' km', font: { size: 10 } }
                         }
-                    });
+                    }
                 }
-            }
+            });
+        }
+    }
 
-    // 8. VALIDASI LAPORAN (Status Keputusan Validasi)
-            if (menuId === 'menu-8') {
-                const ctx = document.getElementById('chart-validasi-status')?.getContext('2d');
-                if (ctx) {
-                    const logs = state.laporanValidasi || [];
-                    const pending = logs.filter(l => l.status === 'Menunggu').length;
-                    const approved = logs.filter(l => l.status === 'Disetujui').length;
-                    const rejected = logs.filter(l => l.status === 'Ditolak').length;
+    // =========================================================================
+    // 8. VALIDASI LAPORAN (Proporsi Status)
+    // =========================================================================
+    if (menuId === 'menu-8') {
+        const canvasVal = document.getElementById('chart-validasi-status');
+        if (canvasVal) {
+            const oldVal = Chart.getChart(canvasVal);
+            if (oldVal) oldVal.destroy();
 
-                    chartInstances['validasiStatus'] = new Chart(ctx, {
-                        type: 'pie',
-                        data: {
-                            labels: ['Menunggu', 'Disetujui', 'Ditolak'],
-                            datasets: [{
-                                data: [pending, approved, rejected],
-                                backgroundColor: ['#F59E0B', '#10B981', '#EF4444'],
-                                borderWidth: 2,
-                                borderColor: '#ffffff'
-                            }]
-                        },
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false, 
-                            plugins: { 
-                                legend: { 
-                                    position: 'right',
-                                    labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } }
-                                } 
-                            } 
+            const logs = state.laporanValidasi || [];
+            const pending = logs.filter(l => l.status === 'Menunggu').length;
+            const approved = logs.filter(l => l.status === 'Disetujui').length;
+            const rejected = logs.filter(l => l.status === 'Ditolak').length;
+
+            chartInstances['validasiStatus'] = new Chart(canvasVal.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: ['Menunggu', 'Disetujui', 'Ditolak'],
+                    datasets: [{
+                        data: [pending, approved, rejected],
+                        backgroundColor: ['#F59E0B', '#10B981', '#EF4444'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } }
                         }
-                    });
+                    }
                 }
-            }
+            });
+        }
+    }
 function renderAcwrChart(canvasId, labels, dataValues) {
     if (chartInstances['acwrBar']) {
         chartInstances['acwrBar'].destroy();
