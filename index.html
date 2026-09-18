@@ -4599,7 +4599,7 @@ function init3DAnatomyViewer() {
 function triggerHUDMuscle(muscleKey) {
     if (!muscleKey) return;
 
-    // 1. Kembalikan semua bagian otot SVG ke warna biru blueprint standar
+    // 1. Reset semua kelompok otot ke biru gelap blueprint
     document.querySelectorAll('svg g[id^="hotspot-"]').forEach(g => {
         g.querySelectorAll('path, ellipse, rect, circle').forEach(el => {
             el.setAttribute('fill', '#1b4578');
@@ -4609,7 +4609,7 @@ function triggerHUDMuscle(muscleKey) {
         });
     });
 
-    // 2. Beri efek neon menyala terang pada otot yang dipilih
+    // 2. Beri sorotan neon menyala terang ke otot yang dipilih
     const activeGroup = document.getElementById(`hotspot-${muscleKey}`);
     if (activeGroup) {
         activeGroup.querySelectorAll('path, ellipse, rect, circle').forEach(el => {
@@ -4620,17 +4620,17 @@ function triggerHUDMuscle(muscleKey) {
         });
     }
 
-    // 3. Sinkronkan status aktif tombol navigasi di bawah diagram
+    // 3. Sorot tombol chip di bawah diagram
     const allBtns = document.querySelectorAll('span[onclick^="triggerHUDMuscle"]');
     allBtns.forEach(btn => {
         if (btn.getAttribute('onclick').includes(`'${muscleKey}'`)) {
-            btn.className = "cursor-pointer text-[9px] bg-cyan-500 text-slate-950 px-2.5 py-1 rounded-lg font-black shadow-md border border-cyan-300 transition";
+            btn.className = "cursor-pointer text-[9px] bg-cyan-400 text-slate-950 px-2.5 py-1 rounded-lg font-black shadow-lg shadow-cyan-400/40 border border-cyan-200 transition";
         } else {
-            btn.className = "cursor-pointer text-[9px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition";
+            btn.className = "cursor-pointer text-[9px] bg-slate-900/90 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg border border-slate-800 font-bold transition";
         }
     });
 
-    // 4. Perbarui kartu analisis detail di sebelah kanan
+    // 4. Perbarui kartu detail di kanan
     if (typeof highlightMuscleGroup === 'function') {
         highlightMuscleGroup(muscleKey);
     }
@@ -7082,87 +7082,115 @@ function triggerHUDMuscle(muscleKey) {
 
                         <!-- VIEWPORT SVG ANATOMI HUD -->
                         <div class="w-full flex items-center justify-center relative z-10 my-auto py-2">
-                            <svg viewBox="0 0 260 520" class="w-full max-w-[250px] h-auto select-none">
+                            <svg viewBox="0 0 300 620" class="w-full max-w-[280px] h-auto select-none drop-shadow-[0_0_25px_rgba(2,132,199,0.15)]">
     <defs>
+        <!-- Glow Halus Neon -->
         <filter id="hudNeonGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="3.5" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
         </filter>
+        <!-- Gradien Garis Tubuh -->
+        <linearGradient id="bodyBaseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#0b1e36" />
+            <stop offset="100%" stop-color="#050d1a" />
+        </linearGradient>
     </defs>
 
-    <!-- KEPALA & LEHER -->
-    <ellipse cx="130" cy="45" rx="18" ry="24" fill="#0c1e38" stroke="#0284c7" stroke-width="1.2" />
-    <path d="M123 68 L123 82 L137 82 L137 68 Z" fill="#081426" />
-
-    <!-- 1. STAPEDIUS (Telinga / Mikro) -->
-    <g id="hotspot-stapedius" onclick="triggerHUDMuscle('stapedius')" class="cursor-pointer">
-        <circle cx="112" cy="45" r="3.5" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
-        <circle cx="148" cy="45" r="3.5" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
+    <!-- SILUET DASAR KERANGKA / KONTUR TUBUH -->
+    <g fill="none" stroke="#1e3a5f" stroke-width="1.5" opacity="0.6">
+        <!-- Kepala & Rahang -->
+        <path d="M150,25 C165,25 174,38 174,56 C174,75 162,92 150,95 C138,92 126,75 126,56 C126,38 135,25 150,25 Z" fill="#081426" stroke="#0284c7" />
+        <!-- Garis Tulang Belakang & Sumbu Simetri -->
+        <line x1="150" y1="95" x2="150" y2="280" stroke="#0369a1" stroke-dasharray="3 3" />
+        <!-- Pinggul & Telapak Kaki -->
+        <path d="M120,580 L115,595 L140,595 L135,580" fill="#0c1e38" />
+        <path d="M180,580 L185,595 L160,595 L165,580" fill="#0c1e38" />
     </g>
 
-    <!-- 5. BAHU / DELTOIDEUS -->
-    <g id="hotspot-deltoid" onclick="triggerHUDMuscle('deltoid')" class="cursor-pointer">
-        <path d="M96 90 C84 94 72 110 76 128 C84 130 92 120 96 106 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <path d="M164 90 C176 94 188 110 184 128 C176 130 168 120 164 106 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    <!-- 1. STAPEDIUS (Otot Pendengaran Mikro) -->
+    <g id="hotspot-stapedius" onclick="triggerHUDMuscle('stapedius')" class="cursor-pointer group">
+        <circle cx="125" cy="54" r="4" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <circle cx="175" cy="54" r="4" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
     </g>
 
-    <!-- 4. ROTATOR CUFF / LENGAN ATAS -->
-    <g id="hotspot-rotator" onclick="triggerHUDMuscle('rotator')" class="cursor-pointer">
-        <ellipse cx="78" cy="148" rx="8" ry="20" transform="rotate(8 78 148)" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <ellipse cx="182" cy="148" rx="8" ry="20" transform="rotate(-8 182 148)" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    <!-- 5. BAHU (DELTOIDEUS - ANTERIOR & LATERAL) -->
+    <g id="hotspot-deltoid" onclick="triggerHUDMuscle('deltoid')" class="cursor-pointer group">
+        <path d="M112,108 C102,112 88,124 86,145 C86,158 96,165 104,152 C110,140 114,124 116,112 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <path d="M188,108 C198,112 212,124 214,145 C214,158 204,165 196,152 C190,140 186,124 184,112 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
     </g>
 
-    <!-- 3. FOREARM & WRIST -->
-    <g id="hotspot-forearm" onclick="triggerHUDMuscle('forearm')" class="cursor-pointer">
-        <path d="M72 175 C66 200 58 235 54 250 C62 252 70 230 76 202 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <path d="M188 175 C194 200 202 235 206 250 C198 252 190 230 184 202 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    <!-- 4. ROTATOR CUFF & LENGAN ATAS (BICEPS / BRACHIALIS) -->
+    <g id="hotspot-rotator" onclick="triggerHUDMuscle('rotator')" class="cursor-pointer group">
+        <path d="M96,160 C90,172 86,192 88,212 C96,214 102,198 104,178 C105,168 102,160 96,160 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <path d="M204,160 C210,172 214,192 212,212 C204,214 198,198 196,178 C195,168 198,160 204,160 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
     </g>
 
-    <!-- 8. LATS & DADA (PECTORALIS) -->
-    <g id="hotspot-lats" onclick="triggerHUDMuscle('lats')" class="cursor-pointer">
-        <path d="M98 92 C114 88 126 92 128 108 C128 118 116 122 102 118 C94 114 94 102 98 92 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <path d="M162 92 C146 88 134 92 132 108 C132 118 144 122 158 118 C166 114 166 102 162 92 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <path d="M94 118 C100 134 100 152 98 166 C90 154 88 136 94 118 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <path d="M166 118 C160 134 160 152 162 166 C170 154 172 136 166 118 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    <!-- 3. LENGAN BAWAH (FOREARM / WRIST FLEXORS) -->
+    <g id="hotspot-forearm" onclick="triggerHUDMuscle('forearm')" class="cursor-pointer group">
+        <path d="M86,218 C78,238 70,270 66,295 C73,298 80,285 86,252 C90,232 90,220 86,218 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <path d="M214,218 C222,238 230,270 234,295 C227,298 220,285 214,252 C210,232 210,220 214,218 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
     </g>
 
-    <!-- 6. ABS & CORE (OBLIQUUS) -->
-    <g id="hotspot-oblique" onclick="triggerHUDMuscle('oblique')" class="cursor-pointer">
-        <rect x="111" y="125" width="16" height="13" rx="2" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
-        <rect x="133" y="125" width="16" height="13" rx="2" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
-        <rect x="111" y="142" width="16" height="13" rx="2" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
-        <rect x="133" y="142" width="16" height="13" rx="2" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
-        <rect x="111" y="159" width="16" height="15" rx="2" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
-        <rect x="133" y="159" width="16" height="15" rx="2" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
+    <!-- 8. DADA (PECTORALIS) & PUNGGUNG SAYAP (LATISSIMUS DORSI) -->
+    <g id="hotspot-lats" onclick="triggerHUDMuscle('lats')" class="cursor-pointer group">
+        <!-- Pectoralis Kiri & Kanan -->
+        <path d="M118,110 C132,108 147,112 148,128 C148,144 135,152 118,148 C110,146 110,126 118,110 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <path d="M182,110 C168,108 153,112 152,128 C152,144 165,152 182,148 C190,146 190,126 182,110 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <!-- Lats Outer V-Taper -->
+        <path d="M110,154 C116,175 120,195 122,215 C114,205 106,182 106,160 Z" fill="#143760" stroke="#0284c7" stroke-width="1" />
+        <path d="M190,154 C184,175 180,195 178,215 C186,205 194,182 194,160 Z" fill="#143760" stroke="#0284c7" stroke-width="1" />
     </g>
 
-    <!-- 11. GLUTEUS (Pinggul / Bokong Utama) -->
-    <g id="hotspot-glute" onclick="triggerHUDMuscle('glute')" class="cursor-pointer">
-        <path d="M100 188 C116 182 144 182 160 188 C166 210 156 226 130 226 C104 226 94 210 100 188 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.4" />
+    <!-- 6. PERUT & CORE (RECTUS & OBLIQUUS ABDOMINIS) -->
+    <g id="hotspot-oblique" onclick="triggerHUDMuscle('oblique')" class="cursor-pointer group">
+        <!-- Six Pack Abs Kolom Kiri -->
+        <path d="M130,154 L146,154 C147,166 147,168 146,172 L130,172 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1" rx="2" />
+        <path d="M130,176 L146,176 C147,188 147,190 146,194 L130,194 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1" rx="2" />
+        <path d="M130,198 L146,198 C147,212 146,218 144,222 L131,222 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1" rx="2" />
+        <!-- Six Pack Abs Kolom Kanan -->
+        <path d="M170,154 L154,154 C153,166 153,168 154,172 L170,172 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1" rx="2" />
+        <path d="M170,176 L154,176 C153,188 153,190 154,194 L170,194 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1" rx="2" />
+        <path d="M170,198 L154,198 C153,212 154,218 156,222 L169,222 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1" rx="2" />
+        <!-- Obliques Samping -->
+        <path d="M122,175 C126,195 126,215 124,232 C118,225 116,205 118,185 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
+        <path d="M178,175 C174,195 174,215 176,232 C182,225 184,205 182,185 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1" />
     </g>
 
-    <!-- 10. QUADRICEPS (Paha Depan) -->
-    <g id="hotspot-quads" onclick="triggerHUDMuscle('quads')" class="cursor-pointer">
-        <path d="M102 234 C116 234 124 260 120 320 C108 322 96 300 96 250 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <path d="M158 234 C144 234 136 260 140 320 C152 322 164 300 164 250 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    <!-- 11. BOKONG / PANGGUL (GLUTEUS MAXIMUS) -->
+    <g id="hotspot-glute" onclick="triggerHUDMuscle('glute')" class="cursor-pointer group">
+        <path d="M124,236 C138,228 162,228 176,236 C186,252 184,274 172,285 C160,282 152,270 150,260 C148,270 140,282 128,285 C116,274 114,252 124,236 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.4" />
     </g>
 
-    <!-- 9. HAMSTRING (Paha Belakang / Sisi Deselerasi) -->
-    <g id="hotspot-hamstring" onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer">
-        <path d="M94 246 C96 280 98 316 100 328 C92 318 90 280 94 246 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <path d="M166 246 C164 280 162 316 160 328 C168 318 170 280 166 246 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    <!-- 10. PAHA DEPAN (QUADRICEPS FEMORIS) -->
+    <g id="hotspot-quads" onclick="triggerHUDMuscle('quads')" class="cursor-pointer group">
+        <!-- Paha Depan Kiri -->
+        <path d="M124,288 C138,285 146,310 144,360 C138,390 128,395 124,375 C118,340 114,305 124,288 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <!-- Paha Depan Kanan -->
+        <path d="M176,288 C162,285 154,310 156,360 C162,390 172,395 176,375 C182,340 186,305 176,288 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
     </g>
 
-    <!-- 2. POPLITEUS (Sendi Lutut) -->
-    <g id="hotspot-popliteus" onclick="triggerHUDMuscle('popliteus')" class="cursor-pointer">
-        <circle cx="110" cy="342" r="7" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <circle cx="150" cy="342" r="7" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    <!-- 9. PAHA BELAKANG (HAMSTRINGS - DESELERASI & SPRINT) -->
+    <g id="hotspot-hamstring" onclick="triggerHUDMuscle('hamstring')" class="cursor-pointer group">
+        <path d="M112,305 C116,335 118,368 122,385 C114,372 110,345 110,320 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <path d="M188,305 C184,335 182,368 178,385 C186,372 190,345 190,320 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
     </g>
 
-    <!-- 7. GASTROCNEMIUS & BETIS -->
-    <g id="hotspot-calves" onclick="triggerHUDMuscle('calves')" class="cursor-pointer">
-        <path d="M102 358 C116 360 120 385 116 430 C108 434 100 415 100 375 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
-        <path d="M158 358 C144 360 140 385 144 430 C152 434 160 415 160 375 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    <!-- 2. SENDI & KUNCI LUTUT (POPLITEUS) -->
+    <g id="hotspot-popliteus" onclick="triggerHUDMuscle('popliteus')" class="cursor-pointer group">
+        <ellipse cx="127" cy="408" rx="8" ry="6" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <ellipse cx="173" cy="408" rx="8" ry="6" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+    </g>
+
+    <!-- 7. BETIS (GASTROCNEMIUS & SOLEUS) -->
+    <g id="hotspot-calves" onclick="triggerHUDMuscle('calves')" class="cursor-pointer group">
+        <!-- Betis Kiri -->
+        <path d="M118,422 C132,425 136,448 132,500 C128,540 124,545 122,510 C116,480 112,445 118,422 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
+        <!-- Betis Kanan -->
+        <path d="M182,422 C168,425 164,448 168,500 C172,540 176,545 178,510 C184,480 188,445 182,422 Z" fill="#1b4578" stroke="#0284c7" stroke-width="1.2" />
     </g>
 </svg>
                         </div>
