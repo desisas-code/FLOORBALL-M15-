@@ -5590,10 +5590,10 @@ function triggerHUDMuscle(muscleKey) {
                                                 <td class="p-3.5 font-mono font-bold text-slate-500">${tk.tanggal || '-'}</td>
                                                 <td class="p-3.5 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : 'Atlet'}</td>
                                                 <td class="p-3.5 text-center font-mono font-black text-blue-900">
-                                                    ${tk.dualGate?.sesi1?.rep \vert{}\vert{} 0} rep (${tk.dualGate?.sesi1?.waktu || 0}s) / ${tk.dualGate?.sesi2?.rep \vert{}\vert{} 0} rep (${tk.dualGate?.sesi2?.waktu || 0}s)
-                                                </td>
-                                                <td class="p-3.5 text-center font-mono font-black text-emerald-700">
-                                                    ${tk.slalomShoot?.s5m?.waktu || 0}s / ${tk.slalomShoot?.s7m?.waktu \vert{}\vert{} 0}s / ${tk.slalomShoot?.s9m?.waktu || 0}s
+    											${tk.dualGate?.sesi1?.rep || 0} rep (${tk.dualGate?.sesi1?.waktu || 0}s) / ${tk.dualGate?.sesi2?.rep || 0} rep (${tk.dualGate?.sesi2?.waktu || 0}s)
+											</td>
+												<td class="p-3.5 text-center font-mono font-black text-emerald-700">
+   												${tk.slalomShoot?.s5m?.waktu || 0}s / ${tk.slalomShoot?.s7m?.waktu || 0}s / ${tk.slalomShoot?.s9m?.waktu || 0}s
                                                 </td>
                                                 <td class="p-3.5 text-center">
                                                     <button onclick="deleteTesTeknikLog('${tk.id}')" class="text-rose-500 bg-rose-50 w-7 h-7 inline-flex items-center justify-center hover:bg-rose-500 hover:text-white rounded-lg transition-all shadow-sm border border-rose-100" title="Hapus Log">
