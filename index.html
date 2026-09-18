@@ -5299,483 +5299,127 @@ function triggerHUDMuscle(muscleKey) {
                     </div>
                 `;
             } else if (state.currentMenu === 'menu-3') {
-    pageTitle.innerText = "Tes Kondisi Fisik & Teknik dengan Norma";
-    const today = new Date().toISOString().split('T')[0];
-    const optionsAtlet = state.atlet.map(a => `<option value="${a.id}">${escapeHTML(a.nama)} (${escapeHTML(a.posisi)} - ${escapeHTML(a.gender)})</option>`).join('');
+                pageTitle.innerText = "Tes Kondisi Fisik & Teknik dengan Norma";
+                const today = new Date().toISOString().split('T')[0];
+                const optionsAtlet = state.atlet.map(a => `<option value="${a.id}">${escapeHTML(a.nama)} (${escapeHTML(a.posisi)} - ${escapeHTML(a.gender)})</option>`).join('');
 
-    // Hitung Distribusi Kategori Norma Skuad
-    let countSB = 0, countB = 0, countS = 0, countK = 0, countSK = 0;
-    state.tesFisik.forEach(t => {
-        const at = state.atlet.find(a => String(a.id) === String(t.atletId));
-        const kat = hitungKategoriNorma(t.keyTes, t.skor, at?.gender, at?.posisi);
-        if (kat === 'SB') countSB++;
-        else if (kat === 'B') countB++;
-        else if (kat === 'S') countS++;
-        else if (kat === 'K') countK++;
-        else if (kat === 'SK') countSK++;
-    });
+                let countSB = 0, countB = 0, countS = 0, countK = 0, countSK = 0;
+                state.tesFisik.forEach(t => {
+                    const at = state.atlet.find(a => String(a.id) === String(t.atletId));
+                    const kat = hitungKategoriNorma(t.keyTes, t.skor, at?.gender, at?.posisi);
+                    if (kat === 'SB') countSB++;
+                    else if (kat === 'B') countB++;
+                    else if (kat === 'S') countS++;
+                    else if (kat === 'K') countK++;
+                    else if (kat === 'SK') countSK++;
+                });
 
-    container.innerHTML = `
-        <!-- 1. GRID DIAGRAM & METRIK HIGHLIGHT (PRO SPORTS DASHBOARD) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-            
-            <!-- RADAR CHART (SPIDER WEB) -->
-            <div class="lg:col-span-5 bg-white/90 backdrop-blur-xl p-6 rounded-[32px] border border-slate-200/80 shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
-                <div class="flex items-center justify-between mb-2 pb-3 border-b border-slate-100">
-                    <h4 class="font-black text-slate-900 text-xs flex items-center gap-2 font-display uppercase tracking-wider">
-                        <i class="fa-solid fa-chart-radar text-blue-900 text-sm"></i> Radar Kebugaran Rerata Skuad
-                    </h4>
-                    <span class="text-[10px] font-extrabold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">6 Core Metrics</span>
-                </div>
-                <div class="h-60 w-full relative flex items-center justify-center p-2">
-                    <canvas id="chart-radar-fisik"></canvas>
-                </div>
-            </div>
-
-            <!-- KPI HIGHLIGHT CARDS EVALUASI NORMA -->
-            <div class="lg:col-span-7 bg-white/90 backdrop-blur-xl p-6 rounded-[32px] border border-slate-200/80 shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-                    <h4 class="font-black text-slate-900 text-xs flex items-center gap-2 font-display uppercase tracking-wider">
-                        <i class="fa-solid fa-heart-pulse text-rose-500 text-sm"></i> Ringkasan Evaluasi Norma Skuad
-                    </h4>
-                    <span class="text-[10px] font-extrabold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                        Total ${state.tesFisik.length} Hasil Tes
-                    </span>
-                </div>
-
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                    <div class="p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl hover:scale-[1.02] transition-transform">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Sangat Baik (SB)</span>
-                            <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
-                        </div>
-                        <span class="text-2xl font-black text-emerald-950 font-display block">${countSB} <span class="text-xs font-bold text-emerald-700">Hasil</span></span>
-                    </div>
-
-                    <div class="p-4 bg-blue-50/80 border border-blue-200/80 rounded-2xl hover:scale-[1.02] transition-transform">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[10px] font-black text-blue-800 uppercase tracking-wider">Baik (B)</span>
-                            <i class="fa-solid fa-thumbs-up text-blue-500 text-xs"></i>
-                        </div>
-                        <span class="text-2xl font-black text-blue-950 font-display block">${countB} <span class="text-xs font-bold text-blue-700">Hasil</span></span>
-                    </div>
-
-                    <div class="p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl hover:scale-[1.02] transition-transform">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[10px] font-black text-amber-800 uppercase tracking-wider">Sedang (S)</span>
-                            <i class="fa-solid fa-minus text-amber-500 text-xs"></i>
-                        </div>
-                        <span class="text-2xl font-black text-amber-950 font-display block">${countS} <span class="text-xs font-bold text-amber-700">Hasil</span></span>
-                    </div>
-
-                    <div class="p-4 bg-orange-50/80 border border-orange-200/80 rounded-2xl hover:scale-[1.02] transition-transform">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[10px] font-black text-orange-800 uppercase tracking-wider">Kurang (K)</span>
-                            <i class="fa-solid fa-triangle-exclamation text-orange-500 text-xs"></i>
-                        </div>
-                        <span class="text-2xl font-black text-orange-950 font-display block">${countK} <span class="text-xs font-bold text-orange-700">Hasil</span></span>
-                    </div>
-
-                    <div class="p-4 bg-rose-50/80 border border-rose-200/80 rounded-2xl hover:scale-[1.02] transition-transform">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[10px] font-black text-rose-800 uppercase tracking-wider">Sangat Kurang</span>
-                            <i class="fa-solid fa-circle-xmark text-rose-500 text-xs"></i>
-                        </div>
-                        <span class="text-2xl font-black text-rose-950 font-display block">${countSK} <span class="text-xs font-bold text-rose-700">Hasil</span></span>
-                    </div>
-
-                    <div class="p-4 bg-slate-100/80 border border-slate-200/80 rounded-2xl flex flex-col justify-center">
-                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Total Entri Tes</span>
-                        <span class="text-2xl font-black text-slate-800 font-display block">${state.tesFisik.length} <span class="text-xs font-bold text-slate-500">Item</span></span>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- 2. FORM INPUT ITEM TES FISIK -->
-        <div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mb-8">
-            <div class="p-6 sm:p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="p-2 rounded-xl bg-cyan-500/20 text-cyan-400 font-black text-sm">
-                            <i class="fa-solid fa-dumbbell"></i>
-                        </span>
-                        <h3 class="text-xl font-black font-display tracking-tight text-white">A. Input Item Tes Fisik</h3>
-                    </div>
-                    <p class="text-xs text-slate-400 font-semibold pl-9">Perekaman data kebugaran berdasarkan norma baku atlet.</p>
-                </div>
-                <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-4 py-1.5 rounded-full text-xs font-black shadow-inner">
-                    <i class="fa-solid fa-layer-group mr-1.5"></i>14 Parameter Fisik
-                </span>
-            </div>
-
-            <form onsubmit="submitMultiTesFisikOptimistic(event)" class="p-6 sm:p-8">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8 bg-slate-50/80 p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-inner">
-                    <div class="space-y-1.5">
-                        <label class="block text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-user-check text-blue-900"></i> Pilih Atlet Skuad <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <select id="multi-tes-atlet-id" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer shadow-sm appearance-none">
-                                ${optionsAtlet}
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                        </div>
-                    </div>
-
-                    <div class="space-y-1.5">
-                        <label class="block text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-calendar-day text-blue-900"></i> Tanggal Tes <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="date" id="multi-tes-tanggal" required value="${today}" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold text-slate-800 bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                    ${listFieldTes.map((f, i) => `
-                        <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:border-blue-400 hover:shadow-md transition-all duration-200 group flex flex-col justify-between">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-[10px] font-black text-slate-400 group-hover:text-blue-600 transition-colors uppercase tracking-wider truncate max-w-[80%]" title="${escapeHTML(f.label)}">
-                                    ${escapeHTML(f.label)}
-                                </span>
-                                <span class="w-6 h-6 rounded-lg bg-slate-100 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center text-[10px] font-mono font-black shrink-0 transition-colors">
-                                    #${i+1}
-                                </span>
+                container.innerHTML = `
+                    <!-- KPI & RADAR CHART -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                        <div class="lg:col-span-5 bg-white/90 backdrop-blur-xl p-6 rounded-[32px] border border-slate-200/80 shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
+                            <div class="flex items-center justify-between mb-2 pb-3 border-b border-slate-100">
+                                <h4 class="font-black text-slate-900 text-xs flex items-center gap-2 font-display uppercase tracking-wider">
+                                    <i class="fa-solid fa-chart-radar text-blue-900 text-sm"></i> Radar Kebugaran Rerata Skuad
+                                </h4>
+                                <span class="text-[10px] font-extrabold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">6 Core Metrics</span>
                             </div>
-
-                            <div class="flex items-center gap-2 bg-slate-50 group-hover:bg-blue-50/40 rounded-2xl p-2 border border-slate-200/80 group-hover:border-blue-200 transition-all">
-                                <input type="number" step="0.01" id="field-${f.key}" placeholder="0" class="w-full bg-transparent text-xl font-black font-mono text-slate-900 focus:outline-none text-right pr-1">
-                                <span class="text-[10px] font-extrabold text-blue-900 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shadow-sm shrink-0 uppercase tracking-wide">
-                                    ${escapeHTML(f.satuan)}
-                                </span>
+                            <div class="h-60 w-full relative flex items-center justify-center p-2">
+                                <canvas id="chart-radar-fisik"></canvas>
                             </div>
                         </div>
-                    `).join('')}
-                </div>
 
-                <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end">
-                    <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-800 hover:to-indigo-900 text-white font-black py-4 px-8 rounded-2xl text-xs shadow-xl shadow-blue-900/30 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-floppy-disk text-cyan-400 text-sm"></i> Simpan Hasil Tes Fisik
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- 3. INPUT TES TEKNIK DASAR -->
-        <div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mb-8">
-            <div class="p-6 sm:p-8 bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 font-black text-sm">
-                            <i class="fa-solid fa-bullseye"></i>
-                        </span>
-                        <h3 class="text-xl font-black font-display tracking-tight text-white">B. Input Tes Teknik Dasar</h3>
-                    </div>
-                    <p class="text-xs text-slate-300 font-semibold pl-9">Pengukuran keterampilan spesifik floorball (Passing, Receiving, Slalom & Shooting).</p>
-                </div>
-                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-4 py-1.5 rounded-full text-xs font-black shadow-inner">
-                    <i class="fa-solid fa-crosshairs mr-1.5"></i>Skill Precision
-                </span>
-            </div>
-
-            <form onsubmit="submitTesTeknikOptimistic(event)" class="p-6 sm:p-8 space-y-8">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-slate-50/80 p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-inner">
-                    <div class="space-y-1.5">
-                        <label class="block text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-user-check text-emerald-700"></i> Pilih Atlet Skuad <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <select id="teknik-atlet-id" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold text-slate-800 bg-white focus:outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 transition-all cursor-pointer shadow-sm appearance-none">
-                                ${optionsAtlet}
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                        </div>
-                    </div>
-
-                    <div class="space-y-1.5">
-                        <label class="block text-[11px] font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-calendar-day text-emerald-700"></i> Tanggal Tes <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="date" id="teknik-tanggal" required value="${today}" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold text-slate-800 bg-white focus:outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 transition-all shadow-sm">
-                    </div>
-                </div>
-
-                <!-- DUAL-GATE PASSING & RECEIVING TEST -->
-                <div class="space-y-4">
-                    <h4 class="text-sm font-black text-slate-900 font-display flex items-center gap-2 uppercase tracking-wider">
-                        <i class="fa-solid fa-people-arrows text-emerald-600"></i> Dual-Gate Passing & Receiving Test
-                    </h4>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <div class="p-5 bg-slate-50/80 rounded-3xl border border-slate-200/80 space-y-4 shadow-sm hover:border-emerald-300 transition-all">
-                            <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
-                                <span class="text-xs font-black text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
-                                    <i class="fa-solid fa-circle-dot text-[10px]"></i> Sesi 1
+                        <div class="lg:col-span-7 bg-white/90 backdrop-blur-xl p-6 rounded-[32px] border border-slate-200/80 shadow-md flex flex-col justify-between hover:shadow-xl transition-all">
+                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                                <h4 class="font-black text-slate-900 text-xs flex items-center gap-2 font-display uppercase tracking-wider">
+                                    <i class="fa-solid fa-heart-pulse text-rose-500 text-sm"></i> Ringkasan Evaluasi Norma Skuad
+                                </h4>
+                                <span class="text-[10px] font-extrabold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                                    Total ${state.tesFisik.length} Hasil Tes
                                 </span>
-                                <span class="text-[10px] font-bold text-slate-400">Passing Accuracy</span>
                             </div>
-
-                            <div class="space-y-3">
-                                <select id="dual-partner-1" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-extrabold bg-white text-slate-800 focus:outline-none focus:border-emerald-600 shadow-sm">
-                                    <option value="">-- Pilih Partner Passing --</option>
-                                    ${optionsAtlet}
-                                </select>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div class="space-y-1">
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Repetisi</span>
-                                        <input type="number" id="dual-rep-1" placeholder="0 Rep" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-black text-slate-800 bg-white focus:outline-none focus:border-emerald-600 shadow-sm">
-                                    </div>
-                                    <div class="space-y-1">
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Waktu (Dtk)</span>
-                                        <input type="number" step="0.01" id="dual-waktu-1" placeholder="0.00s" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-black font-mono text-emerald-800 bg-white focus:outline-none focus:border-emerald-600 shadow-sm">
-                                    </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                                <div class="p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl">
+                                    <span class="text-[10px] font-black text-emerald-800 uppercase tracking-wider block mb-1">Sangat Baik (SB)</span>
+                                    <span class="text-2xl font-black text-emerald-950 font-display block">${countSB}</span>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="p-5 bg-slate-50/80 rounded-3xl border border-slate-200/80 space-y-4 shadow-sm hover:border-teal-300 transition-all">
-                            <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
-                                <span class="text-xs font-black text-teal-700 uppercase tracking-wider flex items-center gap-1.5">
-                                    <i class="fa-solid fa-circle-dot text-[10px]"></i> Sesi 2
-                                </span>
-                                <span class="text-[10px] font-bold text-slate-400">Passing Accuracy</span>
-                            </div>
-
-                            <div class="space-y-3">
-                                <select id="dual-partner-2" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-extrabold bg-white text-slate-800 focus:outline-none focus:border-emerald-600 shadow-sm">
-                                    <option value="">-- Pilih Partner Passing --</option>
-                                    ${optionsAtlet}
-                                </select>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div class="space-y-1">
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Repetisi</span>
-                                        <input type="number" id="dual-rep-2" placeholder="0 Rep" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-black text-slate-800 bg-white focus:outline-none focus:border-emerald-600 shadow-sm">
-                                    </div>
-                                    <div class="space-y-1">
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Waktu (Dtk)</span>
-                                        <input type="number" step="0.01" id="dual-waktu-2" placeholder="0.00s" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-black font-mono text-teal-800 bg-white focus:outline-none focus:border-emerald-600 shadow-sm">
-                                    </div>
+                                <div class="p-4 bg-blue-50/80 border border-blue-200/80 rounded-2xl">
+                                    <span class="text-[10px] font-black text-blue-800 uppercase tracking-wider block mb-1">Baik (B)</span>
+                                    <span class="text-2xl font-black text-blue-950 font-display block">${countB}</span>
+                                </div>
+                                <div class="p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl">
+                                    <span class="text-[10px] font-black text-amber-800 uppercase tracking-wider block mb-1">Sedang (S)</span>
+                                    <span class="text-2xl font-black text-amber-950 font-display block">${countS}</span>
+                                </div>
+                                <div class="p-4 bg-orange-50/80 border border-orange-200/80 rounded-2xl">
+                                    <span class="text-[10px] font-black text-orange-800 uppercase tracking-wider block mb-1">Kurang (K)</span>
+                                    <span class="text-2xl font-black text-orange-950 font-display block">${countK}</span>
+                                </div>
+                                <div class="p-4 bg-rose-50/80 border border-rose-200/80 rounded-2xl">
+                                    <span class="text-[10px] font-black text-rose-800 uppercase tracking-wider block mb-1">Sangat Kurang (SK)</span>
+                                    <span class="text-2xl font-black text-rose-950 font-display block">${countSK}</span>
+                                </div>
+                                <div class="p-4 bg-slate-100/80 border border-slate-200/80 rounded-2xl">
+                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Total Entri</span>
+                                    <span class="text-2xl font-black text-slate-800 font-display block">${state.tesFisik.length}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 2. MULTI-ANGLE SLALOM DRIBBLE & SHOOTING TEST (CLEAN LIGHT UI) -->
-        <div class="pt-6 border-t border-slate-200/80 space-y-6">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                    <h4 class="text-sm font-black text-slate-900 font-display flex items-center gap-2 uppercase tracking-wider">
-                        <i class="fa-solid fa-person-running text-emerald-600"></i> Multi-Angle Slalom Dribble & Shooting Test (L, C, R Run)
-                    </h4>
-                    <p class="text-xs font-semibold text-slate-400 mt-0.5">Masukkan total waktu serta centang indikator Goal dan pelanggaran teknis (Foul).</p>
-                </div>
-                <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">3 Seri Jarak</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                <!-- SERI 5 METER -->
-                <div class="p-5 bg-slate-50/80 rounded-3xl border border-slate-200/90 space-y-4 shadow-sm hover:border-emerald-300 transition-all flex flex-col justify-between">
-                    <div class="flex justify-between items-center border-b border-slate-200/80 pb-3">
-                        <span class="text-xs font-black text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-flag text-[10px]"></i> 1. Seri 5 Meter
-                        </span>
-                        <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                            <input type="number" step="0.01" id="slalom-5m-waktu" placeholder="0.00" class="w-16 text-base font-black font-mono text-center text-blue-950 focus:outline-none bg-transparent">
-                            <span class="text-[10px] font-black text-slate-400">Dtk</span>
+                    <!-- MATRIKS HEAT MAP KONDISI FISIK SKUAD -->
+                    <div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mb-8">
+                        <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-2">
+                            <div>
+                                <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
+                                    <i class="fa-solid fa-table-cells text-blue-900"></i> Matriks Heat Map Kondisi Fisik Skuad
+                                </h4>
+                                <p class="text-xs font-semibold text-slate-400 mt-0.5">Pemetaan norma kebugaran fisik seluruh pemain skuad secara real-time.</p>
+                            </div>
+                            <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3.5 py-1.5 rounded-xl text-xs shadow-sm">
+                                14 Parameter Fisik
+                            </span>
                         </div>
-                    </div>
+                        <div class="overflow-x-auto relative">
+                            <table class="w-full text-left border-collapse min-w-[1200px]">
+                                <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+                                    <tr>
+                                        <th class="p-4 sticky left-0 bg-slate-950 z-20 border-r border-slate-800 min-w-[160px]">Profil Atlet</th>
+                                        <th class="p-4 border-r border-slate-800 text-center">Tgl Terakhir</th>
+                                        ${listFieldTes.map(f => `<th class="p-3 text-center border-r border-slate-800 min-w-[70px]">${escapeHTML(f.shortLabel)}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+                                    ${state.atlet.map(at => {
+                                        const records = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
+                                        const lastDate = records.length > 0 ? records[0].tanggal : '-';
+                                        return `
+                                            <tr class="hover:bg-blue-50/40 transition-colors">
+                                                <td class="p-3 font-black text-slate-800 sticky left-0 bg-white border-r z-10">
+                                                    <div class="truncate max-w-[120px]">${escapeHTML(at.nama)}</div>
+                                                    <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block">${escapeHTML(at.posisi)}</span>
+                                                </td>
+                                                <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>${listFieldTes.map(f => {
+                                                    const item = records.find(t => t.keyTes === f.key);
+                                                    if (!item) return `<td class="p-2 text-center border-r align-middle"><div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div></td>`;
+                                                    const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
+                                                    let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
+                                                    if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600';
+                                                    else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600';
+                                                    else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500';
+                                                    else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600';
+                                                    else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600';
 
-                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 space-y-2 shadow-sm">
-                        <span class="block text-[10px] font-black text-slate-500 uppercase tracking-wider">Akurasi Goal:</span>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s5-goal-l" class="w-4 h-4 accent-emerald-600 rounded"> L
-                            </label>
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s5-goal-c" class="w-4 h-4 accent-emerald-600 rounded"> C
-                            </label>
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s5-goal-r" class="w-4 h-4 accent-emerald-600 rounded"> R
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-rose-200/90 cursor-pointer text-xs font-extrabold text-rose-600 hover:bg-rose-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s5-garis" class="w-4 h-4 accent-rose-600 rounded shrink-0">
-                            <span>Melewati Garis Batas</span>
-                        </label>
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-amber-200/90 cursor-pointer text-xs font-extrabold text-amber-700 hover:bg-amber-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s5-skip" class="w-4 h-4 accent-amber-600 rounded shrink-0">
-                            <span>Melewati / Skip Cone</span>
-                        </label>
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-amber-200/90 cursor-pointer text-xs font-extrabold text-amber-700 hover:bg-amber-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s5-hit" class="w-4 h-4 accent-amber-600 rounded shrink-0">
-                            <span>Menyentuh Cone</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- SERI 7 METER -->
-                <div class="p-5 bg-slate-50/80 rounded-3xl border border-slate-200/90 space-y-4 shadow-sm hover:border-emerald-300 transition-all flex flex-col justify-between">
-                    <div class="flex justify-between items-center border-b border-slate-200/80 pb-3">
-                        <span class="text-xs font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-flag text-[10px]"></i> 2. Seri 7 Meter
-                        </span>
-                        <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                            <input type="number" step="0.01" id="slalom-7m-waktu" placeholder="0.00" class="w-16 text-base font-black font-mono text-center text-emerald-950 focus:outline-none bg-transparent">
-                            <span class="text-[10px] font-black text-slate-400">Dtk</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 space-y-2 shadow-sm">
-                        <span class="block text-[10px] font-black text-slate-500 uppercase tracking-wider">Akurasi Goal:</span>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s7-goal-l" class="w-4 h-4 accent-emerald-600 rounded"> L
-                            </label>
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s7-goal-c" class="w-4 h-4 accent-emerald-600 rounded"> C
-                            </label>
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s7-goal-r" class="w-4 h-4 accent-emerald-600 rounded"> R
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-rose-200/90 cursor-pointer text-xs font-extrabold text-rose-600 hover:bg-rose-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s7-garis" class="w-4 h-4 accent-rose-600 rounded shrink-0">
-                            <span>Melewati Garis Batas</span>
-                        </label>
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-amber-200/90 cursor-pointer text-xs font-extrabold text-amber-700 hover:bg-amber-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s7-skip" class="w-4 h-4 accent-amber-600 rounded shrink-0">
-                            <span>Melewati / Skip Cone</span>
-                        </label>
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-amber-200/90 cursor-pointer text-xs font-extrabold text-amber-700 hover:bg-amber-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s7-hit" class="w-4 h-4 accent-amber-600 rounded shrink-0">
-                            <span>Menyentuh Cone</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- SERI 9 METER -->
-                <div class="p-5 bg-slate-50/80 rounded-3xl border border-slate-200/90 space-y-4 shadow-sm hover:border-emerald-300 transition-all flex flex-col justify-between">
-                    <div class="flex justify-between items-center border-b border-slate-200/80 pb-3">
-                        <span class="text-xs font-black text-teal-800 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-flag text-[10px]"></i> 3. Seri 9 Meter
-                        </span>
-                        <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                            <input type="number" step="0.01" id="slalom-9m-waktu" placeholder="0.00" class="w-16 text-base font-black font-mono text-center text-teal-950 focus:outline-none bg-transparent">
-                            <span class="text-[10px] font-black text-slate-400">Dtk</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 space-y-2 shadow-sm">
-                        <span class="block text-[10px] font-black text-slate-500 uppercase tracking-wider">Akurasi Goal:</span>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s9-goal-l" class="w-4 h-4 accent-emerald-600 rounded"> L
-                            </label>
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s9-goal-c" class="w-4 h-4 accent-emerald-600 rounded"> C
-                            </label>
-                            <label class="flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-emerald-50 p-2 rounded-xl border border-slate-200/80 cursor-pointer font-black text-xs text-slate-700 transition-colors">
-                                <input type="checkbox" id="s9-goal-r" class="w-4 h-4 accent-emerald-600 rounded"> R
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-rose-200/90 cursor-pointer text-xs font-extrabold text-rose-600 hover:bg-rose-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s9-garis" class="w-4 h-4 accent-rose-600 rounded shrink-0">
-                            <span>Melewati Garis Batas</span>
-                        </label>
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-amber-200/90 cursor-pointer text-xs font-extrabold text-amber-700 hover:bg-amber-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s9-skip" class="w-4 h-4 accent-amber-600 rounded shrink-0">
-                            <span>Melewati / Skip Cone</span>
-                        </label>
-                        <label class="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-amber-200/90 cursor-pointer text-xs font-extrabold text-amber-700 hover:bg-amber-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="s9-hit" class="w-4 h-4 accent-amber-600 rounded shrink-0">
-                            <span>Menyentuh Cone</span>
-                        </label>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- 4. MATRIKS HEAT MAP KONDISI FISIK SKUAD -->
-        <div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden">
-            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-2">
-                <div>
-                    <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                        <i class="fa-solid fa-table-cells text-blue-900"></i> Matriks Heat Map Kondisi Fisik Skuad
-                    </h4>
-                    <p class="text-xs font-semibold text-slate-400 mt-0.5">Pemetaan norma kebugaran fisik seluruh pemain skuad secara real-time.</p>
-                </div>
-                <span class="bg-blue-50 text-blue-900 border border-blue-200 font-black px-3.5 py-1.5 rounded-xl text-xs shadow-sm">
-                    14 Parameter Fisik
-                </span>
-            </div>
-<!-- 5. HISTORI RIWAYAT TES TEKNIK SKUAD (LETAKKAN DI SINI) -->
-        <div class="bg-white/90 backdrop-blur-xl rounded-[32px] border border-slate-200/80 shadow-xl overflow-hidden mt-8">
-            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-2">
-                <div>
-                    <h4 class="font-black text-slate-900 text-sm font-display flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Histori Riwayat Tes Teknik Skuad
-                    </h4>
-                    <p class="text-xs font-semibold text-slate-400 mt-0.5">Catatan kronologis hasil tes Dual-Gate Passing dan Slalom Dribble yang telah diinput.</p>
-                </div>
-                <span class="bg-emerald-50 text-emerald-900 border border-emerald-200 font-black px-3.5 py-1.5 rounded-xl text-xs shadow-sm">
-                    ${state.tesTeknik.length} Log Tersimpan
-                </span>
-            </div>
-            <div class="overflow-x-auto relative">
-                <table class="w-full text-left border-collapse min-w-[1200px]">
-                    <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                        <tr>
-                            <th class="p-4 sticky left-0 bg-slate-950 z-20 border-r border-slate-800 min-w-[160px]">Profil Atlet</th>
-                            <th class="p-4 border-r border-slate-800 text-center">Tgl Terakhir</th>
-                            ${listFieldTes.map(f => `<th class="p-3 text-center border-r border-slate-800 min-w-[70px]">${escapeHTML(f.shortLabel)}</th>`).join('')}
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                        ${state.atlet.map(at => {
-                            const records = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
-                            const lastDate = records.length > 0 ? records[0].tanggal : '-';
-                            return `
-                                <tr class="hover:bg-blue-50/40 transition-colors">
-                                    <td class="p-3 font-black text-slate-800 sticky left-0 bg-white border-r z-10">
-                                        <div class="truncate max-w-[120px]">${escapeHTML(at.nama)}</div>
-                                        <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block">${escapeHTML(at.posisi)}</span>
-                                    </td>
-                                    <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>
-                                    ${listFieldTes.map(f => {
-                                        const item = records.find(t => t.keyTes === f.key);
-                                        if (!item) return `<td class="p-2 text-center border-r align-middle"><div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div></td>`;
-                                        const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
-                                        let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
-                                        if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600 shadow-sm';
-                                        else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600 shadow-sm';
-                                        else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500 shadow-sm';
-                                        else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600 shadow-sm';
-                                        else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600 shadow-sm';
-
-                                        return `<td class="p-2 text-center border-r align-middle"><div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full"><span class="font-mono font-black text-sm leading-none">${item.skor}</span><span class="text-[8px] font-extrabold mt-1">${kat}</span></div></td>`;
+                                                    return `<td class="p-2 text-center border-r align-middle"><div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full"><span class="font-mono font-black text-sm leading-none">${item.skor}</span><span class="text-[8px] font-extrabold mt-1">${kat}</span></div></td>`;
+                                                }).join('')}
+                                            </tr>`;
                                     }).join('')}
-                                </tr>`;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
             } else if (state.currentMenu === 'menu-4') {
     pageTitle.innerText = "Periodisasi Latihan & Makrosiklus (Bompa Model)";
     const dynamicList = generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks);
@@ -7117,7 +6761,7 @@ function triggerHUDMuscle(muscleKey) {
             </div>
         </div>
     `;
-            } else if (state.currentMenu === 'menu-11) {
+           } else if (state.currentMenu === 'menu-11') {
     pageTitle.innerText = "Peta Anatomi Otot Interaktif & Fungsional Floorball";
 
     const renderMuscleCards = (items, groupKey, borderTheme, badgeTheme) => items.map(m => `
