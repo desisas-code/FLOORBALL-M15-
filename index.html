@@ -3980,44 +3980,108 @@ function renderMatchHeatmap() {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-semibold bg-white">
-                        ${jadwalSpesifik.map(j => `
-                            <tr class="hover:bg-blue-50/40 transition-colors align-top">
-                                <td class="p-3.5 font-black text-blue-950 bg-slate-50/50">${j.hari}</td>
-                                <td class="p-3.5 font-bold text-slate-800">${j.sesi}</td>
-                                <td class="p-3.5 space-y-2">
-                                    ${j.durasi !== '0 mnt' ? `
-                                        <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80">
-                                            <span class="text-[9px] font-black uppercase tracking-wider text-amber-900 block mb-0.5">
-                                                <i class="fa-solid fa-fire mr-1 text-amber-600"></i> 1. Pemanasan (Warming Up)
-                                            </span>
-                                            <p class="text-[11px] text-slate-700 leading-relaxed">${j.warmUp}</p>
+                        ${jadwalSpesifik.map(j => {
+    // Memecah teks latihan inti berdasarkan pemisah "•" agar menjadi baris kartu rapi
+    const listInti = j.inti ? j.inti.split('•').map(s => s.trim()).filter(Boolean) : [];
+
+    return `
+        <tr class="hover:bg-slate-50/60 transition-colors align-top border-b border-slate-100">
+            <!-- 1. HARI -->
+            <td class="p-4 bg-slate-50/40">
+                <span class="font-black text-slate-900 text-sm block">${j.hari}</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">Sesi Harian</span>
+            </td>
+
+            <!-- 2. SESI FOCUS -->
+            <td class="p-4">
+                <span class="font-extrabold text-slate-800 text-xs leading-snug block">${j.sesi}</span>
+            </td>
+
+            <!-- 3. MATERI & RINCIAN DRILL LATIHAN -->
+            <td class="p-4 space-y-2.5">
+                ${j.durasi !== '0 mnt' ? `
+                    <!-- WARMING UP -->
+                    <div class="p-3 rounded-2xl bg-amber-50/60 border border-amber-200/70 shadow-xs">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-amber-900">
+                                1. Pemanasan (Warming Up)
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed font-medium pl-3.5">${j.warmUp}</p>
+                    </div>
+
+                    <!-- LATIHAN INTI (DIPECAH JADI KARTU RAPI) -->
+                    <div class="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-200/80 shadow-xs space-y-2">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-blue-950">
+                                    2. Latihan Inti (Main Drill)
+                                </span>
+                            </div>
+                            <span class="text-[9px] font-bold text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded-md">
+                                ${listInti.length} Drill
+                            </span>
+                        </div>
+
+                        <!-- DAFTAR GERAKAN/DRILL SATU PER SATU -->
+                        <div class="space-y-1.5 pl-1">
+                            ${listInti.map(item => {
+                                const parts = item.split('—');
+                                const namaDrill = parts[0] ? parts[0].trim() : item;
+                                const parameter = parts[1] ? parts[1].trim() : '';
+
+                                return `
+                                    <div class="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-angle-right text-blue-500 text-[10px]"></i>
+                                            <span class="font-bold text-slate-800 text-xs">${namaDrill}</span>
                                         </div>
-                                        <div class="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/80">
-                                            <span class="text-[9px] font-black uppercase tracking-wider text-blue-900 block mb-0.5">
-                                                <i class="fa-solid fa-dumbbell mr-1 text-blue-600"></i> 2. Latihan Inti (Main Drill)
-                                            </span>
-                                            <p class="text-[11px] text-slate-700 leading-relaxed">${j.inti}</p>
-                                        </div>
-                                        <div class="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80">
-                                            <span class="text-[9px] font-black uppercase tracking-wider text-emerald-900 block mb-0.5">
-                                                <i class="fa-solid fa-snowflake mr-1 text-emerald-600"></i> 3. Pendinginan (Cooling Down)
-                                            </span>
-                                            <p class="text-[11px] text-slate-700 leading-relaxed">${j.coolDown}</p>
-                                        </div>
-                                    ` : `
-                                        <div class="p-3 rounded-xl bg-slate-50 text-slate-500 italic text-center border border-slate-200">
-                                            ${j.inti}
-                                        </div>
-                                    `}
-                                </td>
-                                <td class="p-3.5 text-center font-mono font-bold text-slate-500">${j.durasi}</td>
-                                <td class="p-3.5 text-center">
-                                    <span class="bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-xl font-mono font-black text-[11px] whitespace-nowrap shadow-sm inline-block">
-                                        RPE ${j.rpeTarget}/10
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join('')}
+                                        ${parameter ? `
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="font-mono text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60">
+                                                    ${parameter}
+                                                </span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- COOLING DOWN -->
+                    <div class="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-200/70 shadow-xs">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-900">
+                                3. Pendinginan (Cooling Down)
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed font-medium pl-3.5">${j.coolDown}</p>
+                    </div>
+                ` : `
+                    <div class="p-4 rounded-2xl bg-slate-50 text-slate-500 italic text-center border border-slate-200 font-semibold text-xs">
+                        ${j.inti}
+                    </div>
+                `}
+            </td>
+
+            <!-- 4. DURASI -->
+            <td class="p-4 text-center font-mono font-black text-slate-600 text-xs">
+                ${j.durasi}
+            </td>
+
+            <!-- 5. TARGET RPE -->
+            <td class="p-4 text-center">
+                <span class="bg-amber-50 text-amber-900 border border-amber-300 px-2.5 py-1 rounded-xl font-mono font-black text-[11px] whitespace-nowrap shadow-xs inline-block">
+                    RPE ${j.rpeTarget}/10
+                </span>
+            </td>
+        </tr>
+    `;
+}).join('')}
                     </tbody>
                 </table>
             </div>
