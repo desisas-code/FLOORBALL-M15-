@@ -1793,24 +1793,31 @@ function exportGymLogsCSV() {
         }
 
         function logout() {
-    cleanupThreeJS(); 
+  cleanupThreeJS();
 
-    if (state.matchLive.dribbleTimer.intervalId) {
-        clearInterval(state.matchLive.dribbleTimer.intervalId);
-        state.matchLive.dribbleTimer.isRunning = false;
-    }
-    if (state.matchLive.matchTimer && state.matchLive.matchTimer.intervalId) {
-        clearInterval(state.matchLive.matchTimer.intervalId);
-        state.matchLive.matchTimer.isRunning = false;
-    }
-    if(document.getElementById('app-screen')) document.getElementById('app-screen').classList.add('hidden');
-    if(document.getElementById('login-screen')) document.getElementById('login-screen').classList.remove('hidden');
+  // Hentikan timer pertandingan jika sedang berjalan
+  if (state.matchLive.dribbleTimer && state.matchLive.dribbleTimer.intervalId) {
+    clearInterval(state.matchLive.dribbleTimer.intervalId);
+    state.matchLive.dribbleTimer.isRunning = false;
+  }
+  if (state.matchLive.matchTimer && state.matchLive.matchTimer.intervalId) {
+    clearInterval(state.matchLive.matchTimer.intervalId);
+    state.matchLive.matchTimer.isRunning = false;
+  }
 
-    localStorage.removeItem('cf_authSession');
+  // Hapus sesi login dari memori browser
+  localStorage.removeItem('cf_authSession');
+  state.activeAtlet = null;
+  state.currentRole = 'Pelatih';
 
-    state.activeAtlet = null;
-    selectLoginRole('pelatih');
-    showToast('Anda telah keluar dari aplikasi.', 'success');
+  // Alihkan tampilan kembali ke layar login
+  const appScreen = document.getElementById('app-screen');
+  const loginScreen = document.getElementById('login-screen');
+  if (appScreen) appScreen.classList.add('hidden');
+  if (loginScreen) loginScreen.classList.remove('hidden');
+
+  selectLoginRole('pelatih');
+  showToast('Anda telah keluar dari aplikasi.', 'success');
 }
 
         function showToast(message, type = 'loading') {
@@ -7939,33 +7946,71 @@ const myReports = (state.laporanValidasi || []).filter(l => {
         }
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", async () => {
-  // 1. Pulihkan sesi login aktif
-  const savedAtlet = loadStorage('activeAtlet');
-  if (savedAtlet) {
-    state.activeAtlet = savedAtlet;
-  }
-  const savedUser = loadStorage("currentUser");
-  if (savedUser) {
-    state.currentUser = savedUser;
-  }
-
-  // 2. Muat data atlet lokal
+  // 1. Muat database lokal terlebih dahulu
   state.atlet = loadStorage('atlet', []);
 
-  // 3. Render tampilan awal
-  selectLoginRole(state.loginRole || 'pelatih');
-  if (typeof renderContent === 'function') {
+  // 2. Periksa sesi login yang tersimpan di localStorage
+  const savedSession = loadStorage('authSession', null);
+
+  if (savedSession && savedSession.role) {
+    state.currentRole = savedSession.role;
+
+    if (savedSession.role === 'Pelatih') {
+      state.currentMenu = 'menu-1';
+      state.activeAtlet = null;
+
+      // Update badge & profil pelatih
+      const avatarEl = document.getElementById('user-avatar');
+      const nameEl = document.getElementById('user-name');
+      const statusEl = document.getElementById('user-status');
+      const badgeEl = document.getElementById('current-role-badge');
+
+      if (avatarEl) avatarEl.innerText = 'PK';
+      if (nameEl) nameEl.innerText = 'Pelatih Kepala';
+      if (statusEl) statusEl.innerText = 'Head Coach';
+      if (badgeEl) badgeEl.innerText = 'Pelatih Kepala';
+
+    } else if (savedSession.role === 'Atlet' && savedSession.activeAtlet) {
+      // Sinkronkan data profil atlet terbaru dari state.atlet jika ada
+      const matched = state.atlet.find(a => String(a.id) === String(savedSession.activeAtlet.id));
+      state.activeAtlet = matched || savedSession.activeAtlet;
+      state.currentMenu = 'menu-atlet-1';
+
+      const at = state.activeAtlet;
+      const initials = at.nama ? at.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AT';
+
+      const avatarEl = document.getElementById('user-avatar');
+      const nameEl = document.getElementById('user-name');
+      const statusEl = document.getElementById('user-status');
+      const badgeEl = document.getElementById('current-role-badge');
+
+      if (avatarEl) avatarEl.innerText = initials;
+      if (nameEl) nameEl.innerText = escapeHTML(at.nama);
+      if (statusEl) statusEl.innerText = `Atlet - ${escapeHTML(at.posisi || '-')}`;
+      if (badgeEl) badgeEl.innerText = 'Atlet Skuad';
+    }
+
+    // Langsung buka dashboard aplikasi tanpa menampilkan layar login
+    const loginScreen = document.getElementById('login-screen');
+    const appScreen = document.getElementById('app-screen');
+    if (loginScreen) loginScreen.classList.add('hidden');
+    if (appScreen) appScreen.classList.remove('hidden');
+
+    renderSidebar();
     renderContent();
+  } else {
+    // Jika belum pernah login, tampilkan layar login
+    selectLoginRole(state.loginRole || 'pelatih');
   }
 
-  // 4. Sinkronisasi data dari spreadsheet (satu kali di awal)
+  // 3. Sinkronisasi background dari Spreadsheet
   if (typeof loadAtletFromSheet === 'function') {
     await loadAtletFromSheet();
   } else if (typeof autoFetchFromSpreadsheet === 'function') {
     await autoFetchFromSpreadsheet();
   }
 
-  // 5. Polling tunggal setiap 30 detik
+  // 4. Polling data latar belakang setiap 30 detik
   setInterval(autoFetchFromSpreadsheet, 30000);
 });
 
