@@ -3605,6 +3605,145 @@ function renderMatchHeatmap() {
             updateProgramLatihanUI();
         }
 
+		// DATABASE NORMA TES FISIK & TEKNIK (SESUAI JURNAL & BUKU PERIODISASI)
+const daftarTesFloorball = {
+    fisik: [
+        {
+            key: 'yoyo_ir1',
+            nama: 'Yo-Yo IR1 (Estimasi VO2Max)',
+            kategori: 'Daya Tahan Aerobik Intermiten',
+            satuan: 'ml/kg/mnt',
+            referensi: 'Bangsbo et al. (2008) & Swedish Elite Floorball Study',
+            norma: {
+                L: { istimewa: 58.0, baik: 52.0, sedang: 45.0 },
+                P: { istimewa: 50.0, baik: 44.0, sedang: 38.0 }
+            },
+            lowerIsBetter: false
+        },
+        {
+            key: 'sprint_20m',
+            nama: 'Sprint Akselerasi 20m',
+            kategori: 'Kecepatan & Langkah Awal',
+            satuan: 'detik',
+            referensi: 'Journal of Human Sport & Exercise (2025) & Lum et al.',
+            norma: {
+                L: { istimewa: 3.05, baik: 3.20, sedang: 3.35 },
+                P: { istimewa: 3.30, baik: 3.50, sedang: 3.65 }
+            },
+            lowerIsBetter: true
+        },
+        {
+            key: 't_test',
+            nama: 'T-Test Agility',
+            kategori: 'Kelincahan & COD Lateral',
+            satuan: 'detik',
+            referensi: 'Pauole et al. (2000) & AIS Team Sports Standards',
+            norma: {
+                L: { istimewa: 9.90, baik: 10.60, sedang: 11.50 },
+                P: { istimewa: 10.80, baik: 11.60, sedang: 12.50 }
+            },
+            lowerIsBetter: true
+        },
+        {
+            key: 'standing_broad_jump',
+            nama: 'Standing Broad Jump',
+            kategori: 'Daya Ledak Tungkai (Horizontal Power)',
+            satuan: 'cm',
+            referensi: 'Tudor Bompa (Periodization) & Kinanthropology Floorball',
+            norma: {
+                L: { istimewa: 240, baik: 215, sedang: 190 },
+                P: { istimewa: 205, baik: 180, sedang: 160 }
+            },
+            lowerIsBetter: false
+        },
+        {
+            key: 'plank_core',
+            nama: 'Plank Endurance Test',
+            kategori: 'Ketahanan Core Postur Rendah',
+            satuan: 'detik',
+            referensi: 'McGill Core Protocol & PMC Athletic Performance',
+            norma: {
+                L: { istimewa: 180, baik: 120, sedang: 75 },
+                P: { istimewa: 150, baik: 90, sedang: 60 }
+            },
+            lowerIsBetter: false
+        }
+    ],
+    teknik: [
+        {
+            key: 'slalom_dribble',
+            nama: 'Slalom Dribble Agility (15m)',
+            kategori: 'Ball Mastery & Stickhandling',
+            satuan: 'detik',
+            referensi: 'IFF Coaching Skill Standard Protocol',
+            norma: {
+                L: { istimewa: 11.80, baik: 13.10, sedang: 14.50 },
+                P: { istimewa: 13.00, baik: 14.50, sedang: 16.00 }
+            },
+            lowerIsBetter: true
+        },
+        {
+            key: 'shooting_accuracy',
+            nama: 'Target Shooting Accuracy (4 Corners)',
+            kategori: 'Presisi Tembakan Gawang',
+            satuan: 'gol/10',
+            referensi: 'IFF Official Target Protocol (10 Tembakan Target Sudut)',
+            norma: {
+                L: { istimewa: 8, baik: 6, sedang: 3 },
+                P: { istimewa: 7, baik: 5, sedang: 2 }
+            },
+            lowerIsBetter: false
+        },
+        {
+            key: 'wall_pass_30s',
+            nama: 'Rapid Wall-Pass Rebound (30 dtk)',
+            kategori: 'Passing & First-Touch Soft Hands',
+            satuan: 'operan',
+            referensi: 'Floorball Technical Battery Assessment',
+            norma: {
+                L: { istimewa: 30, baik: 24, sedang: 18 },
+                P: { istimewa: 26, baik: 20, sedang: 15 }
+            },
+            lowerIsBetter: false
+        },
+        {
+            key: 'gk_shuttle_slide',
+            nama: 'GK Knee Lateral Slide (30 dtk)',
+            kategori: 'Kelincahan & Refleks Kiper (GK Khusus)',
+            satuan: 'sentuhan',
+            referensi: 'Floorball Goalie Specific Benchmark',
+            norma: {
+                L: { istimewa: 25, baik: 20, sedang: 16 },
+                P: { istimewa: 22, baik: 18, sedang: 14 }
+            },
+            lowerIsBetter: false
+        }
+    ]
+};
+
+// FUNGSI PENILAIAN OTOMATIS BERDASARKAN GENDER
+function evaluasiHasilTes(testObj, skor, genderAtlet = 'L') {
+    if (skor === null || skor === undefined || isNaN(skor) || skor === '') {
+        return { label: 'Belum Tes', badge: 'bg-slate-100 text-slate-500 border-slate-200' };
+    }
+    
+    const val = parseFloat(skor);
+    const g = (genderAtlet === 'P' || genderAtlet === 'Perempuan' || genderAtlet === 'Wanita') ? 'P' : 'L';
+    const n = testObj.norma[g];
+
+    if (testObj.lowerIsBetter) {
+        if (val <= n.istimewa) return { label: 'Istimewa', badge: 'bg-emerald-50 text-emerald-800 border-emerald-300' };
+        if (val <= n.baik) return { label: 'Baik', badge: 'bg-blue-50 text-blue-800 border-blue-300' };
+        if (val <= n.sedang) return { label: 'Sedang', badge: 'bg-amber-50 text-amber-800 border-amber-300' };
+        return { label: 'Kurang', badge: 'bg-rose-50 text-rose-800 border-rose-300' };
+    } else {
+        if (val >= n.istimewa) return { label: 'Istimewa', badge: 'bg-emerald-50 text-emerald-800 border-emerald-300' };
+        if (val >= n.baik) return { label: 'Baik', badge: 'bg-blue-50 text-blue-800 border-blue-300' };
+        if (val >= n.sedang) return { label: 'Sedang', badge: 'bg-amber-50 text-amber-800 border-amber-300' };
+        return { label: 'Kurang', badge: 'bg-rose-50 text-rose-800 border-rose-300' };
+    }
+}
+		
         const menuLatihanHarian = {
     // ==============================================================
     // 1. TAHAP PERSIAPAN UMUM (TPU) - ADAPTASI ANATOMI & TEKNIK DASAR
