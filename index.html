@@ -368,9 +368,14 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-extrabold text-slate-600 mb-1.5">Nama Lengkap Atlet <span class="text-rose-500">*</span></label>
-                        <input type="text" id="input-nama" required placeholder="Contoh: Dandi Wijaya" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700">
-                    </div>
+    <label class="block text-xs font-extrabold text-slate-600 mb-1.5">Nama Panjang Atlet <span class="text-rose-500">*</span></label>
+    <input type="text" id="input-nama" required placeholder="Contoh: Mochammad Iqbal Ramadhan" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700">
+</div>
+
+<div class="md:col-span-2">
+    <label class="block text-xs font-extrabold text-slate-600 mb-1.5">Nama Panggilan / ID Atlet (Huruf kecil, tanpa spasi) <span class="text-rose-500">*</span></label>
+    <input type="text" id="input-panggilan" required placeholder="Contoh: iqbal" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-700">
+</div>
 
                     <div>
                         <label class="block text-xs font-extrabold text-slate-600 mb-1.5">Posisi Main <span class="text-rose-500">*</span></label>
@@ -1920,6 +1925,8 @@ function exportGymLogsCSV() {
                 if (inputId) inputId.value = target.id;
 
                 if (document.getElementById('input-nama')) document.getElementById('input-nama').value = target.nama || '';
+                // Mengisi nama panggilan dari ID atlet
+                if (document.getElementById('input-panggilan')) document.getElementById('input-panggilan').value = target.id || '';
                 if (document.getElementById('input-posisi')) document.getElementById('input-posisi').value = target.posisi || '';
                 if (document.getElementById('input-gender')) document.getElementById('input-gender').value = target.gender || '';
                 if (document.getElementById('input-usia')) document.getElementById('input-usia').value = target.usia || '';
@@ -1933,6 +1940,8 @@ function exportGymLogsCSV() {
                 if (inputId) inputId.value = '';
                 const form = document.getElementById('form-atlet');
                 if (form) form.reset();
+                // Mengosongkan kolom nama panggilan saat tambah atlet baru
+                if (document.getElementById('input-panggilan')) document.getElementById('input-panggilan').value = '';
             }
             
             if (modal) modal.classList.remove('hidden');
@@ -3825,58 +3834,75 @@ function renderMatchHeatmap() {
         }
 
         async function submitFormAtletOptimistic(e) {
-            e.preventDefault();
-            const id = document.getElementById('input-id')?.value;
-            const nama = document.getElementById('input-nama')?.value;
-            const posisi = document.getElementById('input-posisi')?.value;
-            const gender = document.getElementById('input-gender')?.value;
-            const usia = document.getElementById('input-usia')?.value;
-            const pin = document.getElementById('input-pin')?.value;
-            const tb = document.getElementById('input-tb')?.value;
-            const bb = document.getElementById('input-bb')?.value;
-            
-            const cederaInput = document.getElementById('input-cedera')?.value.trim();
-            const cedera = cederaInput && cederaInput.length > 0 ? cederaInput : 'Tidak ada';
+    e.preventDefault();
+    const id = document.getElementById('input-id')?.value;
+    const nama = document.getElementById('input-nama')?.value?.trim() || '';
+    const panggilan = document.getElementById('input-panggilan')?.value?.trim().toLowerCase().replace(/\s+/g, '') || '';
+    const posisi = document.getElementById('input-posisi')?.value;
+    const gender = document.getElementById('input-gender')?.value;
+    const usia = parseInt(document.getElementById('input-usia')?.value) || 0;
+    const pin = document.getElementById('input-pin')?.value;
+    const tb = parseInt(document.getElementById('input-tb')?.value) || 0;
+    const bb = parseInt(document.getElementById('input-bb')?.value) || 0;
+    
+    const cederaInput = document.getElementById('input-cedera')?.value.trim();
+    const cedera = cederaInput && cederaInput.length > 0 ? cederaInput : 'Tidak ada';
 
-            if (id !== null && id !== undefined && id !== '') {
-                const idx = state.atlet.findIndex(a => String(a.id) === String(id));
-                
-                if (idx !== -1) {
-                    state.atlet[idx] = { 
-                        id: state.atlet[idx].id, 
-                        nama, 
-                        posisi, 
-                        gender, 
-                        usia: parseInt(usia), 
-                        tb: parseInt(tb), 
-                        bb: parseInt(bb), 
-                        pin, 
-                        cedera 
-                    };
-                } else {
-                    showToast('Gagal memperbarui: ID Atlet tidak ditemukan!', 'error');
-                    return;
-                }
-            } else {
-                state.atlet.unshift({ 
-                    id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), 
-                    nama, 
-                    posisi, 
-                    gender, 
-                    usia: parseInt(usia), 
-                    tb: parseInt(tb), 
-                    bb: parseInt(bb), 
-                    pin, 
-                    cedera 
-                });
-            }
+    // Tentukan ID: prioritas input panggilan, jika kosong ambil kata pertama nama panjang
+    const finalId = panggilan || nama.split(' ')[0].toLowerCase();
 
-            saveStorage('atlet', state.atlet);
-            closeModalAtlet();
-            initMatchPlayerStats();
-            renderContent();
-            showToast('Data atlet berhasil diperbarui!', 'success');
+    if (id !== null && id !== undefined && id !== '') {
+        const idx = state.atlet.findIndex(a => String(a.id) === String(id));
+        
+        if (idx !== -1) {
+            state.atlet[idx] = { 
+                id: finalId, // Memperbarui ID jika panggilan diganti saat diedit
+                nama, 
+                posisi, 
+                gender, 
+                usia, 
+                tb, 
+                bb, 
+                pin, 
+                cedera 
+            };
+        } else {
+            showToast('Gagal memperbarui: ID Atlet tidak ditemukan!', 'error');
+            return;
         }
+    } else {
+        // Cek duplikasi ID agar tidak ada nama panggilan yang kembar
+        const isDuplicate = state.atlet.some(a => String(a.id) === String(finalId));
+        if (isDuplicate) {
+            showToast(`Nama panggilan / ID "${finalId}" sudah digunakan atlet lain!`, 'error');
+            return;
+        }
+
+        state.atlet.unshift({ 
+            id: finalId, 
+            nama, 
+            posisi, 
+            gender, 
+            usia, 
+            tb, 
+            bb, 
+            pin, 
+            cedera 
+        });
+    }
+
+    saveStorage('atlet', state.atlet);
+    closeModalAtlet();
+    initMatchPlayerStats();
+    renderContent();
+    
+    // Kirim langsung data terbaru ke Google Spreadsheet
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
+    }
+    
+    showToast('Data atlet berhasil disimpan ke sistem & Spreadsheet!', 'success');
+}
 
         async function deleteAtletOptimistic(id) {
             const isConfirmed = await confirmAction('Hapus Atlet', 'Apakah Anda yakin ingin menghapus atlet ini?');
