@@ -1342,12 +1342,12 @@ function restoreDataJSON(event) {
                 { id: '103', atletId: '3', tanggal: '2026-07-28', jenis: 'Latihan Fisik', status: 'Izin' }
             ]),
             tesFisik: loadStorage('tesFisik', [
-                { id: '201', atletId: '1', tanggal: '2026-07-30', keyTes: 'vsit', skor: '18' },
-                { id: '202', atletId: '1', tanggal: '2026-07-30', keyTes: 'vjump', skor: '58' },
-                { id: '203', atletId: '1', tanggal: '2026-07-30', keyTes: 'yoyo', skor: '48.5' },
-                { id: '204', atletId: '2', tanggal: '2026-07-30', keyTes: 'yoyo', skor: '52.0' },
-                { id: '205', atletId: '3', tanggal: '2026-07-30', keyTes: 'yoyo', skor: '40.0' }
-            ]),
+    { id: '201', atletId: '1', tanggal: '2026-07-30', tahap: 'Pre', keyTes: 'vsit', skor: '18' },
+    { id: '202', atletId: '1', tanggal: '2026-07-30', tahap: 'Pre', keyTes: 'vjump', skor: '58' },
+    { id: '203', atletId: '1', tanggal: '2026-07-30', tahap: 'Pre', keyTes: 'yoyo', skor: '48.5' },
+    { id: '204', atletId: '2', tanggal: '2026-07-30', tahap: 'Pre', keyTes: 'yoyo', skor: '52.0' },
+    { id: '205', atletId: '3', tanggal: '2026-07-30', tahap: 'Pre', keyTes: 'yoyo', skor: '40.0' }
+]),
             tesTeknik: loadStorage('tesTeknik', []),
             joggingLogs: loadStorage('joggingLogs', [
                 { id: 'j1', atletId: '1', tanggal: '2026-07-29', vo2max: '48.5', zona: '0.75', jarak: 3.93, waktu: 30, pace: '7\'38"' },
@@ -2480,6 +2480,45 @@ function initMenu7AutoFill() {
     return list;
 }
 
+// =========================================================================
+// HELPER KALKULASI PROGRES TES (PRE vs MID vs POST)
+// =========================================================================
+function calculateTestProgress(valPre, valPost, lowerIsBetter = false) {
+    const v1 = parseFloat(valPre);
+    const v2 = parseFloat(valPost);
+
+    if (isNaN(v1) || isNaN(v2) || v1 === 0) {
+        return { delta: '-', pct: '-', isImprove: null, color: 'text-slate-400' };
+    }
+
+    const diff = parseFloat((v2 - v1).toFixed(2));
+    const pct = parseFloat(((diff / v1) * 100).toFixed(1));
+
+    let isImprove = false;
+    if (lowerIsBetter) {
+        // Untuk lari/detik: makin kecil nilainya makin baik
+        isImprove = diff < 0;
+    } else {
+        // Untuk repetisi/jarak/VO2Max: makin besar nilainya makin baik
+        isImprove = diff > 0;
+    }
+
+    const sign = diff > 0 ? '+' : '';
+    const color = isImprove 
+        ? 'text-emerald-600 bg-emerald-50 border-emerald-200' 
+        : (diff === 0 ? 'text-slate-500 bg-slate-50 border-slate-200' : 'text-rose-600 bg-rose-50 border-rose-200');
+
+    return {
+        delta: `${sign}${diff}`,
+        pct: `${sign}${pct}%`,
+        isImprove,
+        color
+    };
+}
+
+function hitungKategoriNorma(keyTes, valStr, gender, posisi) {
+    // ... isi fungsi lama kamu tetap di sini ...
+		
         function hitungKategoriNorma(keyTes, valStr, gender, posisi) {
     const val = parseFloat(valStr);
     if (isNaN(val) || val <= 0) return '-';
@@ -4246,40 +4285,51 @@ function loadExistingTesFisikForm(atletId) {
 }
 
         async function submitMultiTesFisikOptimistic(e) {
-            e.preventDefault();
-            const atletIdElem = document.getElementById('multi-tes-atlet-id');
-            const tanggalElem = document.getElementById('multi-tes-tanggal');
-            const atletId = atletIdElem ? atletIdElem.value : '';
-            const tanggal = tanggalElem ? tanggalElem.value : '';
+    e.preventDefault();
+    const atletId = document.getElementById('multi-tes-atlet-id')?.value;
+    const tanggal = document.getElementById('multi-tes-tanggal')?.value;
+    const tahap = document.getElementById('multi-tes-tahap')?.value || 'Pre';
 
-            const atlet = state.atlet.find(a => String(a.id) === String(atletId));
-            if (!atlet) return;
+    const atlet = state.atlet.find(a => String(a.id) === String(atletId));
+    if (!atlet) return;
 
-            const newEntries = [];
-            listFieldTes.forEach(f => {
-                const elem = document.getElementById(`field-${f.key}`);
-                if (elem && elem.value.trim() !== '') {
-                    newEntries.push({ id: (Date.now() + Math.random()).toString(), atletId, tanggal, keyTes: f.key, skor: elem.value.trim() });
-                }
+    const newEntries = [];
+    listFieldTes.forEach(f => {
+        const elem = document.getElementById(`field-${f.key}`);
+        if (elem && elem.value.trim() !== '') {
+            newEntries.push({
+                id: 'tf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                atletId: String(atletId),
+                tanggal,
+                tahap,
+                keyTes: f.key,
+                skor: elem.value.trim()
             });
-
-            if (newEntries.length === 0) {
-                showToast('Harap isi kelengkapan minimal 1 nilai item tes!', 'error');
-                return;
-            }
-
-            const isConfirmed = await confirmAction('Simpan Hasil Tes', `Simpan ${newEntries.length} data tes untuk ${escapeHTML(atlet.nama)}?`);
-            if (!isConfirmed) return;
-
-            newEntries.forEach(ne => {
-                state.tesFisik = state.tesFisik.filter(t => !(String(t.atletId) === String(ne.atletId) && t.keyTes === ne.keyTes));
-            });
-
-            state.tesFisik = [...newEntries, ...state.tesFisik];
-            saveStorage('tesFisik', state.tesFisik);
-            renderContent();
-            showToast('Data tes fisik berhasil disimpan!', 'success');
         }
+    });
+
+    if (newEntries.length === 0) {
+        showToast('Harap isi minimal 1 nilai item tes!', 'error');
+        return;
+    }
+
+    // Hapus data lama yang memiliki atletId, keyTes, DAN tahap yang sama persis (update tahap yang dipilih)
+    newEntries.forEach(ne => {
+        state.tesFisik = state.tesFisik.filter(t => 
+            !(String(t.atletId) === String(ne.atletId) && t.keyTes === ne.keyTes && t.tahap === ne.tahap)
+        );
+    });
+
+    state.tesFisik = [...newEntries, ...state.tesFisik];
+    saveStorage('tesFisik', state.tesFisik);
+    
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
+    }
+
+    renderContent();
+    showToast(`Hasil Tes Fisik (${tahap}-Test) untuk ${escapeHTML(atlet.nama)} tersimpan!`, 'success');
+}
 
         async function submitTesTeknikOptimistic(e) {
             e.preventDefault();
@@ -6011,19 +6061,27 @@ function triggerHUDMuscle(muscleKey) {
                         </div>
 
                         <form onsubmit="submitMultiTesFisikOptimistic(event)" class="space-y-6">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-slate-100">
-                                <div class="space-y-1.5">
-                                    <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">Pilih Atlet Skuad <span class="text-rose-500">*</span></label>
-                                    <select id="multi-tes-atlet-id" onchange="loadExistingTesFisikForm(this.value)" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
-    									<option value="">-- Pilih Atlet --</option>
-    									${optionsAtlet}
-								</select>
-                                </div>
-                                <div class="space-y-1.5">
-                                    <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">Tanggal Pengambilan Tes <span class="text-rose-500">*</span></label>
-                                    <input type="date" id="multi-tes-tanggal" required value="${today}" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold bg-white focus:outline-none focus:border-blue-600 shadow-sm">
-                                </div>
-                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-4 border-b border-slate-100">
+    <div class="space-y-1.5">
+        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">Pilih Atlet Skuad <span class="text-rose-500">*</span></label>
+        <select id="multi-tes-atlet-id" onchange="loadExistingTesFisikForm(this.value)" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
+            <option value="">-- Pilih Atlet --</option>
+            ${optionsAtlet}
+        </select>
+    </div>
+    <div class="space-y-1.5">
+        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">Tahap Tes <span class="text-rose-500">*</span></label>
+        <select id="multi-tes-tahap" required class="w-full px-4 py-3.5 rounded-2xl border border-blue-200 text-sm font-black bg-blue-50/50 text-blue-900 focus:outline-none focus:border-blue-600 shadow-sm">
+            <option value="Pre">1. Pre-Test (Awal Siklus)</option>
+            <option value="Mid">2. Mid-Test (Tengah Siklus)</option>
+            <option value="Post">3. Post-Test (Akhir / Pra-Kompetisi)</option>
+        </select>
+    </div>
+    <div class="space-y-1.5">
+        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">Tanggal Pengambilan Tes <span class="text-rose-500">*</span></label>
+        <input type="date" id="multi-tes-tanggal" required value="${today}" class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold bg-white focus:outline-none focus:border-blue-600 shadow-sm">
+    </div>
+</div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 ${listFieldTes.map(f => `
