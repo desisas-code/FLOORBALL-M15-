@@ -4253,82 +4253,82 @@ function renderMatchHeatmap() {
         // FITUR EKSPOR PDF OTOMATIS & CLEAN RENDER
         // =========================================================================
         function exportPDFCustom(elementId, filenamePrefix) {
-    const targetElement = document.getElementById(elementId) || document.getElementById('main-container');
-    if (!targetElement) {
-        showToast('Area dokumen tidak ditemukan!', 'error');
-        return;
-    }
+            const targetElement = document.getElementById(elementId) || document.getElementById('main-container');
+            if (!targetElement) {
+                showToast('Area dokumen tidak ditemukan!', 'error');
+                return;
+            }
 
-    const toast = showToast('Menyiapkan dokumen PDF lengkap...', 'loading');
+            const toast = showToast('Menyiapkan file PDF lengkap...', 'loading');
 
-    // 1. Buat clone elemen agar tampilan aplikasi di layar tidak berantakan
-    const clone = targetElement.cloneNode(true);
+            // 1. Gandakan elemen agar tampilan aktif layar tidak terganggu
+            const clone = targetElement.cloneNode(true);
+            const printWidth = 1150; // Standar landscape penuh agar tabel tidak terpotong
+            clone.style.width = `${printWidth}px`;
+            clone.style.minWidth = `${printWidth}px`;
+            clone.style.maxWidth = 'none';
+            clone.style.height = 'auto';
+            clone.style.overflow = 'visible';
 
-    // 2. Bersihkan pembatas overflow dan paksa lebar penuh agar tidak terpotong
-    clone.style.width = '1100px'; // Menampung seluruh kolom tabel hingga tuntas
-    clone.style.maxWidth = 'none';
-    clone.style.height = 'auto';
-    clone.style.maxHeight = 'none';
-    clone.style.overflow = 'visible';
+            // Buka semua elemen scrollbar di dalam clone
+            clone.querySelectorAll('*').forEach(el => {
+                el.style.overflow = 'visible';
+                el.style.maxHeight = 'none';
+            });
 
-    // Buka seluruh kontainer overflow internal di dalam clone
-    clone.querySelectorAll('*').forEach(el => {
-        el.style.overflow = 'visible';
-        el.style.maxHeight = 'none';
-    });
+            // 2. Sembunyikan tombol aksi dan cegah pemotongan baris di tengah tabel
+            const styleOverride = document.createElement('style');
+            styleOverride.innerHTML = `
+                button, input, select, .no-print, #toast-container { 
+                    display: none !important; 
+                }
+                tr, .bg-white { 
+                    page-break-inside: avoid !important; 
+                    break-inside: avoid !important; 
+                }
+            `;
+            clone.appendChild(styleOverride);
 
-    // 3. Cegah baris tabel terpotong di antara dua halaman
-    const stylePageBreak = document.createElement('style');
-    stylePageBreak.innerHTML = `
-        tr, .bg-white { 
-            page-break-inside: avoid !important; 
-            break-inside: avoid !important; 
-        }
-        .no-print, button { 
-            display: none !important; 
-        }
-    `;
-    clone.appendChild(stylePageBreak);
+            // Letakkan sementara di luar pandangan layar
+            clone.style.position = 'fixed';
+            clone.style.left = '-9999px';
+            clone.style.top = '0';
+            clone.style.backgroundColor = '#ffffff';
+            clone.style.zIndex = '-9999';
+            document.body.appendChild(clone);
 
-    // Letakkan clone di luar layar aktif untuk rendering bersih
-    clone.style.position = 'fixed';
-    clone.style.left = '-9999px';
-    clone.style.top = '0';
-    clone.style.background = '#ffffff';
-    document.body.appendChild(clone);
+            // 3. Konfigurasi rendering halaman
+            const opt = {
+                margin: [8, 8, 8, 8],
+                filename: `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: {
+                    scale: 1.5,
+                    useCORS: true,
+                    windowWidth: printWidth,
+                    scrollX: 0,
+                    scrollY: 0
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'landscape' // Orientasi landscape agar semua kolom muat
+                },
+                pagebreak: { mode: ['css', 'legacy'] }
+            };
 
-    // 4. Konfigurasi html2pdf dengan orientasi Landscape & mode multi-page
-    const opt = {
-        margin: [8, 8, 8, 8],
-        filename: `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-            scale: 2,
-            useCORS: true,
-            scrollY: 0,
-            scrollX: 0,
-            windowWidth: 1150
-        },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'landscape' // Menggunakan landscape agar seluruh kolom muat
-        },
-        pagebreak: { mode: ['css', 'legacy'] }
-    };
-
-    html2pdf().set(opt).from(clone).save().then(() => {
-        document.body.removeChild(clone);
-        if (toast) toast.remove();
-        showToast('Seluruh data PDF berhasil diunduh!', 'success');
-    }).catch(err => {
-        document.body.removeChild(clone);
-        if (toast) toast.remove();
-        console.error("PDF Error:", err);
-        showToast('Gagal memproses PDF, mengalihkan ke menu print...', 'error');
-        window.print();
-    });
-}	
+            html2pdf().set(opt).from(clone).save().then(() => {
+                document.body.removeChild(clone);
+                if (toast) toast.remove();
+                showToast('PDF berhasil diunduh tanpa terpotong!', 'success');
+            }).catch(err => {
+                document.body.removeChild(clone);
+                if (toast) toast.remove();
+                console.error("PDF Error:", err);
+                showToast('Beralih ke dialog cetak browser...', 'error');
+                window.print();
+            });
+        }	
         function filterSearchAtlet(query) {
             state.searchQueryAtlet = query.toLowerCase();
             renderContent();
@@ -7946,73 +7946,70 @@ const myReports = (state.laporanValidasi || []).filter(l => {
         }
   // Interval polling yang stabil (30 detik untuk menghemat kuota Apps Script & baterai HP)
   window.addEventListener("DOMContentLoaded", async () => {
-  // 1. Muat database lokal terlebih dahulu
-  state.atlet = loadStorage('atlet', []);
+    // 1. Muat database lokal
+    state.atlet = loadStorage('atlet', []);
 
-  // 2. Periksa sesi login yang tersimpan di localStorage
-  const savedSession = loadStorage('authSession', null);
+    // 2. Periksa sesi login yang tersimpan di memori browser
+    const savedSession = loadStorage('authSession', null);
 
-  if (savedSession && savedSession.role) {
-    state.currentRole = savedSession.role;
+    if (savedSession && savedSession.role) {
+      state.currentRole = savedSession.role;
 
-    if (savedSession.role === 'Pelatih') {
-      state.currentMenu = 'menu-1';
-      state.activeAtlet = null;
+      if (savedSession.role === 'Pelatih') {
+        state.currentMenu = 'menu-1';
+        state.activeAtlet = null;
 
-      // Update badge & profil pelatih
-      const avatarEl = document.getElementById('user-avatar');
-      const nameEl = document.getElementById('user-name');
-      const statusEl = document.getElementById('user-status');
-      const badgeEl = document.getElementById('current-role-badge');
+        const avatarEl = document.getElementById('user-avatar');
+        const nameEl = document.getElementById('user-name');
+        const statusEl = document.getElementById('user-status');
+        const badgeEl = document.getElementById('current-role-badge');
 
-      if (avatarEl) avatarEl.innerText = 'PK';
-      if (nameEl) nameEl.innerText = 'Pelatih Kepala';
-      if (statusEl) statusEl.innerText = 'Head Coach';
-      if (badgeEl) badgeEl.innerText = 'Pelatih Kepala';
+        if (avatarEl) avatarEl.innerText = 'PK';
+        if (nameEl) nameEl.innerText = 'Pelatih Kepala';
+        if (statusEl) statusEl.innerText = 'Head Coach';
+        if (badgeEl) badgeEl.innerText = 'Pelatih Kepala';
 
-    } else if (savedSession.role === 'Atlet' && savedSession.activeAtlet) {
-      // Sinkronkan data profil atlet terbaru dari state.atlet jika ada
-      const matched = state.atlet.find(a => String(a.id) === String(savedSession.activeAtlet.id));
-      state.activeAtlet = matched || savedSession.activeAtlet;
-      state.currentMenu = 'menu-atlet-1';
+      } else if (savedSession.role === 'Atlet' && savedSession.activeAtlet) {
+        const matched = state.atlet.find(a => String(a.id) === String(savedSession.activeAtlet.id));
+        state.activeAtlet = matched || savedSession.activeAtlet;
+        state.currentMenu = 'menu-atlet-1';
 
-      const at = state.activeAtlet;
-      const initials = at.nama ? at.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AT';
+        const at = state.activeAtlet;
+        const initials = at.nama ? at.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AT';
 
-      const avatarEl = document.getElementById('user-avatar');
-      const nameEl = document.getElementById('user-name');
-      const statusEl = document.getElementById('user-status');
-      const badgeEl = document.getElementById('current-role-badge');
+        const avatarEl = document.getElementById('user-avatar');
+        const nameEl = document.getElementById('user-name');
+        const statusEl = document.getElementById('user-status');
+        const badgeEl = document.getElementById('current-role-badge');
 
-      if (avatarEl) avatarEl.innerText = initials;
-      if (nameEl) nameEl.innerText = escapeHTML(at.nama);
-      if (statusEl) statusEl.innerText = `Atlet - ${escapeHTML(at.posisi || '-')}`;
-      if (badgeEl) badgeEl.innerText = 'Atlet Skuad';
+        if (avatarEl) avatarEl.innerText = initials;
+        if (nameEl) nameEl.innerText = escapeHTML(at.nama);
+        if (statusEl) statusEl.innerText = `Atlet - ${escapeHTML(at.posisi || '-')}`;
+        if (badgeEl) badgeEl.innerText = 'Atlet Skuad';
+      }
+
+      // Langsung buka dashboard aplikasi tanpa memunculkan login kembali
+      const loginScreen = document.getElementById('login-screen');
+      const appScreen = document.getElementById('app-screen');
+      if (loginScreen) loginScreen.classList.add('hidden');
+      if (appScreen) appScreen.classList.remove('hidden');
+
+      renderSidebar();
+      renderContent();
+    } else {
+      selectLoginRole(state.loginRole || 'pelatih');
     }
 
-    // Langsung buka dashboard aplikasi tanpa menampilkan layar login
-    const loginScreen = document.getElementById('login-screen');
-    const appScreen = document.getElementById('app-screen');
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (appScreen) appScreen.classList.remove('hidden');
+    // 3. Sinkronisasi Google Spreadsheet
+    if (typeof loadAtletFromSheet === 'function') {
+      await loadAtletFromSheet();
+    } else if (typeof autoFetchFromSpreadsheet === 'function') {
+      await autoFetchFromSpreadsheet();
+    }
 
-    renderSidebar();
-    renderContent();
-  } else {
-    // Jika belum pernah login, tampilkan layar login
-    selectLoginRole(state.loginRole || 'pelatih');
-  }
-
-  // 3. Sinkronisasi background dari Spreadsheet
-  if (typeof loadAtletFromSheet === 'function') {
-    await loadAtletFromSheet();
-  } else if (typeof autoFetchFromSpreadsheet === 'function') {
-    await autoFetchFromSpreadsheet();
-  }
-
-  // 4. Polling data latar belakang setiap 30 detik
-  setInterval(autoFetchFromSpreadsheet, 30000);
-});
+    // 4. Polling data latar belakang setiap 30 detik
+    setInterval(autoFetchFromSpreadsheet, 30000);
+  });
 
  function openAtletRadarModal(atletId) {
   const atlet = state.atlet.find(a => String(a.id) === String(atletId));
