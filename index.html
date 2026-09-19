@@ -205,8 +205,11 @@
             state.rpeLogs = Array.from(rpeMap.values());
             saveStorage("rpeLogs", state.rpeLogs);
           }
-          // 4. Render Ulang Tampilan Otomatis
-          if (typeof renderContent === 'function') {
+         // 4. Render Ulang Tampilan Otomatis (Hanya jika TIDAK sedang mengetik)
+          const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+          const isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
+          
+          if (!isTyping && typeof renderContent === 'function') {
             renderContent();
           }
         }
@@ -4228,6 +4231,19 @@ function evaluasiHasilTes(testObj, skor, genderAtlet = 'L') {
         </div>
     `;
 }
+		// Mengisi otomatis skor tes lama ke dalam form saat atlet dipilih
+function loadExistingTesFisikForm(atletId) {
+    if (!atletId) return;
+    const records = state.tesFisik.filter(t => String(t.atletId) === String(atletId));
+    
+    listFieldTes.forEach(f => {
+        const inputElem = document.getElementById(`field-${f.key}`);
+        if (inputElem) {
+            const match = records.find(r => r.keyTes === f.key);
+            inputElem.value = match ? match.skor : '';
+        }
+    });
+}
 
         async function submitMultiTesFisikOptimistic(e) {
             e.preventDefault();
@@ -5998,10 +6014,10 @@ function triggerHUDMuscle(muscleKey) {
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-slate-100">
                                 <div class="space-y-1.5">
                                     <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">Pilih Atlet Skuad <span class="text-rose-500">*</span></label>
-                                    <select id="multi-tes-atlet-id" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
-                                        <option value="">-- Pilih Atlet --</option>
-                                        ${optionsAtlet}
-                                    </select>
+                                    <select id="multi-tes-atlet-id" onchange="loadExistingTesFisikForm(this.value)" required class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 text-sm font-extrabold bg-white text-slate-800 focus:outline-none focus:border-blue-600 shadow-sm">
+    									<option value="">-- Pilih Atlet --</option>
+    									${optionsAtlet}
+								</select>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="block text-[11px] font-black text-slate-500 uppercase tracking-wider">Tanggal Pengambilan Tes <span class="text-rose-500">*</span></label>
