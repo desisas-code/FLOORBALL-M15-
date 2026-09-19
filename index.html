@@ -3606,266 +3606,169 @@ function renderMatchHeatmap() {
         }
 
         const menuLatihanHarian = {
-    // 1. TPU - ADAPTASI ANATOMI (AA)
+    // ==============================================================
+    // 1. TAHAP PERSIAPAN UMUM (TPU) - ADAPTASI ANATOMI & TEKNIK DASAR
+    // ==============================================================
     AA: [
         {
             hari: 'Senin',
-            sesi: 'Adaptasi Anatomi & Core',
-            durasi: '75 mnt',
-            rpeTarget: 5,
-            warmUp: 'Jogging santai 5 mnt, dynamic stretching (leg swings, arm circles, inchworm) 5 mnt, aktivasi glute & ankle 5 mnt.',
-            inti: 'Sirkuit beban tubuh 3 set: Bodyweight squat (15 rep), push-up (12 rep), walking lunges (10/kaki), plank hold (45 dtk). Lanjut stationary wall-pass 50x.',
-            coolDown: 'Static stretching statis (hamstring, paha depan, bahu) 10 mnt, teknik pernapasan diafragma 5 mnt.'
-        },
-        {
-            hari: 'Selasa',
-            sesi: 'Aerobik Dasar & Stance',
-            durasi: '60 mnt',
-            rpeTarget: 4,
-            warmUp: 'Lari keliling lapangan 5 mnt, ankle mobility & hip opener flow 10 mnt.',
-            inti: 'Continuous running Zona 2 (HR 120-140 BPM) 30 mnt. Drill mekanika low stance floorball & stickhandling angka 8 di tempat 15 mnt.',
-            coolDown: 'Jalan santai 5 mnt, foam rolling otot betis dan punggung bawah 10 mnt.'
-        },
-        {
-            hari: 'Rabu',
-            sesi: 'Teknik Dasar Passing & Grip',
-            durasi: '90 mnt',
-            rpeTarget: 6,
-            warmUp: 'Pemanasan koordinasi tangga kelincahan (agility ladder) 10 mnt, wrist rotasi & peregangan lengan bawah 5 mnt.',
-            inti: 'Stationary passing jarak 7 meter berpasangan forehand/backhand (4 set x 25 passing), drill kontrol bola lembut (soft hands) 20 mnt, mini game 3v3 tempo lambat 20 mnt.',
-            coolDown: 'Peregangan statis otot pergelangan tangan, forearm, dan selangkangan 15 mnt.'
-        },
-        {
-            hari: 'Kamis',
-            sesi: 'Recovery Aktif & Fleksibilitas',
-            durasi: '45 mnt',
-            rpeTarget: 2,
-            warmUp: 'Jalan santai di tempat & rotasi persendian kepala hingga kaki 10 mnt.',
-            inti: 'Yoga flow relaksasi, foam rolling seluruh tubuh, mobility flow sendi panggul dan bahu 25 mnt.',
-            coolDown: 'Peregangan otot leher dan relaksasi pernapasan 10 mnt.'
-        },
-        {
-            hari: 'Jumat',
-            sesi: 'Kekuatan Fungsional Ringan',
-            durasi: '75 mnt',
-            rpeTarget: 5,
-            warmUp: 'Jogging shuttle 5 mnt, dynamic lunges & butt kicks 10 mnt.',
-            inti: 'Gym sirkuit ringan (40-50% 1RM, 3 set x 12 rep): Goblet squat, dumbbell row, step-up bangku, deadbug core hold 30 dtk. Lanjut drill wrist snap shot 15 mnt.',
-            coolDown: 'Peregangan statis paha belakang, quadriceps, dada 15 mnt.'
-        },
-        {
-            hari: 'Sabtu',
-            sesi: 'Game Fundamental & Formasi',
-            durasi: '90 mnt',
-            rpeTarget: 6,
-            warmUp: 'Rondo passing game 10 mnt, sprint pendek 5 meter (5 rep) 5 mnt.',
-            inti: 'Pengenalan zona posisi formasi 2-1-2 (25 mnt), simulasi rotasi bola antar-lini (25 mnt), small sided scrimmage game 4v4 (20 mnt).',
-            coolDown: 'Jogging pendinginan lambat 5 mnt, deep static stretch 15 mnt.'
-        },
-        {
-            hari: 'Minggu',
-            sesi: 'Istirahat Total',
-            durasi: '0 mnt',
-            rpeTarget: 1,
-            warmUp: '-',
-            inti: 'Rest day total / pemulihan fisiologis jaringan tubuh.',
-            coolDown: '-'
-        }
-    ],
-
-    // 2. TPU - HIPERTROFI
-    Hypertrophy: [
-        {
-            hari: 'Senin',
-            sesi: 'Hipertrofi Lower Body',
+            sesi: 'Fisik: Adaptasi Anatomi & Core',
             durasi: '80 mnt',
-            rpeTarget: 6,
-            warmUp: 'Sepeda statis 5 mnt, mobility panggul & dynamic air squat 10 mnt.',
-            inti: 'Barbell back squat 65% 1RM (4 set x 10-12 rep), Romanian Deadlift / RDL (3 set x 10 rep), dumbbell walking lunges (3 set x 12 langkah), seated calf raise (3 set x 15 rep).',
-            coolDown: 'Foam rolling paha depan & gluteus 10 mnt, peregangan hamstring 5 mnt.'
+            rpeTarget: 5,
+            warmUp: 'Jogging santai 5 mnt, dynamic mobility (hip opener, leg swings, arm circles) 5 mnt, aktivasi ankle & glute band walk 5 mnt.',
+            inti: `• SQUAT: Goblet Squat — Beban 50% 1RM | 3 Set × 12 Reps | Rest 60 dtk
+• PUSH & PULL: Push-Up tempo lambat — Bodyweight | 3 Set × 12 Reps | Rest 45 dtk
+• LUNGES: Dumbbell Walking Lunges — Ringan | 3 Set × 10 Reps/kaki | Rest 60 dtk
+• CORE: Plank Hold — Bodyweight | 3 Set × 45 dtk | Rest 30 dtk`,
+            coolDown: 'Stretching statis paha depan, hamstring, otot betis 10 mnt, pernapasan diafragma 5 mnt.'
         },
         {
             hari: 'Selasa',
-            sesi: 'Daya Tahan Aerobik MAS',
-            durasi: '60 mnt',
-            rpeTarget: 6,
-            warmUp: 'Lari keliling lapangan 5 mnt, drill peregangan dinamis tungkai 10 mnt.',
-            inti: 'Continuous running 75% MAS tempo menengah 35 mnt (HR 135-155 BPM). Lanjut drill wall-passing dinamis sambil bergerak 10 mnt.',
-            coolDown: 'Jalan pendinginan 5 mnt, peregangan statis betis dan panggul 10 mnt.'
+            sesi: 'Teknik: Stance, Grip & Passing Statis',
+            durasi: '75 mnt',
+            rpeTarget: 4,
+            warmUp: 'Pemanasan pergelangan tangan (wrist circle) 5 mnt, koordinasi tangga kelincahan (ladder drill) 10 mnt.',
+            inti: `• STICKHANDLING: Dribble angka 8 di tempat (head-up) | 4 Set × 60 dtk | Rest 45 dtk
+• PASSING DASAR: Stationary partner pass forehand/backhand jarak 7m | 4 Set × 25 Reps | Rest 45 dtk
+• KONTROL: Soft-hands reception bola pantul dinding | 3 Set × 20 Reps | Rest 30 dtk
+• MINI GAME: 3v3 tempo lambat area sempit | 2 Babak × 8 mnt | Rest 2 mnt`,
+            coolDown: 'Peregangan pergelangan tangan, forearm, dan bahu 10 mnt.'
         },
         {
             hari: 'Rabu',
-            sesi: 'Hipertrofi Upper & Forearm',
-            durasi: '75 mnt',
-            rpeTarget: 6,
-            warmUp: 'Arm circles, band pull-apart, rotator cuff warm-up 10 mnt.',
-            inti: 'Dumbbell bench press (4 set x 10 rep), bent-over dumbbell row (4 set x 10 rep), wrist roller 3 set, forearm wrist curl (3 set x 15 rep). Diakhiri stickhandling berat 10 mnt.',
-            coolDown: 'Peregangan otot dada, belikat, dan pergelangan tangan 10 mnt.'
+            sesi: 'Fisik: Kapasitas Aerobik Dasar (Jogging)',
+            durasi: '60 mnt',
+            rpeTarget: 5,
+            warmUp: 'Lari santai keliling lapangan 5 mnt, peregangan dinamis panggul 10 mnt.',
+            inti: `• AEROBIC BASE: Continuous running Zona 2 (HR 120–140 BPM) | 1 Sesi × 35 mnt
+• STRIDES: Akselerasi lari bertahap 60m (intensitas 70%) | 4 Set × 1 Rep | Rest 60 dtk
+• RECOVERY CORE: Deadbug & Bird-Dog | 3 Set × 10 Reps/sisi | Rest 30 dtk`,
+            coolDown: 'Jalan pendinginan 5 mnt, foam rolling otot paha dan betis 10 mnt.'
         },
         {
             hari: 'Kamis',
-            sesi: 'Active Recovery',
-            durasi: '45 mnt',
-            rpeTarget: 2,
-            warmUp: 'Pemanasan sendi santai 5 mnt.',
-            inti: 'Berenang gaya dada santai / sepeda santai 25 mnt, stretching pasif 15 mnt.',
-            coolDown: 'Relaksasi air hangat 5 mnt.'
+            sesi: 'Teknik: Dribble Dinamis & Wrist Shot',
+            durasi: '80 mnt',
+            rpeTarget: 5,
+            warmUp: 'Dribble zig-zag cone santai 10 mnt, aktivasi engsel bahu 5 mnt.',
+            inti: `• SLALOM DRILL: Dribble slalom cone kecepatan sedang | 4 Set × 5 Reps | Rest 60 dtk
+• RUNNING PASS: Give-and-go (operan satu-dua) sambil berlari | 4 Set × 12 Reps | Rest 45 dtk
+• SHOOTING: Wrist shot statis dari area slot (fokus lekukan blade) | 4 Set × 10 Tembakan | Rest 60 dtk
+• GAME TACTIC: Pengenalan formasi bertahan 2-1-2 tanpa lawan | 20 mnt`,
+            coolDown: 'Peregangan statis punggung bawah, panggul, dan lengan 10 mnt.'
         },
         {
             hari: 'Jumat',
-            sesi: 'Kekuatan Daya Tahan',
+            sesi: 'Fisik: Kekuatan Otot Penunjang & Sendi',
             durasi: '75 mnt',
-            rpeTarget: 7,
-            warmUp: 'Jogging interval pelan-cepat 5 mnt, aktivasi core & dynamic lunges 10 mnt.',
-            inti: 'Kettlebell swing (4 set x 15 rep), push-up tempo lambat (4 set x 15 rep), hanging knee raise (3 set x 12 rep), drill shooting sweeper shot berulang 20 mnt.',
-            coolDown: 'Peregangan statis punggung, paha, dan leher 10 mnt.'
+            rpeTarget: 6,
+            warmUp: 'Skipping tali 5 mnt, dynamic lunges & butt kicks 10 mnt.',
+            inti: `• POSTERIOR: Romanian Deadlift (RDL) — Beban 50% 1RM | 3 Set × 10 Reps | Rest 60 dtk
+• UPPER PULL: Dumbbell Single-Arm Row — Sedang | 3 Set × 10 Reps/sisi | Rest 45 dtk
+• FOREARM: Wrist Roller / Forearm Curl — 5–10 kg | 3 Set × 15 Reps | Rest 45 dtk
+• CORE ROTASI: Russian Twist dengan beban ringan | 3 Set × 20 Reps | Rest 30 dtk`,
+            coolDown: 'Peregangan statis otot hamstring, punggung, dada 15 mnt.'
         },
         {
             hari: 'Sabtu',
-            sesi: 'Taktik Formasi & Scrimmage',
+            sesi: 'Teknik: Simulasi Game & Taktik Formasi',
             durasi: '90 mnt',
-            rpeTarget: 7,
-            warmUp: 'Game operan kucing-kucingan (rondo) 10 mnt, koordinasi lari sprint pendek 5 mnt.',
-            inti: 'Drill transisi formasi 2-2-1 saat kehilangan bola (30 mnt), latihan set-piece tendangan bebas dasar (15 mnt), match 5v5 (30 mnt).',
-            coolDown: 'Jogging pelan 5 mnt, peregangan menyeluruh 10 mnt.'
+            rpeTarget: 6,
+            warmUp: 'Game rondo (kucing-kucingan satu sentuhan) 10 mnt, lari sprint 5 meter 5 mnt.',
+            inti: `• ROTASI: Sirkulasi operan bola antar-lini formasi 2-2-1 | 20 mnt
+• SHOOTING DINAMIS: Sweeper shot menerima umpan silang | 4 Set × 8 Reps | Rest 60 dtk
+• SCRIMMAGE MATCH: Game simulasi 4v4 lapangan penuh tempo terkontrol | 3 Babak × 10 mnt | Rest 3 mnt`,
+            coolDown: 'Jogging pendinginan lambat 5 mnt, deep static stretch seluruh tubuh 15 mnt.'
         },
         {
             hari: 'Minggu',
-            sesi: 'Istirahat Total',
+            sesi: 'Istirahat Total (Rest Day)',
             durasi: '0 mnt',
             rpeTarget: 1,
             warmUp: '-',
-            inti: 'Rest day.',
+            inti: 'Istirahat total / pemulihan fisiologis jaringan otot dan sistem saraf.',
             coolDown: '-'
         }
     ],
 
-    // 3. TPK - KEKUATAN MAKSIMAL (MxS)
+    // ==============================================================
+    // 2. TAHAP PERSIAPAN KHUSUS (TPK) - MAXIMUM STRENGTH & TEKNIK POWER
+    // ==============================================================
     MxS: [
         {
             hari: 'Senin',
-            sesi: 'Max Strength (Lower)',
-            durasi: '80 mnt',
+            sesi: 'Fisik: Maximum Strength (MxS Lower)',
+            durasi: '85 mnt',
             rpeTarget: 8,
-            warmUp: 'Treadmill/sepeda 5 mnt, aktivasi glute band, hip flow, mobility squat bertahap 15 mnt.',
-            inti: 'Barbell back squat 80-85% 1RM (4 set x 5-6 rep, rest 2 mnt), Trap bar deadlift (4 set x 5 rep, rest 2 mnt), Nordic hamstring curl (3 set x 6 rep).',
-            coolDown: 'Foam rolling intensif tungkai bawah & deep hamstring stretch 15 mnt.'
+            warmUp: 'Sepeda statis 5 mnt, mobility squat & glute activation 15 mnt.',
+            inti: `• PRIMARY LIFT: Barbell Back Squat — Beban 80–85% 1RM | 4 Set × 5 Reps | Rest 120 dtk
+• EXPLOSIVE DRIVE: Trap Bar Deadlift — Beban 80% 1RM | 4 Set × 5 Reps | Rest 120 dtk
+• HAMSTRING: Nordic Hamstring Curl — Bodyweight | 3 Set × 6 Reps | Rest 90 dtk
+• CORE: Cable Pallof Press Hold — Beban Sedang | 3 Set × 8 Reps/sisi (Hold 2 dtk) | Rest 60 dtk`,
+            coolDown: 'Foam rolling intensif paha dan betis 10 mnt, peregangan hamstring 5 mnt.'
         },
         {
             hari: 'Selasa',
-            sesi: 'Interval Anaerobik MAS',
-            durasi: '60 mnt',
-            rpeTarget: 8,
-            warmUp: 'Jogging progresif 5 mnt, koordinasi lari A-skip, B-skip, high knees 10 mnt.',
-            inti: 'Interval lari 15 detik sprint (100-110% MAS) / 15 detik jalan aktif (sebanyak 10-12 repetisi x 2 set). Lanjut drill operan lari cepat 15 mnt.',
-            coolDown: 'Jalan santai 5 mnt, stretching statis otot betis & paha 10 mnt.'
+            sesi: 'Teknik: Dribble Slalom Cepat & Drag Shot',
+            durasi: '90 mnt',
+            rpeTarget: 7,
+            warmUp: 'Footwork koordinasi cone 10 mnt, handling bola cepat 5 mnt.',
+            inti: `• SLALOM FULL SPEED: Dribble melewati 6 cone kecepatan penuh | 5 Set × 4 Reps | Rest 60 dtk
+• DRAG SHOT: Tembakan drag shot bertenaga setelah akselerasi | 4 Set × 8 Tembakan | Rest 60 dtk
+• DUEL RINK: Duel perebutan bola 1v1 di dinding (wall battle) | 4 Set × 4 Reps (15 dtk kerja) | Rest 60 dtk
+• TRANSISI: Breakout serangan balik cepat 3v2 | 20 mnt`,
+            coolDown: 'Peregangan sendi bahu, forearm, dan selangkangan 15 mnt.'
         },
         {
             hari: 'Rabu',
-            sesi: 'Max Strength (Upper & Rotasi)',
+            sesi: 'Fisik: Maximum Strength (Upper) & Interval MAS',
             durasi: '80 mnt',
             rpeTarget: 8,
-            warmUp: 'Rotator cuff band activation, shoulder dislocate drill 10 mnt.',
-            inti: 'Barbell bench press 80% 1RM (4 set x 6 rep), weighted pull-up (4 set x 5 rep), landmine rotational press (3 set x 6 rep/sisi), single-arm heavy dumbbell row (3 set x 6 rep).',
-            coolDown: 'Peregangan dada, bahu depan, dan punggung sayap 15 mnt.'
+            warmUp: 'Rotator cuff band activation 10 mnt, jogging akselerasi 5 mnt.',
+            inti: `• PUSH POWER: Barbell Bench Press — Beban 75–80% 1RM | 4 Set × 6 Reps | Rest 90 dtk
+• PULL: Weighted Pull-Up / Lat Pulldown — 75% 1RM | 4 Set × 6 Reps | Rest 90 dtk
+• ROTASI SHOOT: Landmine Rotational Press — Barbell 15–20 kg | 3 Set × 6 Reps/sisi | Rest 60 dtk
+• CONDITIONING: Lari 15 dtk Sprint MAS / 15 dtk Jalan | 2 Set × 10 Reps | Rest 3 mnt antar-set`,
+            coolDown: 'Jalan santai 5 mnt, stretching statis dada, bahu, dan betis 10 mnt.'
         },
         {
             hari: 'Kamis',
-            sesi: 'Regenerasi Fisiologis',
-            durasi: '45 mnt',
-            rpeTarget: 3,
-            warmUp: 'Jalan santai 5 mnt.',
-            inti: 'Terapi mobilitas panggul, yoga peregangan dinamis, foam rolling otot punggung 30 mnt.',
-            coolDown: 'Pernapasan relaksasi 10 mnt.'
+            sesi: 'Teknik: One-Timer Slap Shot & Rebound',
+            durasi: '85 mnt',
+            rpeTarget: 7,
+            warmUp: 'Passing dinamis berpasangan 10 mnt, aktivasi pergelangan tangan 5 mnt.',
+            inti: `• SLAP SHOT: One-timer slap shot menerima umpan silang | 4 Set × 8 Tembakan | Rest 60 dtk
+• REBOUND FINISH: Reaksi menyambar bola muntah di area slot | 4 Set × 6 Reps | Rest 45 dtk
+• FORECHECKING DRILL: Skema tekanan 1-2-2 merebut bola di area lawan | 25 mnt
+• SHORT GAME: Mini game 3v3 intensitas tinggi adangan penuh | 3 Babak × 5 mnt | Rest 2 mnt`,
+            coolDown: 'Stretching otot panggul, punggung, dan leher 15 mnt.'
         },
         {
             hari: 'Jumat',
-            sesi: 'Transisi Breakout & Drag Shot',
-            durasi: '90 mnt',
-            rpeTarget: 8,
-            warmUp: 'Dribble zig-zag cone santai 10 mnt, sprint akselerasi 10 meter (4 rep) 5 mnt.',
-            inti: 'Drill breakout cepat dari garis pertahanan 3v2 (30 mnt), latihan drag shot bertenaga penuh setelah lari kencang (30 mnt), pertarungan perebutan bola di dinding rink / wall battle (15 mnt).',
-            coolDown: 'Pendinginan lari pelan 5 mnt, peregangan sendi panggul 10 mnt.'
-        },
-        {
-            hari: 'Sabtu',
-            sesi: 'High Tempo Match',
-            durasi: '90 mnt',
-            rpeTarget: 9,
-            warmUp: 'Pemanasan tanding dinamis skuad, passing drill segitiga cepat 15 mnt.',
-            inti: 'Full-court matchplay intensitas turnamen 3 x 20 menit (fokus disiplin rotasi shift line 40-45 detik).',
-            coolDown: 'Jogging pelan 5 mnt, stretching statis berpasangan 15 mnt.'
-        },
-        {
-            hari: 'Minggu',
-            sesi: 'Istirahat Total',
-            durasi: '0 mnt',
-            rpeTarget: 1,
-            warmUp: '-',
-            inti: 'Rest day.',
-            coolDown: '-'
-        }
-    ],
-
-    // 4. TPK - POWER & RSA
-    Power: [
-        {
-            hari: 'Senin',
-            sesi: 'Pliometrik & Daya Ledak',
+            sesi: 'Fisik: Pliometrik & Repeated Sprint (RSA)',
             durasi: '75 mnt',
             rpeTarget: 8,
-            warmUp: 'Pogo jump ringan, skipping tali 5 mnt, mobilitas ankle & pergelangan kaki 10 mnt.',
-            inti: 'Plyometric box jump pendaratan stabil (4 set x 5 rep), lateral skater jump (4 set x 6 rep/kaki), medicine ball rotational wall slam (4 set x 8 rep/sisi), dumbbell jump squat (3 set x 5 rep).',
-            coolDown: 'Peregangan betis, quadriceps, dan pendinginan napas 15 mnt.'
-        },
-        {
-            hari: 'Selasa',
-            sesi: 'Repeated Sprint Ability (RSA)',
-            durasi: '60 mnt',
-            rpeTarget: 8,
-            warmUp: 'Jogging akselerasi bertahap 5 mnt, dynamic leg swings & lunge matrix 10 mnt.',
-            inti: 'Drill RSA: 6 x 20 meter sprint maksimal (rest 20 dtk antar-sprint), jeda antar-set 4 mnt (lakukan 2 set). Dilanjutkan simulasi sprint mengejar bola lepas 15 mnt.',
-            coolDown: 'Jalan pemulihan 5 mnt, peregangan hamstring & selangkangan 10 mnt.'
-        },
-        {
-            hari: 'Rabu',
-            sesi: 'Shooting Eksplosif & One-Timer',
-            durasi: '90 mnt',
-            rpeTarget: 8,
-            warmUp: 'Handling bola cepat di tempat 10 mnt, passing wall-rebound cepat 5 mnt.',
-            inti: 'One-timer slap shot menerima umpan silang (30 mnt), drag shot putar badan eksplosif (25 mnt), duel rebound di depan kiper lawan (20 mnt).',
-            coolDown: 'Peregangan sendi bahu, forearm, dan otot pinggang 15 mnt.'
-        },
-        {
-            hari: 'Kamis',
-            sesi: 'Recovery & Taktik Kelas',
-            durasi: '45 mnt',
-            rpeTarget: 2,
-            warmUp: 'Peregangan leher dan lengan 5 mnt.',
-            inti: 'Evaluasi taktik video match lawan 25 mnt, foam rolling tungkai bawah & core 15 mnt.',
-            coolDown: 'Pernapasan relaksasi 5 mnt.'
-        },
-        {
-            hari: 'Jumat',
-            sesi: 'Forechecking & Wall Battle',
-            durasi: '80 mnt',
-            rpeTarget: 8,
-            warmUp: 'Jogging kelincahan arah 5 mnt, drill kontak bodi ringan sesuai aturan IFF 10 mnt.',
-            inti: 'Skema forechecking agresif 1-2-2 (30 mnt), duel kontak perebutan bola di papan rink (25 mnt), latihan transisi kilat saat merebut bola (15 mnt).',
-            coolDown: 'Pendinginan lari kecil 5 mnt, stretching statis 10 mnt.'
+            warmUp: 'Pogo jump 5 mnt, lunge matrix & ankle flow 10 mnt.',
+            inti: `• PLIOMETRIK: Box Jump (landing fokus) | 4 Set × 5 Reps | Rest 90 dtk
+• LATERAL POWER: Skater Jump ke samping | 4 Set × 6 Reps/kaki | Rest 60 dtk
+• CORE POWER: Medicine Ball Rotational Wall Slam (5 kg) | 4 Set × 8 Reps/sisi | Rest 60 dtk
+• SPRINT RSA: Sprint maksimal 6 × 20 meter (Rest 20 dtk antar-sprint) | 2 Set | Rest 4 mnt antar-set`,
+            coolDown: 'Peregangan statis paha belakang, betis, dan pendinginan pernapasan 15 mnt.'
         },
         {
             hari: 'Sabtu',
-            sesi: 'Simulasi Laga TPK',
+            sesi: 'Teknik & Taktik: Full Match Simulasi Shift',
             durasi: '90 mnt',
             rpeTarget: 9,
-            warmUp: 'Pemanasan tanding spesifik lini 15 mnt.',
-            inti: 'Simulasi tanding 3 x 15 menit dengan simulasi defisit skor (fokus mental mengejar ketertinggalan dan serangan kilat).',
-            coolDown: 'Pendinginan es / kompres es bila ada benturan, peregangan 15 mnt.'
+            warmUp: 'Protokol pemanasan tanding lengkap 15 mnt.',
+            inti: `• DRILL KHUSUS: Set-piece powerplay 5v4 & bertahan boxplay 4v5 | 25 mnt
+• MATCHPLAY: Scrimmage penuh 3 × 15 menit (disiplin rotasi shift line 40 dtk) | 45 mnt
+• PENALTY: Latihan shootout penalti 1v1 menghadapi kiper | 3 Tembakan/pemain`,
+            coolDown: 'Pendinginan lari kecil 5 mnt, kompres es bila ada benturan, deep stretching 15 mnt.'
         },
         {
             hari: 'Minggu',
-            sesi: 'Istirahat Total',
+            sesi: 'Istirahat Total (Rest Day)',
             durasi: '0 mnt',
             rpeTarget: 1,
             warmUp: '-',
@@ -3874,203 +3777,85 @@ function renderMatchHeatmap() {
         }
     ],
 
-    // 5. PRA-KOMPETISI (SAQ & TAKTIK MATCH)
+    // ==============================================================
+    // 3. PRA-KOMPETISI (K1) - SAQ & SIMULASI PERTANDINGAN
+    // ==============================================================
     SAQ: [
         {
             hari: 'Senin',
-            sesi: 'SAQ & Reaksi Langkah Cepat',
+            sesi: 'Fisik: SAQ & Kecepatan Langkah Pertama',
             durasi: '70 mnt',
             rpeTarget: 8,
-            warmUp: 'Agility ladder drills variasi in-out 10 mnt, akselerasi sprint 5 meter 5 mnt.',
-            inti: 'T-Test agility drill dengan tongkat dan bola (4 set), reaksi visual sprint arah acak peluit pelatih (15 mnt), shuttle run 5-10-5 meter (15 mnt).',
-            coolDown: 'Peregangan statis paha, lutut, dan betis 15 mnt.'
+            warmUp: 'Agility ladder in-out 10 mnt, ankle mobility 5 mnt.',
+            inti: `• FIRST STEP: Akselerasi sprint 0–5 meter | 5 Set × 2 Reps | Rest 60 dtk
+• AGILITY: T-Test Agility dengan bola | 4 Set × 1 Rep | Rest 90 dtk
+• REACTIVE POWER: Hurdle Hops to Sprint 5m | 3 Set × 4 Reps | Rest 90 dtk
+• REACTION: Shuttle Run 5-10-5 meter reaksi suara peluit | 4 Set × 1 Rep | Rest 90 dtk`,
+            coolDown: 'Peregangan statis tungkai bawah dan pendinginan pernapasan 15 mnt.'
         },
         {
             hari: 'Selasa',
-            sesi: 'Special Teams (Power Play 5v4)',
+            sesi: 'Teknik: Special Teams (Power Play 5v4)',
             durasi: '80 mnt',
             rpeTarget: 7,
             warmUp: 'Passing rondo cepat satu sentuhan 10 mnt, dynamic stretch 5 mnt.',
-            inti: 'Skema Power Play 5 lawan 4: Formasi payung (umbrella) 25 mnt, sirkulasi cepat cari celah one-timer slap shot 25 mnt, simulasi screen depan kiper 15 mnt.',
-            coolDown: 'Pendinginan santai 5 mnt, peregangan otot punggung 10 mnt.'
+            inti: `• SIRKULASI: Operan cepat formasi payung (umbrella) 5v4 | 25 mnt
+• QUICK FINISH: One-timer tembakan celah sempit | 4 Set × 8 Tembakan | Rest 45 dtk
+• SCREENING: Menghalangi pandangan kiper & membelokkan bola (tip-in) | 20 mnt
+• GAME 5v4: Simulasi situasi penalti waktu 2 menit | 3 Sesi × 4 mnt | Rest 2 mnt`,
+            coolDown: 'Pendinginan santai 5 mnt, peregangan otot punggung dan bahu 10 mnt.'
         },
         {
             hari: 'Rabu',
-            sesi: 'Special Teams (Box Play 4v5)',
+            sesi: 'Fisik: Pemeliharaan Power & Neuromuscular',
+            durasi: '60 mnt',
+            rpeTarget: 7,
+            warmUp: 'Skipping tali 5 mnt, mobilisasi seluruh sendi 10 mnt.',
+            inti: `• POWER GYM: Trap Bar Jump Shrug — Beban 30% 1RM | 3 Set × 5 Reps | Rest 90 dtk
+• EXPLOSIVE CORE: Medball Chest Pass ke dinding — Bola 4 kg | 3 Set × 8 Reps | Rest 60 dtk
+• ACCELERATION: Sprint 10 meter tajam | 4 Set × 1 Rep | Rest 90 dtk`,
+            coolDown: 'Peregangan relaksasi yoga flow 15 mnt.'
+        },
+        {
+            hari: 'Kamis',
+            sesi: 'Teknik: Special Teams (Box Play 4v5)',
             durasi: '80 mnt',
             rpeTarget: 7,
-            warmUp: 'Footwork bertahan lateral shuffle 10 mnt, stretching paha dalam 5 mnt.',
-            inti: 'Skema Box Play bertahan 4 lawan 5: Menutup jalur passing slot gawang (30 mnt), blocking tembakan dengan stick/badan aman (20 mnt), counter-attack buang bola cepat (15 mnt).',
-            coolDown: 'Peregangan otot pinggul dan tungkai bawah 15 mnt.'
-        },
-        {
-            hari: 'Kamis',
-            sesi: 'Simulasi Shift Line 40 Detik',
-            durasi: '60 mnt',
-            rpeTarget: 6,
-            warmUp: 'Jogging ringan 5 mnt, aktivasi peregangan dinamis 10 mnt.',
-            inti: 'Simulasi pergantian pemain di bangku cadangan (bench rotation) tiap 40 detik saat bola aktif tanpa merusak formasi bertahan (35 mnt). Diakhiri free-hit drill 10 mnt.',
-            coolDown: 'Pendinginan santai 10 mnt.'
+            warmUp: 'Footwork lateral bertahan 10 mnt, stretching selangkangan 5 mnt.',
+            inti: `• BOX DEFENSE: Menutup jalur umpan slot gawang 4v5 | 25 mnt
+• BLOCKING: Memblok tembakan dengan stick dan badan aman | 20 mnt
+• CLEARANCE: Membuang bola cepat keluar zona bahaya | 15 mnt
+• GAME 4v5: Simulasi bertahan dari kebobolan under pressure | 3 Sesi × 4 mnt | Rest 2 mnt`,
+            coolDown: 'Peregangan otot pinggul dan paha dalam 15 mnt.'
         },
         {
             hari: 'Jumat',
-            sesi: 'Set-Piece & Penalty Shootout',
+            sesi: 'Fisik & Taktik: Ketajaman Set-Piece & Free-Hit',
             durasi: '60 mnt',
             rpeTarget: 5,
-            warmUp: 'Jogging santai 5 mnt, aktivasi wrist & bahu 10 mnt.',
-            inti: 'Eksekusi tendangan bebas dekat gawang (20 mnt), latihan penalti tembakan langsung / penalty shootout 1 lawan 1 menghadapi kiper (25 mnt).',
-            coolDown: 'Peregangan statis santai 10 mnt.'
+            warmUp: 'Jogging santai 5 mnt, dynamic stretch 10 mnt.',
+            inti: `• SET-PIECE: Eksekusi tendangan bebas dekat gawang | 20 mnt
+• PENALTY: Penalty shootout 1 lawan 1 menghadapi kiper | 4 Reps/pemain | Rest santai
+• ROTASI SHIFT: Simulasi pergantian line cepat di pinggir rink | 15 mnt`,
+            coolDown: 'Peregangan statis santai 15 mnt.'
         },
         {
             hari: 'Sabtu',
-            sesi: 'Laga Uji Coba (Friendly Match)',
+            sesi: 'Teknik & Taktik: Laga Uji Coba Resmi',
             durasi: '90 mnt',
             rpeTarget: 9,
-            warmUp: 'Protokol pemanasan tanding lengkap 20 mnt.',
-            inti: 'Laga uji coba resmi melawan tim mitra (3 x 20 mnt). Penerapan penuh sistem taktis dan penilaian efisiensi formasi line.',
-            coolDown: 'Pendinginan menyeluruh 15 mnt, evaluasi singkat post-match.'
+            warmUp: 'Pemanasan tanding resmi 20 mnt.',
+            inti: `• FRIENDLY MATCH: Laga uji coba melawan tim eksternal (3 × 20 mnt)
+• EVALUASI: Penilaian eksekusi taktik, kedisiplinan shift, dan performa pemain per-line`,
+            coolDown: 'Pendinginan aktif jalan santai 5 mnt, deep stretching 15 mnt.'
         },
         {
             hari: 'Minggu',
-            sesi: 'Istirahat Total',
+            sesi: 'Istirahat Total (Rest Day)',
             durasi: '0 mnt',
             rpeTarget: 1,
             warmUp: '-',
             inti: 'Rest day.',
-            coolDown: '-'
-        }
-    ],
-
-    // 6. KOMPETISI UTAMA (PEAKING & TAPERING)
-    Peaking: [
-        {
-            hari: 'Senin',
-            sesi: 'Tapering & Speed Primer',
-            durasi: '45 mnt',
-            rpeTarget: 5,
-            warmUp: 'Jogging santai 5 mnt, aktivasi dinamis seluruh persendian 10 mnt.',
-            inti: 'Akselerasi sprint 10 meter tajam (3 rep x 2 set, rest penuh), sentuhan bola akurasi passing pendek 15 mnt (volume dipotong 50%).',
-            coolDown: 'Stretching pasif santai 10 mnt.'
-        },
-        {
-            hari: 'Selasa',
-            sesi: 'Finishing & Penalty Polish',
-            durasi: '50 mnt',
-            rpeTarget: 5,
-            warmUp: 'Pemanasan bola tangan 10 mnt.',
-            inti: 'Latihan penyelesaian akhir bola rebound 15 mnt, penalti shootout 15 mnt, skema set-piece khusus lawan tanding 10 mnt.',
-            coolDown: 'Pendinginan santai 10 mnt.'
-        },
-        {
-            hari: 'Rabu',
-            sesi: 'Briefing Taktik & Ringan',
-            durasi: '40 mnt',
-            rpeTarget: 4,
-            warmUp: 'Peregangan dinamis santai 10 mnt.',
-            inti: 'Game taktis santai tanpa kontak keras 15 mnt, pemantapan skema bola mati 10 mnt.',
-            coolDown: 'Foam rolling santai 10 mnt.'
-        },
-        {
-            hari: 'Kamis',
-            sesi: 'Aktivasi Mental & Mobilitas',
-            durasi: '30 mnt',
-            rpeTarget: 2,
-            warmUp: 'Jalan santai 5 mnt.',
-            inti: 'Mobilitas sendi ringan, visualisasi taktik bertanding, istirahat dan nutrisi karbohidrat glikogen.',
-            coolDown: 'Pernapasan rileks 10 mnt.'
-        },
-        {
-            hari: 'Jumat',
-            sesi: 'MATCHDAY 1 (Kompetisi)',
-            durasi: '60 mnt',
-            rpeTarget: 10,
-            warmUp: 'Pemanasan tanding resmi 20 mnt.',
-            inti: 'Pertandingan resmi Turnamen Babak 1 (All-out performance).',
-            coolDown: 'Ice bath, jalan pendinginan 10 mnt, hidrasi & nutrisi recovery.'
-        },
-        {
-            hari: 'Sabtu',
-            sesi: 'MATCHDAY 2 / FINAL',
-            durasi: '60 mnt',
-            rpeTarget: 10,
-            warmUp: 'Pemanasan tanding resmi 20 mnt.',
-            inti: 'Pertandingan Semifinal / Final Turnamen (Peak performance).',
-            coolDown: 'Pendinginan tanding 15 mnt, penyerahan trofi/evaluasi musim.'
-        },
-        {
-            hari: 'Minggu',
-            sesi: 'Regenerasi Pasca Tanding',
-            durasi: '30 mnt',
-            rpeTarget: 2,
-            warmUp: '-',
-            inti: 'Terapi pemulihan, peregangan ringan, istirahat total.',
-            coolDown: '-'
-        }
-    ],
-
-    // 7. TRANSISI / PEMULIHAN
-    Recovery: [
-        {
-            hari: 'Senin',
-            sesi: 'Active Recovery Renang',
-            durasi: '40 mnt',
-            rpeTarget: 2,
-            warmUp: 'Peregangan statis di pinggir kolam 5 mnt.',
-            inti: 'Berenang gaya bebas/dada santai 25 mnt (pelepasan beban persendian).',
-            coolDown: 'Relaksasi air hangat 10 mnt.'
-        },
-        {
-            hari: 'Selasa',
-            sesi: 'Istirahat Total',
-            durasi: '0 mnt',
-            rpeTarget: 1,
-            warmUp: '-',
-            inti: 'Bebas aktivitas fisik berat.',
-            coolDown: '-'
-        },
-        {
-            hari: 'Rabu',
-            sesi: 'Fisioterapi & Foam Rolling',
-            durasi: '45 mnt',
-            rpeTarget: 2,
-            warmUp: 'Jalan santai 5 mnt.',
-            inti: 'Pelepasan simpul otot (myofascial release) dengan foam roller, perawatan memar/cedera turnamen 30 mnt.',
-            coolDown: 'Peregangan yoga santai 10 mnt.'
-        },
-        {
-            hari: 'Kamis',
-            sesi: 'Istirahat Total',
-            durasi: '0 mnt',
-            rpeTarget: 1,
-            warmUp: '-',
-            inti: 'Rest day.',
-            coolDown: '-'
-        },
-        {
-            hari: 'Jumat',
-            sesi: 'Olahraga Rekreasi',
-            durasi: '45 mnt',
-            rpeTarget: 3,
-            warmUp: 'Pemanasan santai 5 mnt.',
-            inti: 'Olahraga rekreasi non-floorball (misal tenis meja / jalan sehat alam) 35 mnt.',
-            coolDown: 'Peregangan santai 5 mnt.'
-        },
-        {
-            hari: 'Sabtu',
-            sesi: 'Evaluasi & Refleksi Musim',
-            durasi: '60 mnt',
-            rpeTarget: 1,
-            warmUp: '-',
-            inti: 'Meeting evaluasi tim bersama pelatih, peninjauan statistik pemain, penetapan target siklus latihan baru.',
-            coolDown: '-'
-        },
-        {
-            hari: 'Minggu',
-            sesi: 'Istirahat Total',
-            durasi: '0 mnt',
-            rpeTarget: 1,
-            warmUp: '-',
-            inti: 'Rest day total.',
             coolDown: '-'
         }
     ]
