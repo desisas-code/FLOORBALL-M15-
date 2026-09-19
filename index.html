@@ -2335,9 +2335,15 @@ function initMenu7AutoFill() {
         let volPct = 50, intPct = 50;
         let volLbl = "Sedang", intLbl = "Sedang";
         let hrTarget = "";
-        let fokus = "";
+        
+        // Rincian 3 Pilar Latihan Floorball
+        let fokusFisik = "";
+        let fokusTeknik = "";
+        let fokusTaktik = "";
 
+        // ==============================================================
         // 1. TAHAP PERSIAPAN UMUM (TPU)
+        // ==============================================================
         if (ratio <= 0.15) {
             faseUtama = "Persiapan Umum (TPU)";
             subFase = "Adaptasi Anatomi (AA) & Aerobik Dasar";
@@ -2347,7 +2353,10 @@ function initMenu7AutoFill() {
             intPct = 50 + (i * 2);
             volLbl = "Sangat Tinggi"; intLbl = "Rendah - Sedang";
             hrTarget = "120–140 BPM";
-            fokus = "Penguatan ligamen & tendon sendi, stabilitas core, dan daya tahan aerobik dasar (Jogging Zona 2).";
+            
+            fokusFisik = "Sirkuit beban ringan (40-60% 1RM), fleksibilitas sendi, continuous run Zona 2.";
+            fokusTeknik = "Mekanika stance & grip rendah, stationary passing (5-10m), ball handling angka 8.";
+            fokusTaktik = "Pengenalan formasi dasar (2-1-2 / 2-2-1) & zona penempatan posisi di gelanggang.";
         } else if (ratio <= 0.30) {
             faseUtama = "Persiapan Umum (TPU)";
             subFase = "Hipertrofi & Ketahanan Otot (Endurance-Strength)";
@@ -2357,9 +2366,14 @@ function initMenu7AutoFill() {
             intPct = 65;
             volLbl = "Tinggi"; intLbl = "Sedang";
             hrTarget = "135–155 BPM";
-            fokus = "Pondasi kekuatan otot utama (Squat/RDL), kapasitas aerobik MAS, dan teknik stickhandling berulang.";
+            
+            fokusFisik = "Latihan beban compound (Squat/RDL/Row 65%), kapasitas aerobik MAS.";
+            fokusTeknik = "Wall-pass dinamis, forehand/backhand reception bola pantul, wrist shot statis.";
+            fokusTaktik = "Aturan resmi IFF, koordinasi dasar antar-lini pemain, komunikasi lapangan.";
         }
+        // ==============================================================
         // 2. TAHAP PERSIAPAN KHUSUS (TPK)
+        // ==============================================================
         else if (ratio <= 0.48) {
             faseUtama = "Persiapan Khusus (TPK)";
             subFase = "Kekuatan Maksimal (Maximum Strength / MxS)";
@@ -2369,7 +2383,10 @@ function initMenu7AutoFill() {
             intPct = 85;
             volLbl = "Sedang - Tinggi"; intLbl = "Tinggi";
             hrTarget = "155–175 BPM";
-            fokus = "Beban gym 80–85% 1RM (Trap bar, Back Squat) untuk rekrutmen serat otot cepat (fast-twitch).";
+            
+            fokusFisik = "Beban gym 80-85% 1RM (Trap Bar, Back Squat) untuk rekrutmen serat otot cepat.";
+            fokusTeknik = "Dribble slalom cone kecepatan tinggi (head-up), passing diagonal saat sprint.";
+            fokusTaktik = "Breakout dari pertahanan ke transisi serang, duel 1 vs 1 di pinggir rink (wall battle).";
         } else if (ratio <= 0.65) {
             faseUtama = "Persiapan Khusus (TPK)";
             subFase = "Konversi ke Power & Anaerobic RSA";
@@ -2379,33 +2396,48 @@ function initMenu7AutoFill() {
             intPct = 90;
             volLbl = "Sedang"; intLbl = "Tinggi";
             hrTarget = "165–185 BPM";
-            fokus = "Transfer kekuatan ke eksplosivitas drag shot, sprint interval berulang (RSA 6x20m), dan pliometrik.";
+            
+            fokusFisik = "Pliometrik loncatan (box jump), rotasi eksplosif bola medis, interval lari RSA (6x20m).";
+            fokusTeknik = "Drag shot lari bertenaga penuh, one-timer slap shot, lemparan cepat kiper (outlet pass).";
+            fokusTaktik = "Forechecking agresif (1-2-2), transisi cepat, rotasi bertahan kiper di area slot.";
         }
+        // ==============================================================
         // 3. PRA-KOMPETISI (K1)
+        // ==============================================================
         else if (ratio <= 0.85) {
             faseUtama = "Pra-Kompetisi (K1)";
-            subFase = "SAQ (Speed, Agility, Quickness) & Simulasi Game";
+            subFase = "SAQ (Speed, Agility) & Taktik Match";
             faseBadge = "Pra-Kompetisi";
             badgeBg = "bg-amber-50 text-amber-900 border-amber-300";
             volPct = 50;
             intPct = 95;
             volLbl = "Sedang - Rendah"; intLbl = "Sangat Tinggi";
             hrTarget = "170–190 BPM";
-            fokus = "Kecepatan reaksi, koordinasi shift line 45 detik, eksekusi set-piece, dan sparing match berintensitas tinggi.";
+            
+            fokusFisik = "SAQ (kecepatan langkah awal 0-5m, change of direction), pemeliharaan daya ledak.";
+            fokusTeknik = "Passing & shooting di bawah tekanan benturan lawan, tip-in & deflection di depan gawang.";
+            fokusTaktik = "Taktik Power Play (5v4) & Box Play (4v5), simulasi pergantian shift 45 detik, laga uji coba.";
         }
+        // ==============================================================
         // 4. KOMPETISI UTAMA (K2)
+        // ==============================================================
         else if (ratio <= 0.95) {
             faseUtama = "Kompetisi Utama (K2)";
-            subFase = "Tapering, Peaking & Maintenance Taktik";
+            subFase = "Tapering, Peaking & Evaluasi Taktik";
             faseBadge = "Kompetisi Utama";
             badgeBg = "bg-rose-50 text-rose-900 border-rose-300";
             volPct = 35;
             intPct = 100;
             volLbl = "Rendah (Tapering)"; intLbl = "Maksimal";
             hrTarget = "175–195 BPM";
-            fokus = "Penurunan volume untuk pemulihan glikogen, kesiapan mental bertanding, dan taktik pertandingan turnamen.";
+            
+            fokusFisik = "Tapering (volume turun 60%), pemanasan dinamis, aktivasi otot penstabil sendi.";
+            fokusTeknik = "Penyelesaian akhir (finishing), presisi penalti shootout, eksekusi free-hit dekat gawang.";
+            fokusTaktik = "Penyesuaian strategi menghadapi lawan spesifik turnamen, kekompakan komunikasi tim.";
         }
+        // ==============================================================
         // 5. TRANSISI
+        // ==============================================================
         else {
             faseUtama = "Transisi / Pemulihan";
             subFase = "Active Recovery & Fisiologis";
@@ -2415,7 +2447,10 @@ function initMenu7AutoFill() {
             intPct = 35;
             volLbl = "Sangat Rendah"; intLbl = "Rendah";
             hrTarget = "110–130 BPM";
-            fokus = "Pemulihan asam laktat total, relaksasi otot, hydrotherapy, dan evaluasi hasil kompetisi.";
+            
+            fokusFisik = "Active recovery (renang santai/bersepeda), pelepasan asam laktat dengan foam rolling.";
+            fokusTeknik = "Bebas dari drill stickhandling intensif, latihan mobilitas ringan.";
+            fokusTaktik = "Evaluasi menyeluruh musim pertandingan, pemulihan mental bertanding atlet.";
         }
 
         list.push({
@@ -2430,7 +2465,9 @@ function initMenu7AutoFill() {
             intensitasPct: intPct,
             intensitasLabel: intLbl,
             hrTarget,
-            fokus,
+            fokusFisik,
+            fokusTeknik,
+            fokusTaktik,
             mikrosiklus: `Mikro ${i}`
         });
 
@@ -5876,69 +5913,84 @@ function triggerHUDMuscle(muscleKey) {
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[950px]">
-                    <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                        <tr>
-                            <th class="py-4 px-4 text-center w-20">Mikro</th>
-                            <th class="py-4 px-5">Rentang Tanggal</th>
-                            <th class="py-4 px-5">Fase Siklus Latihan</th>
-                            <th class="py-4 px-5 min-w-[200px]">Beban Volume</th>
-                            <th class="py-4 px-5 min-w-[200px]">Level Intensitas</th>
-                            <th class="py-4 px-5 text-center">Target HR Zone</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                        ${dynamicList.map((p) => `
-                            <tr class="hover:bg-blue-50/40 transition-colors group">
-                                <td class="py-4 px-4 text-center">
-                                    <div class="bg-slate-100 group-hover:bg-blue-900 group-hover:text-white text-slate-800 font-black font-mono w-10 h-10 rounded-2xl flex items-center justify-center border border-slate-200/80 mx-auto shadow-sm transition-all">
-                                        W${p.mingguKe}
-                                    </div>
-                                </td>
-                                <td class="py-4 px-5 font-mono text-slate-600 font-bold">
-                                    <i class="fa-regular fa-calendar text-slate-400 mr-2"></i>${p.rentangTanggal}
-                                </td>
-                                <td class="py-4 px-5">
-    <div class="flex flex-col gap-1 items-start">
-        <span class="${p.badgeBg} border px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm">
-            ${p.faseBadge}
-        </span>
-        <span class="text-xs font-extrabold text-slate-800 leading-tight">
-            ${p.subFase}
-        </span>
-        <span class="text-[10px] font-bold text-slate-400">
-            ${p.faseUtama}
-        </span>
-    </div>
-</td>
-                                <td class="py-4 px-5 align-middle">
-                                    <div class="flex items-center justify-between mb-1.5">
-                                        <span class="font-black text-[10px] uppercase text-slate-500">${p.volumeLabel}</span>
-                                        <span class="text-[10px] font-mono font-black text-blue-700">${p.volumePct}%</span>
-                                    </div>
-                                    <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60 shadow-inner">
-                                        <div class="h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full shadow-sm" style="width: ${p.volumePct}%"></div>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-5 align-middle">
-                                    <div class="flex items-center justify-between mb-1.5">
-                                        <span class="font-black text-[10px] uppercase text-slate-500">${p.intensitasLabel}</span>
-                                        <span class="text-[10px] font-mono font-black text-rose-600">${p.intensitasPct}%</span>
-                                    </div>
-                                    <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60 shadow-inner">
-                                        <div class="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full shadow-sm" style="width: ${p.intensitasPct}%"></div>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-5 text-center">
-                                    <span class="bg-rose-50 text-rose-700 border border-rose-200/80 px-3 py-1.5 rounded-xl font-mono font-black text-[11px] inline-block shadow-sm">
-                                        <i class="fa-solid fa-heart-pulse text-[10px] mr-1 text-rose-500"></i>${p.hrTarget}
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
+    <table class="w-full text-left border-collapse min-w-[1100px]">
+        <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+            <tr>
+                <th class="py-4 px-3 text-center w-16">Mikro</th>
+                <th class="py-4 px-4 w-36">Rentang Tanggal</th>
+                <th class="py-4 px-4 w-60">Fase & Subfase (Bompa)</th>
+                <th class="py-4 px-4 min-w-[320px]">Rincian Program (Fisik, Teknik, Taktik)</th>
+                <th class="py-4 px-4 w-40">Volume</th>
+                <th class="py-4 px-4 w-40">Intensitas</th>
+                <th class="py-4 px-3 text-center w-28">Target HR</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+            ${dynamicList.map((p) => `
+                <tr class="hover:bg-blue-50/40 transition-colors group align-top">
+                    <td class="py-4 px-3 text-center">
+                        <div class="bg-slate-100 group-hover:bg-blue-900 group-hover:text-white text-slate-800 font-black font-mono w-9 h-9 rounded-xl flex items-center justify-center border border-slate-200/80 mx-auto shadow-sm transition-all text-xs">
+                            W${p.mingguKe}
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 font-mono text-slate-600 font-bold text-[11px] whitespace-nowrap">
+                        <i class="fa-regular fa-calendar text-slate-400 mr-1.5"></i>${p.rentangTanggal}
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="flex flex-col gap-1 items-start">
+                            <span class="${p.badgeBg} border px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm">
+                                ${p.faseBadge}
+                            </span>
+                            <span class="text-xs font-extrabold text-slate-800 leading-tight">
+                                ${p.subFase}
+                            </span>
+                            <span class="text-[10px] font-bold text-slate-400">
+                                ${p.faseUtama}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 space-y-2 text-[11px]">
+                        <div class="flex items-start gap-1.5">
+                            <span class="bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">FISIK</span>
+                            <span class="text-slate-600 leading-snug">${p.fokusFisik}</span>
+                        </div>
+                        <div class="flex items-start gap-1.5">
+                            <span class="bg-blue-50 text-blue-800 border border-blue-200 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">TEKNIK</span>
+                            <span class="text-slate-600 leading-snug">${p.fokusTeknik}</span>
+                        </div>
+                        <div class="flex items-start gap-1.5">
+                            <span class="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">TAKTIK</span>
+                            <span class="text-slate-600 leading-snug">${p.fokusTaktik}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 align-middle">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-black text-[9px] uppercase text-slate-400">${p.volumeLabel}</span>
+                            <span class="text-[10px] font-mono font-black text-blue-700">${p.volumePct}%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200 shadow-inner">
+                            <div class="h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full" style="width: ${p.volumePct}%"></div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 align-middle">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-black text-[9px] uppercase text-slate-400">${p.intensitasLabel}</span>
+                            <span class="text-[10px] font-mono font-black text-rose-600">${p.intensitasPct}%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200 shadow-inner">
+                            <div class="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full" style="width: ${p.intensitasPct}%"></div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-3 text-center align-middle">
+                        <span class="bg-rose-50 text-rose-700 border border-rose-200 px-2 py-1 rounded-xl font-mono font-black text-[10px] inline-block shadow-sm whitespace-nowrap">
+                            ${p.hrTarget}
+                        </span>
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+</div>
         </div>
     `;
             } else if (state.currentMenu === 'menu-5') {
