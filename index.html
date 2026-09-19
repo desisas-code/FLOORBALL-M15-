@@ -4246,32 +4246,82 @@ function renderMatchHeatmap() {
         // FITUR EKSPOR PDF OTOMATIS & CLEAN RENDER
         // =========================================================================
         function exportPDFCustom(elementId, filenamePrefix) {
-            const element = document.getElementById(elementId) || document.getElementById('main-container');
-            if (!element) {
-                showToast('Area dokumen tidak ditemukan!', 'error');
-                return;
-            }
+    const targetElement = document.getElementById(elementId) || document.getElementById('main-container');
+    if (!targetElement) {
+        showToast('Area dokumen tidak ditemukan!', 'error');
+        return;
+    }
 
-            const toast = showToast('Membangun dokumen PDF resmi...', 'loading');
+    const toast = showToast('Menyiapkan dokumen PDF lengkap...', 'loading');
 
-            const opt = {
-                margin:       [10, 10, 10, 10],
-                filename:     `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+    // 1. Buat clone elemen agar tampilan aplikasi di layar tidak berantakan
+    const clone = targetElement.cloneNode(true);
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                if (toast) toast.remove();
-                showToast('Dokumen PDF Berhasil Diunduh!', 'success');
-            }).catch(err => {
-                if (toast) toast.remove();
-                console.error("PDF Error:", err);
-                showToast('Gagal memproses PDF. Mengalihkan ke Print bawaan...', 'error');
-                window.print();
-            });
-        }	
+    // 2. Bersihkan pembatas overflow dan paksa lebar penuh agar tidak terpotong
+    clone.style.width = '1100px'; // Menampung seluruh kolom tabel hingga tuntas
+    clone.style.maxWidth = 'none';
+    clone.style.height = 'auto';
+    clone.style.maxHeight = 'none';
+    clone.style.overflow = 'visible';
+
+    // Buka seluruh kontainer overflow internal di dalam clone
+    clone.querySelectorAll('*').forEach(el => {
+        el.style.overflow = 'visible';
+        el.style.maxHeight = 'none';
+    });
+
+    // 3. Cegah baris tabel terpotong di antara dua halaman
+    const stylePageBreak = document.createElement('style');
+    stylePageBreak.innerHTML = `
+        tr, .bg-white { 
+            page-break-inside: avoid !important; 
+            break-inside: avoid !important; 
+        }
+        .no-print, button { 
+            display: none !important; 
+        }
+    `;
+    clone.appendChild(stylePageBreak);
+
+    // Letakkan clone di luar layar aktif untuk rendering bersih
+    clone.style.position = 'fixed';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    clone.style.background = '#ffffff';
+    document.body.appendChild(clone);
+
+    // 4. Konfigurasi html2pdf dengan orientasi Landscape & mode multi-page
+    const opt = {
+        margin: [8, 8, 8, 8],
+        filename: `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
+            scrollY: 0,
+            scrollX: 0,
+            windowWidth: 1150
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'landscape' // Menggunakan landscape agar seluruh kolom muat
+        },
+        pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(clone).save().then(() => {
+        document.body.removeChild(clone);
+        if (toast) toast.remove();
+        showToast('Seluruh data PDF berhasil diunduh!', 'success');
+    }).catch(err => {
+        document.body.removeChild(clone);
+        if (toast) toast.remove();
+        console.error("PDF Error:", err);
+        showToast('Gagal memproses PDF, mengalihkan ke menu print...', 'error');
+        window.print();
+    });
+}	
         function filterSearchAtlet(query) {
             state.searchQueryAtlet = query.toLowerCase();
             renderContent();
