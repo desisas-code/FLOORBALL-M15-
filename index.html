@@ -2326,73 +2326,104 @@ function initMenu7AutoFill() {
         end.setDate(end.getDate() + 6);
 
         const dateRangeStr = `${start.getDate()} ${start.toLocaleString('id-ID', { month: 'short' })} - ${end.getDate()} ${end.toLocaleString('id-ID', { month: 'short' })} ${end.getFullYear()}`;
+        const ratio = i / totalWeeks;
 
-        let progress = i / totalWeeks;
-        let fase = "Persiapan Umum (TPU)";
-        let faseCode = "AA";
-        let badgeBg = "bg-blue-100 text-blue-900 border-blue-200";
-        let volPct = 80, intPct = 60;
-        let volLbl = "Tinggi", intLbl = "Sedang";
-        let hrTarget = "130-150 BPM";
-        let fokus = "Anatomical Adaptation (AA), Kebugaran Aerobik Dasar & Stabilitas Sendi/Core.";
+        let faseUtama = "";
+        let subFase = "";
+        let faseBadge = "";
+        let badgeBg = "";
+        let volPct = 50, intPct = 50;
+        let volLbl = "Sedang", intLbl = "Sedang";
+        let hrTarget = "";
+        let fokus = "";
 
-        if (progress <= 0.30) {
-            // FASE PERSIAPAN UMUM (TPU) - Bompa: AA & Foundation
-            fase = "Persiapan Umum (TPU)";
-            faseCode = "AA";
-            badgeBg = "bg-blue-100 text-blue-900 border-blue-200";
-            volPct = Math.min(95, 75 + (i * 4));
-            intPct = 60;
-            volLbl = "Sangat Tinggi"; intLbl = "Sedang";
-            hrTarget = "130-150 BPM";
-            fokus = "Anatomical Adaptation (AA), Kebugaran Aerobik Dasar, Hypertrophy & Stabilitas Core.";
-        } else if (progress <= 0.65) {
-            // FASE PERSIAPAN KHUSUS (TPK) - Bompa: Max Strength, Conversion to Power & RSA
-            fase = "Persiapan Khusus (TPK)";
-            faseCode = "Strength";
-            badgeBg = "bg-emerald-100 text-emerald-900 border-emerald-200";
-            volPct = 80;
-            intPct = Math.min(90, 65 + (i * 3));
-            volLbl = "Tinggi"; intLbl = "Tinggi";
-            hrTarget = "150-175 BPM";
-            fokus = "Kekuatan Maksimal (MxS), Konversi ke Power Spesifik Floorball & Anaerobic RSA.";
-        } else if (progress <= 0.85) {
-            // FASE PRA-KOMPETISI (K1) - Bompa: SAQ, Agility & Match Conditioning
-            fase = "Pra-Kompetisi (K1)";
-            faseCode = "Speed & Agility";
-            badgeBg = "bg-amber-100 text-amber-900 border-amber-200";
-            volPct = 60;
+        // 1. TAHAP PERSIAPAN UMUM (TPU)
+        if (ratio <= 0.15) {
+            faseUtama = "Persiapan Umum (TPU)";
+            subFase = "Adaptasi Anatomi (AA) & Aerobik Dasar";
+            faseBadge = "TPU - AA";
+            badgeBg = "bg-sky-50 text-sky-800 border-sky-300";
+            volPct = Math.min(95, 75 + (i * 3));
+            intPct = 50 + (i * 2);
+            volLbl = "Sangat Tinggi"; intLbl = "Rendah - Sedang";
+            hrTarget = "120–140 BPM";
+            fokus = "Penguatan ligamen & tendon sendi, stabilitas core, dan daya tahan aerobik dasar (Jogging Zona 2).";
+        } else if (ratio <= 0.30) {
+            faseUtama = "Persiapan Umum (TPU)";
+            subFase = "Hipertrofi & Ketahanan Otot (Endurance-Strength)";
+            faseBadge = "TPU - Hipertrofi";
+            badgeBg = "bg-blue-50 text-blue-900 border-blue-300";
+            volPct = 85;
+            intPct = 65;
+            volLbl = "Tinggi"; intLbl = "Sedang";
+            hrTarget = "135–155 BPM";
+            fokus = "Pondasi kekuatan otot utama (Squat/RDL), kapasitas aerobik MAS, dan teknik stickhandling berulang.";
+        }
+        // 2. TAHAP PERSIAPAN KHUSUS (TPK)
+        else if (ratio <= 0.48) {
+            faseUtama = "Persiapan Khusus (TPK)";
+            subFase = "Kekuatan Maksimal (Maximum Strength / MxS)";
+            faseBadge = "TPK - MxS";
+            badgeBg = "bg-indigo-50 text-indigo-900 border-indigo-300";
+            volPct = 75;
+            intPct = 85;
+            volLbl = "Sedang - Tinggi"; intLbl = "Tinggi";
+            hrTarget = "155–175 BPM";
+            fokus = "Beban gym 80–85% 1RM (Trap bar, Back Squat) untuk rekrutmen serat otot cepat (fast-twitch).";
+        } else if (ratio <= 0.65) {
+            faseUtama = "Persiapan Khusus (TPK)";
+            subFase = "Konversi ke Power & Anaerobic RSA";
+            faseBadge = "TPK - Power & RSA";
+            badgeBg = "bg-emerald-50 text-emerald-900 border-emerald-300";
+            volPct = 65;
+            intPct = 90;
+            volLbl = "Sedang"; intLbl = "Tinggi";
+            hrTarget = "165–185 BPM";
+            fokus = "Transfer kekuatan ke eksplosivitas drag shot, sprint interval berulang (RSA 6x20m), dan pliometrik.";
+        }
+        // 3. PRA-KOMPETISI (K1)
+        else if (ratio <= 0.85) {
+            faseUtama = "Pra-Kompetisi (K1)";
+            subFase = "SAQ (Speed, Agility, Quickness) & Simulasi Game";
+            faseBadge = "Pra-Kompetisi";
+            badgeBg = "bg-amber-50 text-amber-900 border-amber-300";
+            volPct = 50;
             intPct = 95;
-            volLbl = "Sedang"; intLbl = "Sangat Tinggi";
-            hrTarget = "170-190 BPM";
-            fokus = "Speed, Agility, Quickness (SAQ), Taktik Shift Match & Eksplosivitas Dribble/Shoot.";
-        } else if (progress <= 0.95) {
-            // FASE KOMPETISI UTAMA (K2) - Bompa: Tapering, Peaking & Maintenance
-            fase = "Kompetisi Utama (K2)";
-            faseCode = "Tapering";
-            badgeBg = "bg-rose-100 text-rose-900 border-rose-200";
+            volLbl = "Sedang - Rendah"; intLbl = "Sangat Tinggi";
+            hrTarget = "170–190 BPM";
+            fokus = "Kecepatan reaksi, koordinasi shift line 45 detik, eksekusi set-piece, dan sparing match berintensitas tinggi.";
+        }
+        // 4. KOMPETISI UTAMA (K2)
+        else if (ratio <= 0.95) {
+            faseUtama = "Kompetisi Utama (K2)";
+            subFase = "Tapering, Peaking & Maintenance Taktik";
+            faseBadge = "Kompetisi Utama";
+            badgeBg = "bg-rose-50 text-rose-900 border-rose-300";
             volPct = 35;
             intPct = 100;
-            volLbl = "Sangat Rendah"; intLbl = "Maksimal (Tajam)";
-            hrTarget = "180-195 BPM";
-            fokus = "Tapering, Peaking Performa, Penyempurnaan Taktik Set-Piece & Pemeliharaan Kondisi.";
-        } else {
-            // FASE TRANSISI - Bompa: Transition & Active Recovery
-            fase = "Transisi / Recovery";
-            faseCode = "AA";
-            badgeBg = "bg-slate-100 text-slate-700 border-slate-200";
+            volLbl = "Rendah (Tapering)"; intLbl = "Maksimal";
+            hrTarget = "175–195 BPM";
+            fokus = "Penurunan volume untuk pemulihan glikogen, kesiapan mental bertanding, dan taktik pertandingan turnamen.";
+        }
+        // 5. TRANSISI
+        else {
+            faseUtama = "Transisi / Pemulihan";
+            subFase = "Active Recovery & Fisiologis";
+            faseBadge = "Transisi";
+            badgeBg = "bg-slate-100 text-slate-700 border-slate-300";
             volPct = 30;
-            intPct = 40;
+            intPct = 35;
             volLbl = "Sangat Rendah"; intLbl = "Rendah";
-            hrTarget = "110-130 BPM";
-            fokus = "Pemulihan Fisik & Mental (Active Recovery, Hydrotherapy, Psikologis).";
+            hrTarget = "110–130 BPM";
+            fokus = "Pemulihan asam laktat total, relaksasi otot, hydrotherapy, dan evaluasi hasil kompetisi.";
         }
 
         list.push({
             mingguKe: i,
             rentangTanggal: dateRangeStr,
-            fase,
-            faseCode,
+            faseUtama,
+            subFase,
+            faseBadge,
             badgeBg,
             volumePct: volPct,
             volumeLabel: volLbl,
@@ -5868,10 +5899,18 @@ function triggerHUDMuscle(muscleKey) {
                                     <i class="fa-regular fa-calendar text-slate-400 mr-2"></i>${p.rentangTanggal}
                                 </td>
                                 <td class="py-4 px-5">
-                                    <span class="${p.badgeBg} border px-3 py-1.5 rounded-xl text-[10px] font-black inline-block whitespace-nowrap shadow-sm">
-                                        ${escapeHTML(p.fase)}
-                                    </span>
-                                </td>
+    <div class="flex flex-col gap-1 items-start">
+        <span class="${p.badgeBg} border px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm">
+            ${p.faseBadge}
+        </span>
+        <span class="text-xs font-extrabold text-slate-800 leading-tight">
+            ${p.subFase}
+        </span>
+        <span class="text-[10px] font-bold text-slate-400">
+            ${p.faseUtama}
+        </span>
+    </div>
+</td>
                                 <td class="py-4 px-5 align-middle">
                                     <div class="flex items-center justify-between mb-1.5">
                                         <span class="font-black text-[10px] uppercase text-slate-500">${p.volumeLabel}</span>
