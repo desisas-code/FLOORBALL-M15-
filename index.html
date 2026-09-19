@@ -4054,50 +4054,116 @@ function evaluasiHasilTes(testObj, skor, genderAtlet = 'L') {
     const listMikro = generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks);
     const currentMikro = listMikro.find(m => m.mingguKe === state.selectedProgramWeek) || listMikro[0];
 
+    // 1. Ambil data tes fisik atlet (otomatis utamakan Post, lalu Mid, lalu Pre)
     const myTes = state.tesFisik.filter(t => String(t.atletId) === String(atlet.id));
-    const getSkor = (key) => {
-        const item = myTes.find(t => t.keyTes === key);
-        return item ? parseFloat(item.skor) : null;
+    const getSkorTerbaru = (key) => {
+        const post = myTes.find(t => t.keyTes === key && t.tahap === 'Post');
+        if (post) return parseFloat(post.skor);
+        const mid = myTes.find(t => t.keyTes === key && t.tahap === 'Mid');
+        if (mid) return parseFloat(mid.skor);
+        const pre = myTes.find(t => t.keyTes === key);
+        return pre ? parseFloat(pre.skor) : null;
     };
 
-    const vo2max = getSkor('yoyo');
-    const ttest = getSkor('ttest');
+    const vo2max = getSkorTerbaru('yoyo');
+    const ttest = getSkorTerbaru('ttest');
+    const sprint20 = getSkorTerbaru('sprint20');
+    const plank = getSkorTerbaru('plank');
+    const statusCedera = (atlet.cedera && atlet.cedera !== 'Tidak ada') ? atlet.cedera : null;
 
-    // Ambil data latihan harian
+    // 2. Ambil template dasar fase
     const templateBase = menuLatihanHarian[currentMikro.faseCode] || menuLatihanHarian["AA"];
 
-    // Modifikasi khusus Kiper (GK)
+    // 3. Modifikasi adaptif harian mengikuti tes fisik & status cedera
     const jadwalSpesifik = templateBase.map(j => {
         let warmUp = j.warmUp;
         let inti = j.inti;
         let coolDown = j.coolDown;
 
-        if (atlet.posisi === 'GK' && j.durasi !== '0 mnt') {
-            warmUp = `[Kiper] Mobilitas panggul (adductor flow), knee slide flow, aktivasi bola tenis tangan.`;
-            if (j.hari === 'Senin') inti = `[Kiper] Reaksi tembakan bola jarak 3-5 meter, recovery cepat posisi kneeling, drill fleksibilitas panggul.`;
-            else if (j.hari === 'Rabu') inti = `[Kiper] Latihan antisipasi bola pantul slot area, lemparan outlet pass presisi ke sayap.`;
-            else if (j.hari === 'Jumat') inti = `[Kiper] Pliometrik panggul (kneeling jump ke kuda-kuda), latihan kelincahan lateral shuffle 30 dtk.`;
-            coolDown = `[Kiper] Deep stretch otot paha dalam, selangkangan, dan kompres es sendi lutut bila diperlukan.`;
-        } else if (atlet.posisi !== 'GK' && j.durasi !== '0 mnt') {
-            if (j.hari === 'Selasa' && vo2max) {
-                const paceEst = (60 / (vo2max / 3.5 * (currentMikro.volumePct > 70 ? 0.75 : 0.85))).toFixed(1);
-                inti += ` [Pace: ${paceEst} mnt/km].`;
+        if (j.durasi === '0 mnt') return { ...j, warmUp, inti, coolDown };
+
+        // --- ADAPTASI TES FISIK ---
+        if (vo2max) {
+            const paceEst = (60 / (vo2max / 3.5 * 0.75)).toFixed(2);
+            if (vo2max < 45) {
+                inti += `\n• [Koreksi VO2Max ${vo2max}]: Fokus Zona 2 (Aerobic Base), pace lari diatur ${paceEst} mnt/km.`;
+            } else if (vo2max >= 54) {
+                inti += `\n• [Koreksi VO2Max ${vo2max} (SB)]: Kapasitas prima, boleh tempo run / interval MAS.`;
             }
-            if (j.hari === 'Rabu' && ttest && ttest > 11.5) {
-                inti += ` [Catatan: Tambahkan drill kelincahan ganti arah T-Test].`;
+        }
+
+        if (ttest && ttest > 11.5) {
+            warmUp += ` (+5 mnt ladder drill & ankle control karena T-Test ${ttest}s).`;
+            inti += `\n• [Koreksi Agility]: Tambahkan 3 set drill kelincahan ganti arah cone 5m.`;
+        }
+
+        if (plank && plank < 90) {
+            inti += `\n• [Koreksi Core]: Plank rendah (${plank}s), ganti beban rotasi berat ke deadbug stabil.`;
+        }
+
+        // --- KHUSUS KIPER (GK) ---
+        if (atlet.posisi === 'GK') {
+            warmUp = `[Kiper] Mobilitas panggul (adductor flow), knee slide di lantai, dan reaksi bola tenis.`;
+            if (j.hari === 'Senin') inti = `• [Kiper] Reaksi tembakan dekat (3-5m), recovery kneeling, drill fleksibilitas panggul.`;
+            else if (j.hari === 'Rabu') inti = `• [Kiper] Rebound slot area gawang, lemparan outlet pass presisi ke FL/FR.`;
+            else if (j.hari === 'Jumat') inti = `• [Kiper] Pliometrik panggul (kneeling jump ke kuda-kuda), lateral shuffle 30 dtk.`;
+            coolDown = `[Kiper] Deep stretch paha dalam, selangkangan, dan kompres es sendi lutut.`;
+        }
+
+        // --- ADAPTASI STATUS CEDERA ---
+        if (statusCedera) {
+            const cLower = statusCedera.toLowerCase();
+            if (cLower.includes('ankle') || cLower.includes('lutut') || cLower.includes('sprain') || cLower.includes('knee')) {
+                inti = inti.replace(/box jump/gi, 'Step-Up Rendah (Tanpa Benturan)')
+                           .replace(/sprint/gi, 'Jogging Ringan / Sepeda Statis')
+                           .replace(/depth jump/gi, 'Isometric Wall-Sit');
+                warmUp += ` [Pakai knee/ankle brace, hindari loncatan eksplosif].`;
+                coolDown += ` [Kompres es pada ${escapeHTML(statusCedera)}].`;
+            }
+            if (cLower.includes('pinggang') || cLower.includes('back') || cLower.includes('hamstring')) {
+                inti = inti.replace(/deadlift/gi, 'Glute Bridge Bodyweight')
+                           .replace(/back squat/gi, 'Goblet Squat Ringan');
+            }
+            if (cLower.includes('bahu') || cLower.includes('shoulder') || cLower.includes('wrist')) {
+                inti = inti.replace(/bench press/gi, 'Push-Up Incline Tembok')
+                           .replace(/slap shot/gi, 'Passing Datar Ringan (No Slap)');
             }
         }
 
         return { ...j, warmUp, inti, coolDown };
     });
 
-    const isCedera = atlet.cedera && atlet.cedera !== 'Tidak ada';
-    const noteMedis = isCedera 
-        ? `<div class="p-4 mb-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2.5 shadow-sm">
-            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base shrink-0"></i>
-            <span>Catatan Medis: <strong>${escapeHTML(atlet.cedera)}</strong> — Sesuaikan beban tumpuan persendian dan perpanjang durasi pemanasan & pendinginan.</span>
-           </div>`
-        : '';
+    const noteMedis = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+            <!-- KARTU STATUS ADAPTASI TES FISIK -->
+            <div class="p-4 rounded-2xl bg-blue-50/80 border border-blue-200 text-blue-950 text-xs shadow-sm space-y-1">
+                <span class="font-black uppercase tracking-wider text-[10px] text-blue-700 block flex items-center gap-1.5">
+                    <i class="fa-solid fa-square-poll-vertical"></i> Baseline Fisik Terkini (Terkoreksi Otomatis)
+                </span>
+                <p class="font-bold">
+                    VO2Max: <strong class="text-blue-900 font-black">${vo2max ? vo2max + ' ml/kg/m' : 'Belum Tes'}</strong> | 
+                    T-Test: <strong class="text-blue-900 font-black">${ttest ? ttest + 's' : '-'}</strong> | 
+                    Plank: <strong class="text-blue-900 font-black">${plank ? plank + 's' : '-'}</strong>
+                </p>
+                <p class="text-[10px] text-blue-700 leading-tight">
+                    *Menu latihan lari, repetisi inti, dan durasi istirahat di bawah otomatis disesuaikan dengan nilai tes atlet di atas.
+                </p>
+            </div>
+
+            <!-- KARTU PERINGATAN MEDIS & CEDERA -->
+            <div class="p-4 rounded-2xl ${statusCedera ? 'bg-rose-50 border-rose-200 text-rose-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900'} border text-xs shadow-sm space-y-1">
+                <span class="font-black uppercase tracking-wider text-[10px] ${statusCedera ? 'text-rose-700' : 'text-emerald-700'} block flex items-center gap-1.5">
+                    <i class="fa-solid ${statusCedera ? 'fa-triangle-exclamation' : 'fa-shield-heart'}"></i> Status Medis Atlet
+                </span>
+                <p class="font-extrabold">
+                    ${statusCedera ? `Terdeteksi Cedera: <u>${escapeHTML(statusCedera)}</u>` : 'Kondisi Bugar (Fit to Train)'}
+                </p>
+                <p class="text-[10px] ${statusCedera ? 'text-rose-700' : 'text-emerald-700'} leading-tight">
+                    ${statusCedera ? '*Gerakan eksplosif tinggi (box jump/sprint/deadlift) otomatis dialihkan ke alternatif low-impact.' : '*Atlet diizinkan menjalankan seluruh menu beban dan latihan kecepatan secara maksimal.'}
+                </p>
+            </div>
+        </div>
+    `;
 
     area.innerHTML = `
         <div class="bg-white/95 backdrop-blur-xl p-6 sm:p-8 rounded-[32px] border border-slate-200/80 shadow-xl mb-6">
