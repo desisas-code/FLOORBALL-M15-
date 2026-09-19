@@ -3606,50 +3606,97 @@ function renderMatchHeatmap() {
         }
 
         const menuLatihanHarian = {
-            AA: [
-                { hari: 'Senin', sesi: 'Kekuatan Adaptasi', materi: 'Bodyweight Squat, Core Plank, Wall-Pass Drill', durasi: '75 mnt', rpeTarget: 5 },
-                { hari: 'Selasa', sesi: 'Aerobik Dasar', materi: 'Continuous Jogging Zona 2, Static Stretching', durasi: '60 mnt', rpeTarget: 4 },
-                { hari: 'Rabu', sesi: 'Teknik Stickwork', materi: 'Slalom Cone, Forehand-Backhand Handling', durasi: '90 mnt', rpeTarget: 6 },
-                { hari: 'Kamis', sesi: 'Recovery Aktif', materi: 'Mobility Flow, Foam Rolling, Stretching', durasi: '45 mnt', rpeTarget: 2 },
-                { hari: 'Jumat', sesi: 'Sirkuit Fisik', materi: 'Push Up, Lunges, Agility Ladder Drill', durasi: '75 mnt', rpeTarget: 6 },
-                { hari: 'Sabtu', sesi: 'Simulasi Game', materi: 'Small Sided Games (3v3 / 4v4 Shift Match)', durasi: '90 mnt', rpeTarget: 7 },
-                { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest Day / Pemulihan Fisiologis', durasi: '0 mnt', rpeTarget: 1 }
-            ],
-            Strength: [
-                { hari: 'Senin', sesi: 'Max Strength (Lower)', materi: 'Back Squat 80% 1RM, Bulgarian Split Squat', durasi: '80 mnt', rpeTarget: 8 },
-                { hari: 'Selasa', sesi: 'Interval MAS', materi: '15s Sprint / 15s Jog MAS Conditioning', durasi: '60 mnt', rpeTarget: 7 },
-                { hari: 'Rabu', sesi: 'Taktik & Set-Piece', materi: 'Powerplay, Shorthanded Defense, Drag Shot', durasi: '90 mnt', rpeTarget: 6 },
-                { hari: 'Kamis', sesi: 'Recovery Aktif', materi: 'Low-Intensity Aerobic, Yoga Flow', durasi: '45 mnt', rpeTarget: 3 },
-                { hari: 'Jumat', sesi: 'Max Strength (Upper)', materi: 'Bench Press, Pull-Up, Landmine Rotation', durasi: '80 mnt', rpeTarget: 8 },
-                { hari: 'Sabtu', sesi: 'High-Tempo Match', materi: 'Full Court Scrimmage 3 x 20 Menit', durasi: '90 mnt', rpeTarget: 9 },
-                { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest Day', durasi: '0 mnt', rpeTarget: 1 }
-            ]
-        };
+    // 1. TPU - ADAPTASI ANATOMI (AA)
+    AA: [
+        { hari: 'Senin', sesi: 'Fisik & Anatomi Dasar', materi: 'Sirkuit stabilitas sendi, core plank, bodyweight squat, push-up.', durasi: '75 mnt', rpeTarget: 5 },
+        { hari: 'Selasa', sesi: 'Aerobik & Teknik Statis', materi: 'Continuous jogging Zona 2 (aerobic base), wall-pass mechanics, grip stance.', durasi: '60 mnt', rpeTarget: 4 },
+        { hari: 'Rabu', sesi: 'Stickhandling & Ball Control', materi: 'Drill angka 8 di tempat, stationary forehand-backhand passing, wrist snap.', durasi: '90 mnt', rpeTarget: 6 },
+        { hari: 'Kamis', sesi: 'Recovery Aktif & Mobilitas', materi: 'Foam rolling, dynamic stretching, mobilitas sendi bahu dan panggul.', durasi: '45 mnt', rpeTarget: 2 },
+        { hari: 'Jumat', sesi: 'Kekuatan Fungsional', materi: 'Latihan beban ringan (40-60% 1RM), lunges, lateral band walk, kettlebell deadlift.', durasi: '75 mnt', rpeTarget: 5 },
+        { hari: 'Sabtu', sesi: 'Fundamental Game & Posisi', materi: 'Small sided games (3v3 tempo santai), pemahaman penempatan zona pertahanan.', durasi: '90 mnt', rpeTarget: 6 },
+        { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest day total / pemulihan fisiologis jaringan.', durasi: '0 mnt', rpeTarget: 1 }
+    ],
+
+    // 2. TPU - HIPERTROFI & ENDURANCE-STRENGTH
+    Hypertrophy: [
+        { hari: 'Senin', sesi: 'Hipertrofi Otot Tungkai', materi: 'Back squat 65% 1RM, Bulgarian split squat, calf raises, core anti-rotasi.', durasi: '80 mnt', rpeTarget: 6 },
+        { hari: 'Selasa', sesi: 'Kapasitas Aerobik MAS', materi: 'Jogging tempo menengah (75% MAS), teknik passing pantul dinamis.', durasi: '60 mnt', rpeTarget: 6 },
+        { hari: 'Rabu', sesi: 'Hipertrofi Upper & Grip', materi: 'Dumbbell bench press, bent-over row, wrist roller, forehand control.', durasi: '75 mnt', rpeTarget: 6 },
+        { hari: 'Kamis', sesi: 'Active Recovery', materi: 'Renang santai / bersepeda ringan, pelepasan asam laktat.', durasi: '45 mnt', rpeTarget: 2 },
+        { hari: 'Jumat', sesi: 'Kekuatan Daya Tahan', materi: 'Sirkuit kettlebell swing, push-up bertingkat, stationary sweeper shot.', durasi: '75 mnt', rpeTarget: 7 },
+        { hari: 'Sabtu', sesi: 'Taktik Formasi & Game', materi: 'Latihan formasi 2-1-2 / 2-2-1, koordinasi rotasi antar-lini, game 4v4.', durasi: '90 mnt', rpeTarget: 7 },
+        { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest day.', durasi: '0 mnt', rpeTarget: 1 }
+    ],
+
+    // 3. TPK - KEKUATAN MAKSIMAL (MxS)
+    MxS: [
+        { hari: 'Senin', sesi: 'Maximum Strength (Lower)', materi: 'Heavy barbell squat 80-85% 1RM, trap bar deadlift eksplosif, rest antar-set 2 mnt.', durasi: '80 mnt', rpeTarget: 8 },
+        { hari: 'Selasa', sesi: 'Daya Tahan Anaerobik MAS', materi: 'Interval lari 15s sprint / 15s jog (100% MAS), koordinasi operan lari cepat.', durasi: '60 mnt', rpeTarget: 8 },
+        { hari: 'Rabu', sesi: 'Maximum Strength (Upper)', materi: 'Weighted pull-up, landmine press rotasi, dumbbell single-arm row berat.', durasi: '80 mnt', rpeTarget: 8 },
+        { hari: 'Kamis', sesi: 'Regenerasi Fisiologis', materi: 'Mobilitas sendi pinggul, terapi air hangat/dingin, peregangan pasif.', durasi: '45 mnt', rpeTarget: 3 },
+        { hari: 'Jumat', sesi: 'Transisi Breakout & Dribble', materi: 'Slalom cone sprint penuh, breakout pass cepat, shooting drag shot bertenaga.', durasi: '90 mnt', rpeTarget: 7 },
+        { hari: 'Sabtu', sesi: 'Match High Tempo', materi: 'Simulasi game penuh (3 x 20 menit) intensitas tinggi, rotasi shift line ketat.', durasi: '90 mnt', rpeTarget: 9 },
+        { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest day.', durasi: '0 mnt', rpeTarget: 1 }
+    ],
+
+    // 4. TPK - KONVERSI KE POWER & RSA
+    Power: [
+        { hari: 'Senin', sesi: 'Pliometrik & Daya Ledak', materi: 'Box jump, lateral skater jump, medicine ball rotational slam ke dinding.', durasi: '75 mnt', rpeTarget: 8 },
+        { hari: 'Selasa', sesi: 'Repeated Sprint Ability (RSA)', materi: 'Sprint RSA 6x20m (rest 20s antar-rep), akselerasi mengejar bola lepas.', durasi: '60 mnt', rpeTarget: 8 },
+        { hari: 'Rabu', sesi: 'Shooting Eksplosif & Rebound', materi: 'One-timer slap shot, drag shot lari cepat, duel perebutan bola di bibir gawang.', durasi: '90 mnt', rpeTarget: 8 },
+        { hari: 'Kamis', sesi: 'Recovery & Taktik Kelas', materi: 'Analisis video taktik lawan, stretching tungkai bawah, foam rolling.', durasi: '45 mnt', rpeTarget: 2 },
+        { hari: 'Jumat', sesi: 'Forechecking & Wall Battle', materi: 'Sistem tekanan 1-2-2 agresif, duel fisik di papan gelanggang (rink battle).', durasi: '80 mnt', rpeTarget: 8 },
+        { hari: 'Sabtu', sesi: 'Simulasi Laga Intensif', materi: 'Game simulasi turnamen dengan penekanan transisi bertahan ke counter-attack.', durasi: '90 mnt', rpeTarget: 9 },
+        { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest day.', durasi: '0 mnt', rpeTarget: 1 }
+    ],
+
+    // 5. PRA-KOMPETISI (SAQ & TAKTIK MATCH)
+    SAQ: [
+        { hari: 'Senin', sesi: 'Speed, Agility & Quickness', materi: 'Agility ladder, T-Test reaction drill, akselerasi langkah awal 0-5 meter.', durasi: '70 mnt', rpeTarget: 8 },
+        { hari: 'Selasa', sesi: 'Special Teams (Power Play)', materi: 'Skema unggul pemain 5v4, sirkulasi bola cepat, tembakan satu sentuhan.', durasi: '80 mnt', rpeTarget: 7 },
+        { hari: 'Rabu', sesi: 'Special Teams (Box Play)', materi: 'Skema bertahan 4v5, penutupan jalur passing tengah, blocking tembakan lawan.', durasi: '80 mnt', rpeTarget: 7 },
+        { hari: 'Kamis', sesi: 'Penyempurnaan Shift Line', materi: 'Drill pergantian line di pinggir rink tiap 40 detik tanpa kehilangan formasi.', durasi: '60 mnt', rpeTarget: 6 },
+        { hari: 'Jumat', sesi: 'Aktivasi Cepat & Set-Piece', materi: 'Eksekusi free-hit sudut gawang, penalti shootout, stretching dinamis.', durasi: '60 mnt', rpeTarget: 5 },
+        { hari: 'Sabtu', sesi: 'Uji Coba Resmi (Friendly Match)', materi: 'Laga uji coba melawan tim eksternal, evaluasi kesiapan mental dan taktis.', durasi: '90 mnt', rpeTarget: 9 },
+        { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest day.', durasi: '0 mnt', rpeTarget: 1 }
+    ],
+
+    // 6. KOMPETISI UTAMA (TAPERING & PEAKING)
+    Peaking: [
+        { hari: 'Senin', sesi: 'Tapering & Aktivasi Kecepatan', materi: 'Sprint pendek 10 meter (3 set), sentuhan bola ringan, volume turun 50%.', durasi: '45 mnt', rpeTarget: 5 },
+        { hari: 'Selasa', sesi: 'Penajaman Eksekusi Taktik', materi: 'Skema set-piece khusus lawan, penalti shootout, passing akurasi tinggi.', durasi: '50 mnt', rpeTarget: 5 },
+        { hari: 'Rabu', sesi: 'Simulasi Ringan & Briefing', materi: 'Game taktis santai 15 menit, evaluasi akhir skema bertahan gawang.', durasi: '40 mnt', rpeTarget: 4 },
+        { hari: 'Kamis', sesi: 'Kesiapan Mental & Mobilitas', materi: 'Peregangan dinamis, latihan visualisasi pertandingan, istirahat cukup.', durasi: '30 mnt', rpeTarget: 2 },
+        { hari: 'Jumat', sesi: 'Laga Turnamen Babak 1', materi: 'Matchday turnamen resmi, fokus eksekusi strategi dan disiplin rotasi shift.', durasi: '60 mnt', rpeTarget: 10 },
+        { hari: 'Sabtu', sesi: 'Laga Turnamen Lanjutan', materi: 'Matchday penentuan / semifinal / final, evaluasi cepat antar-babak.', durasi: '60 mnt', rpeTarget: 10 },
+        { hari: 'Minggu', sesi: 'Regenerasi Pasca-Match', materi: 'Ice bath, pendinginan, evaluasi trofi dan pencapaian tim.', durasi: '30 mnt', rpeTarget: 2 }
+    ],
+
+    // 7. TRANSISI / RECOVERY
+    Recovery: [
+        { hari: 'Senin', sesi: 'Active Recovery', materi: 'Berenang santai 20-30 menit, peregangan seluruh tubuh.', durasi: '40 mnt', rpeTarget: 2 },
+        { hari: 'Selasa', sesi: 'Istirahat Total', materi: 'Bebas dari aktivitas fisik berat.', durasi: '0 mnt', rpeTarget: 1 },
+        { hari: 'Rabu', sesi: 'Mobilitas & Fisioterapi', materi: 'Perawatan cedera ringan, foam rolling, yoga pemulihan.', durasi: '45 mnt', rpeTarget: 2 },
+        { hari: 'Kamis', sesi: 'Istirahat Total', materi: 'Rest day.', durasi: '0 mnt', rpeTarget: 1 },
+        { hari: 'Jumat', sesi: 'Olahraga Rekreasi', materi: 'Permainan santai non-floorball (misal bulu tangkis santai / jogging rileks).', durasi: '45 mnt', rpeTarget: 3 },
+        { hari: 'Sabtu', sesi: 'Evaluasi & Refleksi', materi: 'Pertemuan evaluasi performa musim bersama pelatih dan penetapan target baru.', durasi: '60 mnt', rpeTarget: 1 },
+        { hari: 'Minggu', sesi: 'Istirahat Total', materi: 'Rest day.', durasi: '0 mnt', rpeTarget: 1 }
+    ]
+};
 
         function updateProgramLatihanUI() {
     const area = document.getElementById('program-result-area');
     if (!area) return;
 
     let atlet = state.atlet.find(a => String(a.id) === String(state.selectedProgramAtlet));
-    
-    if (!atlet && state.selectedProgramAtlet) {
-        const selectElem = document.getElementById('prog-atlet');
-        if (selectElem && selectElem.selectedIndex !== -1) {
-            const selectedText = selectElem.options[selectElem.selectedIndex].text;
-            const namaOnly = selectedText.split(' (')[0].trim();
-            atlet = state.atlet.find(a => a.nama === namaOnly);
-        }
-    }
-
-    if (!atlet) {
-        atlet = state.atlet[0] || { id: '1', nama: 'Atlet', posisi: '-' };
-    }
+    if (!atlet && state.atlet.length > 0) atlet = state.atlet[0];
+    if (!atlet) return;
 
     const listMikro = generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks);
     const currentMikro = listMikro.find(m => m.mingguKe === state.selectedProgramWeek) || listMikro[0];
 
+    // Ambil data hasil tes fisik atlet untuk personalisasi target
     const myTes = state.tesFisik.filter(t => String(t.atletId) === String(atlet.id));
-    
     const getSkor = (key) => {
         const item = myTes.find(t => t.keyTes === key);
         return item ? parseFloat(item.skor) : null;
@@ -3660,38 +3707,35 @@ function renderMatchHeatmap() {
     const pushUp = getSkor('push_up');
     const ttest = getSkor('ttest');
 
+    // Ambil template harian berdasarkan kode subfase (AA, Hypertrophy, MxS, Power, SAQ, Peaking, Recovery)
     const templateBase = menuLatihanHarian[currentMikro.faseCode] || menuLatihanHarian["AA"];
 
+    // Personalisasi materi harian berdasarkan posisi (GK vs Pemain)
     const jadwalSpesifik = templateBase.map(j => {
         let materiBaru = j.materi;
 
+        // Spesifikasi Kiper (GK)
         if (atlet.posisi === 'GK') {
             if (j.hari === 'Senin') {
-                materiBaru = `Reaction & Lateral Shuffling Drill, Core Anti-Rotation, Throwing Accuracy 5m-15m`;
+                materiBaru = `[Kiper] Latihan reaksi visual bola tenis, knee slide flow, core stabilitas anti-rotasi.`;
             } else if (j.hari === 'Selasa') {
-                const paceZone1 = vo2max ? `Pace ${(60 / (vo2max / 3.5 * 0.6)).toFixed(1)} Mnt/Km` : '60% MAS';
-                materiBaru = `Light Recovery Run (${paceZone1}), Hip & Ankle Flexibility Work`;
+                materiBaru = `[Kiper] Mobilitas sendi panggul (adductor flow), light recovery jog, lemparan outlet pass presisi.`;
             } else if (j.hari === 'Rabu') {
-                materiBaru = `Knee Slides Mechanics, High-Ball Save Positioning, GK Specific Mobility`;
+                materiBaru = `[Kiper] Reaksi tembakan area slot jarak 3-5 meter, recovery posisi cepat dari posisi kneeling.`;
             } else if (j.hari === 'Jumat') {
-                materiBaru = `Explosive Lower Body Power (Plyo Box, Kneeling Jump), Shoulder Stability`;
+                materiBaru = `[Kiper] Pliometrik panggul (kneeling jump ke kuda-kuda), latihan kelincahan lateral shuffle 30s.`;
             } else if (j.hari === 'Sabtu') {
-                materiBaru = `Game Simulation: Focus Reaction on Slot Area Shots & Quick Outlet Passes`;
+                materiBaru = `[Kiper] Game simulation: komunikasi komando pertahanan, blokade tembakan sudut sempit & penalti.`;
             }
-        } else {
-            if (j.hari === 'Senin') {
-                let fokusTeknik = pushUp && pushUp < 35 ? 'Upper Body Strength & Passing Power' : 'Core Stability & Drag Shot Mechanics';
-                materiBaru = `${fokusTeknik}, Stationary Passing & Wall-Pass Precision`;
-            } else if (j.hari === 'Selasa') {
-                const paceZone = vo2max ? `Pace ${(60 / (vo2max / 3.5 * 0.75)).toFixed(1)} Mnt/Km` : 'Zone 2 MAS';
-                materiBaru = `Continuous Aerobic Run (${paceZone}), ${vsit && vsit < 15 ? 'Hamstring Flexibility Focus' : 'General Mobility'}`;
-            } else if (j.hari === 'Rabu') {
-                let fokusAgility = ttest && ttest > 11.5 ? 'Change of Direction & Shuttle Drill' : 'High-Speed Stickhandling & Dribbling';
-                materiBaru = `${fokusAgility}, Position Tactics (${atlet.posisi})`;
-            } else if (j.hari === 'Jumat') {
-                materiBaru = `Lower Split Strength (Squat & Deadlift), Upper Body Conditioning`;
-            } else if (j.hari === 'Sabtu') {
-                materiBaru = `Small Sided Games (3v3 / 4v4) - High Intensity Shift Rotation Focus`;
+        } 
+        // Spesifikasi Pemain Lapangan (Forward / Defender / Center)
+        else {
+            if (j.hari === 'Selasa' && vo2max) {
+                const paceEst = (60 / (vo2max / 3.5 * (currentMikro.volumePct > 70 ? 0.75 : 0.85))).toFixed(1);
+                materiBaru += ` (Target Pace: ${paceEst} Mnt/Km).`;
+            }
+            if (j.hari === 'Rabu' && ttest && ttest > 11.5) {
+                materiBaru += ` [Fokus Tambahan: Kelincahan ganti arah T-Test].`;
             }
         }
 
@@ -3699,89 +3743,71 @@ function renderMatchHeatmap() {
     });
 
     const isCedera = atlet.cedera && atlet.cedera !== 'Tidak ada';
-    const noteIndividual = isCedera 
-        ? `<div class="p-4 mb-5 rounded-2xl bg-rose-50 border border-rose-200/90 text-rose-800 text-xs font-bold flex items-center gap-2.5 shadow-sm"><i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i> Catatan Medis: ${escapeHTML(atlet.cedera)} - Rest/Jeda antar set ditambah & Volume latihan dikurangi 30%.</div>`
-        : (atlet.posisi === 'GK' ? `<div class="p-4 mb-5 rounded-2xl bg-cyan-50 border border-cyan-200/90 text-cyan-950 text-xs font-bold flex items-center gap-2.5 shadow-sm"><i class="fa-solid fa-user-shield text-cyan-600 text-base"></i> Preskripsi Kiper (GK): Disesuaikan untuk reaksi eksplosif, kelincahan spesifik, dan lemparan presisi.</div>` : '');
-
-    const summaryTesBadge = `
-        <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 mb-6 shadow-inner">
-            <span class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-chart-simple text-blue-900"></i> Baseline Fisik Atlet Saat Ini:
-            </span>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-bold">
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-between">
-                    <span class="text-slate-400 font-extrabold text-[10px]">VO2Max</span>
-                    <span class="font-mono font-black text-blue-900">${vo2max ? vo2max + ' ml/kg' : '-'}</span>
-                </div>
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-between">
-                    <span class="text-slate-400 font-extrabold text-[10px]">Flexibility</span>
-                    <span class="font-mono font-black text-emerald-700">${vsit ? vsit + ' cm' : '-'}</span>
-                </div>
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-between">
-                    <span class="text-slate-400 font-extrabold text-[10px]">Push Up</span>
-                    <span class="font-mono font-black text-amber-700">${pushUp ? pushUp + ' rep' : '-'}</span>
-                </div>
-                <div class="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-between">
-                    <span class="text-slate-400 font-extrabold text-[10px]">Agility</span>
-                    <span class="font-mono font-black text-purple-700">${ttest ? ttest + ' s' : '-'}</span>
-                </div>
-            </div>
-        </div>
-    `;
+    const noteMedis = isCedera 
+        ? `<div class="p-4 mb-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2.5 shadow-sm">
+            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base shrink-0"></i>
+            <span>Catatan Medis: <strong>${escapeHTML(atlet.cedera)}</strong> — Kurangi volume beban tumpuan 25-30% dan perpanjang waktu pemulihan antar-set.</span>
+           </div>`
+        : '';
 
     area.innerHTML = `
         <div class="bg-white/95 backdrop-blur-xl p-6 sm:p-8 rounded-[32px] border border-slate-200/80 shadow-xl mb-6">
-            <!-- HEADER PROFIL ATLET & MINGGU MIKRO -->
-            <div class="flex justify-between items-start sm:items-center mb-6 flex-wrap gap-3 pb-5 border-b border-slate-100">
+            <!-- HEADER ATLET & FASE BERJALAN -->
+            <div class="flex justify-between items-start sm:items-center mb-6 flex-wrap gap-4 pb-5 border-b border-slate-100">
                 <div>
-                    <span class="text-[10px] font-black uppercase text-blue-900 tracking-wider block mb-1">PROGRAM LATIHAN INDIVIDUAL BOMPA</span>
-                    <h4 class="font-black text-slate-900 text-2xl font-display tracking-tight">${escapeHTML(atlet.nama)} <span class="text-base font-extrabold text-blue-900 bg-blue-50 border border-blue-200 px-3 py-1 rounded-xl shadow-sm ml-1">${escapeHTML(atlet.posisi)}</span></h4>
+                    <span class="text-[10px] font-black uppercase text-blue-900 tracking-wider block mb-1">PROGRAM WORKOUT TERSTRUKTUR BOMPA</span>
+                    <h4 class="font-black text-slate-900 text-2xl font-display tracking-tight flex items-center gap-2">
+                        ${escapeHTML(atlet.nama)}
+                        <span class="text-xs font-extrabold text-blue-900 bg-blue-50 border border-blue-200 px-3 py-1 rounded-xl shadow-sm">${escapeHTML(atlet.posisi)}</span>
+                    </h4>
                 </div>
-                <div>
-                    <span class="${currentMikro.badgeBg} border px-4 py-2 rounded-2xl text-xs font-black inline-block whitespace-nowrap shadow-sm">
-                        Minggu Ke-${state.selectedProgramWeek} : ${escapeHTML(currentMikro.fase)}
+                <div class="flex flex-col sm:items-end">
+                    <span class="${currentMikro.badgeBg} border px-3.5 py-1.5 rounded-xl text-xs font-black shadow-sm inline-block">
+                        Minggu Ke-${state.selectedProgramWeek}: ${currentMikro.faseBadge}
                     </span>
+                    <span class="text-[11px] font-bold text-slate-400 mt-1">${currentMikro.subFase}</span>
                 </div>
             </div>
-            
-            ${noteIndividual}
-            ${summaryTesBadge}
 
-            <!-- 4 KARTU METRIK BEBAN SIKLUS -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            ${noteMedis}
+
+            <!-- 4 KARTU PARAMETER BEBAN MIKROSIKLUS -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div class="p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl shadow-sm">
-                    <span class="block text-[10px] text-blue-800 font-black uppercase tracking-wider mb-0.5">Volume</span>
+                    <span class="block text-[10px] text-blue-800 font-black uppercase tracking-wider mb-0.5">Volume Latihan</span>
                     <strong class="text-blue-950 font-black text-base">${currentMikro.volumeLabel} (${currentMikro.volumePct}%)</strong>
                 </div>
                 <div class="p-4 bg-rose-50/70 border border-rose-200/80 rounded-2xl shadow-sm">
-                    <span class="block text-[10px] text-rose-700 font-black uppercase tracking-wider mb-0.5">Intensitas</span>
+                    <span class="block text-[10px] text-rose-700 font-black uppercase tracking-wider mb-0.5">Intensitas Latihan</span>
                     <strong class="text-rose-950 font-black text-base">${currentMikro.intensitasLabel} (${currentMikro.intensitasPct}%)</strong>
                 </div>
                 <div class="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl shadow-sm">
-                    <span class="block text-[10px] text-amber-800 font-black uppercase tracking-wider mb-0.5">Target HR Zone</span>
+                    <span class="block text-[10px] text-amber-800 font-black uppercase tracking-wider mb-0.5">Target Heart Rate</span>
                     <strong class="text-amber-950 font-black text-base">${currentMikro.hrTarget}</strong>
                 </div>
                 <div class="p-4 bg-purple-50/70 border border-purple-200/80 rounded-2xl shadow-sm">
-                    <span class="block text-[10px] text-purple-800 font-black uppercase tracking-wider mb-0.5">Target Phase</span>
+                    <span class="block text-[10px] text-purple-800 font-black uppercase tracking-wider mb-0.5">Fase Biomotorik</span>
                     <strong class="text-purple-950 font-black text-base">${currentMikro.faseCode}</strong>
                 </div>
             </div>
 
-            <!-- TABEL PRESKRIPSI DRILL HARIAN -->
+            <!-- TABEL JADWAL HARIAN SENIN - MINGGU -->
             <div class="overflow-x-auto rounded-2xl border border-slate-200/90 shadow-sm">
                 <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
                     <h5 class="font-black text-xs uppercase tracking-wider flex items-center gap-2 font-display">
-                        <i class="fa-solid fa-calendar-week text-cyan-400"></i> Preskripsi Jadwal & Detail Drill Harian
+                        <i class="fa-solid fa-calendar-week text-cyan-400"></i> Jadwal Preskripsi Latihan Mingguan (Senin – Minggu)
                     </h5>
-                    <span class="text-[10px] font-extrabold text-cyan-300 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">7 Hari Latihan</span>
+                    <span class="text-[10px] font-extrabold text-cyan-300 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                        7 Hari Terjadwal
+                    </span>
                 </div>
                 
-                <table class="w-full text-left border-collapse min-w-[650px]">
+                <table class="w-full text-left border-collapse min-w-[700px]">
                     <thead class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider border-b border-slate-200">
                         <tr>
                             <th class="p-3.5 w-24">Hari</th>
                             <th class="p-3.5 w-48">Sesi Focus</th>
-                            <th class="p-3.5">Materi & Detail Preskripsi Drill</th>
+                            <th class="p-3.5">Materi & Rincian Drill Latihan</th>
                             <th class="p-3.5 text-center w-24">Durasi</th>
                             <th class="p-3.5 text-center w-28">Target RPE</th>
                         </tr>
@@ -3794,8 +3820,8 @@ function renderMatchHeatmap() {
                                 <td class="p-3.5 text-slate-600 leading-relaxed">${j.materi}</td>
                                 <td class="p-3.5 text-center font-mono font-bold text-slate-500">${j.durasi}</td>
                                 <td class="p-3.5 text-center">
-                                    <span class="bg-amber-50 text-amber-900 border border-amber-200/90 px-3 py-1 rounded-xl font-mono font-black text-[11px] whitespace-nowrap shadow-sm inline-block">
-                                        RPE ${j.rpeTarget}
+                                    <span class="bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-xl font-mono font-black text-[11px] whitespace-nowrap shadow-sm inline-block">
+                                        RPE ${j.rpeTarget}/10
                                     </span>
                                 </td>
                             </tr>
