@@ -4259,24 +4259,25 @@ function renderMatchHeatmap() {
                 return;
             }
 
-            const toast = showToast('Menyiapkan file PDF lengkap...', 'loading');
+            const toast = showToast('Menyiapkan dan mengunduh PDF...', 'loading');
 
-            // 1. Gandakan elemen agar tampilan aktif layar tidak terganggu
+            // 1. Kloning elemen target
             const clone = targetElement.cloneNode(true);
-            const printWidth = 1150; // Standar landscape penuh agar tabel tidak terpotong
+            const printWidth = 1120; // Lebar standar kertas A4 Landscape
+
             clone.style.width = `${printWidth}px`;
             clone.style.minWidth = `${printWidth}px`;
             clone.style.maxWidth = 'none';
             clone.style.height = 'auto';
             clone.style.overflow = 'visible';
 
-            // Buka semua elemen scrollbar di dalam clone
+            // Buka semua scrollbar internal
             clone.querySelectorAll('*').forEach(el => {
                 el.style.overflow = 'visible';
                 el.style.maxHeight = 'none';
             });
 
-            // 2. Sembunyikan tombol aksi dan cegah pemotongan baris di tengah tabel
+            // 2. Sembunyikan elemen kontrol yang tidak perlu dicetak
             const styleOverride = document.createElement('style');
             styleOverride.innerHTML = `
                 button, input, select, .no-print, #toast-container { 
@@ -4289,45 +4290,48 @@ function renderMatchHeatmap() {
             `;
             clone.appendChild(styleOverride);
 
-            // Letakkan sementara di luar pandangan layar
-            clone.style.position = 'fixed';
-            clone.style.left = '-9999px';
+            // 3. Letakkan elemen di dalam koordinat layar (bukan minus), namun disembunyikan di layer bawah
+            clone.style.position = 'absolute';
+            clone.style.left = '0';
             clone.style.top = '0';
-            clone.style.backgroundColor = '#ffffff';
             clone.style.zIndex = '-9999';
+            clone.style.backgroundColor = '#ffffff';
             document.body.appendChild(clone);
 
-            // 3. Konfigurasi rendering halaman
+            // 4. Konfigurasi unduhan html2pdf
             const opt = {
                 margin: [8, 8, 8, 8],
                 filename: `${filenamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`,
-                image: { type: 'jpeg', quality: 0.95 },
+                image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: {
-                    scale: 1.5,
+                    scale: 2,
                     useCORS: true,
                     windowWidth: printWidth,
-                    scrollX: 0,
-                    scrollY: 0
+                    scrollY: 0,
+                    scrollX: 0
                 },
                 jsPDF: {
                     unit: 'mm',
                     format: 'a4',
-                    orientation: 'landscape' // Orientasi landscape agar semua kolom muat
+                    orientation: 'landscape'
                 },
                 pagebreak: { mode: ['css', 'legacy'] }
             };
 
-            html2pdf().set(opt).from(clone).save().then(() => {
-                document.body.removeChild(clone);
-                if (toast) toast.remove();
-                showToast('PDF berhasil diunduh tanpa terpotong!', 'success');
-            }).catch(err => {
-                document.body.removeChild(clone);
-                if (toast) toast.remove();
-                console.error("PDF Error:", err);
-                showToast('Beralih ke dialog cetak browser...', 'error');
-                window.print();
-            });
+            // Beri jeda 300 milidetik agar browser selesai menggambar tabel clone ke memori
+            setTimeout(() => {
+                html2pdf().set(opt).from(clone).save().then(() => {
+                    if (clone.parentNode) clone.parentNode.removeChild(clone);
+                    if (toast) toast.remove();
+                    showToast('PDF berhasil diunduh dan tersimpan!', 'success');
+                }).catch(err => {
+                    if (clone.parentNode) clone.parentNode.removeChild(clone);
+                    if (toast) toast.remove();
+                    console.error("PDF Error:", err);
+                    showToast('Gagal memproses PDF otomatis. Mengalihkan ke menu print...', 'error');
+                    window.print();
+                });
+            }, 300);
         }	
         function filterSearchAtlet(query) {
             state.searchQueryAtlet = query.toLowerCase();
