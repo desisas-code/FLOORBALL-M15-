@@ -6223,72 +6223,63 @@ function triggerHUDMuscle(muscleKey) {
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-            ${state.atlet.map(at => {
-                const allRecords = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
-                const targetTahap = state.filterTahapFisik || 'Pre';
-                const tahapList = targetTahap === 'Semua' ? ['Pre', 'Mid', 'Post'] : [targetTahap];
+    ${state.atlet.map(at => {
+        const allRecords = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
+        const targetTahap = state.filterTahapFisik || 'Pre';
+        const tahapList = targetTahap === 'Semua' ? ['Pre', 'Mid', 'Post'] : [targetTahap];
 
-                return tahapList.map(tahapAktif => {
-                    const recordsTahap = allRecords.filter(t => (t.tahap || 'Pre') === tahapAktif);
-                    const lastDate = recordsTahap.length > 0 ? recordsTahap[0].tanggal : '-';
+        return tahapList.map(tahapAktif => {
+            const recordsTahap = allRecords.filter(t => (t.tahap || 'Pre') === tahapAktif);
+            const lastDate = recordsTahap.length > 0 ? recordsTahap[0].tanggal : '-';
 
-                    if (targetTahap === 'Semua' && recordsTahap.length === 0) return '';
+            if (targetTahap === 'Semua' && recordsTahap.length === 0) return '';
 
-                    return `
-                        <tr class="hover:bg-blue-50/40 transition-colors">
-                            <td class="p-3 font-black text-slate-800 sticky left-0 bg-white border-r z-10">
-                                <div class="truncate max-w-[120px]">${escapeHTML(at.nama)}</div>
-                                <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block">${escapeHTML(at.posisi)}</span>
-                            </td>
-                            <td class="p-2.5 font-bold border-r text-center align-middle">
-                                <span class="px-2 py-1 rounded-lg text-[10px] font-black font-mono ${
-                                    tahapAktif === 'Pre' ? 'bg-sky-100 text-sky-800 border border-sky-200' :
-                                    tahapAktif === 'Mid' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                                    'bg-purple-100 text-purple-800 border border-purple-200'
-                                }">
-                                    ${tahapAktif}
-                                </span>
-                            </td>
-                            <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>
-                            ${listFieldTes.map(f => {
-    let item = null;
-    if (tahapAktif === 'Semua') {
-        const order = { 'Post': 3, 'Mid': 2, 'Pre': 1 };
-        const sorted = allRecords
-            .filter(t => t.keyTes === f.key)
-            .sort((a, b) => (order[b.tahap || 'Pre'] || 1) - (order[a.tahap || 'Pre'] || 1));
-        item = sorted[0] || null;
-    } else {
-        item = recordsTahap.find(t => t.keyTes === f.key) || null;
-    }
+            return `
+                <tr class="hover:bg-blue-50/40 transition-colors">
+                    <td class="p-3 font-black text-slate-800 sticky left-0 bg-white border-r z-10">
+                        <div class="truncate max-w-[120px]">${escapeHTML(at.nama)}</div>
+                        <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block">${escapeHTML(at.posisi)}</span>
+                    </td>
+                    <td class="p-2.5 font-bold border-r text-center align-middle">
+                        <span class="px-2 py-1 rounded-lg text-[10px] font-black font-mono ${
+                            tahapAktif === 'Pre' ? 'bg-sky-100 text-sky-800 border border-sky-200' :
+                            tahapAktif === 'Mid' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                            'bg-purple-100 text-purple-800 border border-purple-200'
+                        }">
+                            ${tahapAktif}
+                        </span>
+                    </td>
+                    <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>
+                    ${listFieldTes.map(f => {
+                        const item = recordsTahap.find(t => t.keyTes === f.key);
 
-    if (!item) {
-        return `<td class="p-2 text-center border-r align-middle">
-            <div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div>
-        </td>`;
-    }
+                        if (!item) {
+                            return `<td class="p-2 text-center border-r align-middle">
+                                <div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div>
+                            </td>`;
+                        }
 
-    const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
-    let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
-    if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600';
-    else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600';
-    else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500';
-    else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600';
-    else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600';
+                        const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
+                        let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
+                        if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600';
+                        else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600';
+                        else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500';
+                        else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600';
+                        else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600';
 
-    return `<td class="p-2 text-center border-r align-middle">
-        <div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full shadow-xs">
-            <span class="font-mono font-black text-xs leading-none">${item.skor}</span>
-            <div class="flex items-center gap-1 mt-1">
-                <span class="text-[8px] font-extrabold uppercase">${kat}</span>
-                <span class="text-[7px] font-mono px-1 rounded bg-black/25 text-white font-bold">${item.tahap || 'Pre'}</span>
-            </div>
-        </div>
-    </td>`;
-                }).join('')}
-            </tr>`;
-        }).join('')}
-    `).join('')}
+                        return `<td class="p-2 text-center border-r align-middle">
+                            <div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full shadow-xs">
+                                <span class="font-mono font-black text-xs leading-none">${item.skor}</span>
+                                <div class="flex items-center gap-1 mt-1">
+                                    <span class="text-[8px] font-extrabold uppercase">${kat}</span>
+                                    <span class="text-[7px] font-mono px-1 rounded bg-black/25 text-white font-bold">${item.tahap || 'Pre'}</span>
+                                </div>
+                            </div>
+                        </td>`;
+                    }).join('')}
+                </tr>`;
+        }).join('');
+    }).join('')}
 </tbody>
                             </table>
                         </div>
