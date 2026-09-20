@@ -144,79 +144,84 @@
       // Auto Sync di Background
       const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYtnxFuZKmCmeNFYYBsa8-jAIkRTwT5L4oGUG6zzLuwVoGHXWEOwhEIURjKgfPFU1C/exec";
 
-      async function autoFetchFromSpreadsheet() {
-      try {
-        const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
-        const data = await res.json();
-        
-        if (data && data.status === "success") {
-          // 1. Update Data Atlet
-          if (data.atlet && Array.isArray(data.atlet) && data.atlet.length > 0) {
-            state.atlet = data.atlet;
-            saveStorage("atlet", data.atlet);
-          }
+      // =========================================================================
+// AUTO SYNC & EXACT MIRRORING DARI GOOGLE SPREADSHEET KE WEB
+// =========================================================================
+async function autoFetchFromSpreadsheet() {
+  try {
+    const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
+    const data = await res.json();
+    
+    if (data && data.status === "success") {
+      let hasChanges = false;
 
-          // 2. Sinkronisasi Log Jogging
-          const localJogging = loadStorage("joggingLogs") || state.joggingLogs || [];
-          const serverJogging = data.joggingLogs || data.programLatihan || [];
-          const dailyMap = new Map();
+      // 1. Data Atlet
+      if (data.atlet !== undefined && Array.isArray(data.atlet)) {
+        state.atlet = data.atlet;
+        saveStorage("atlet", data.atlet);
+        hasChanges = true;
+      }
 
-          [...localJogging, ...serverJogging].forEach(item => {
-            if (item && item.atletId) {
-              dailyMap.set(String(item.atletId), item);
-            }
-          });
+      // 2. Log Jogging (Hapus data lokal jika di sheet sudah dihapus)
+      if (data.joggingLogs !== undefined && Array.isArray(data.joggingLogs)) {
+        state.joggingLogs = data.joggingLogs;
+        saveStorage("joggingLogs", data.joggingLogs);
+        hasChanges = true;
+      }
 
-          state.joggingLogs = Array.from(dailyMap.values()).slice(0, 41);
-          saveStorage("joggingLogs", state.joggingLogs);
+      // 3. Laporan Validasi
+      if (data.laporanValidasi !== undefined && Array.isArray(data.laporanValidasi)) {
+        state.laporanValidasi = data.laporanValidasi;
+        saveStorage("laporanValidasi", data.laporanValidasi);
+        hasChanges = true;
+      }
 
-          // 3. Update Laporan Validasi
-          if (data.laporanValidasi && Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
-            const localVal = loadStorage("laporanValidasi") || state.laporanValidasi || [];
-            const mergedVal = new Map();
+      // 4. Log RPE & ACWR
+      if (data.rpeLogs !== undefined && Array.isArray(data.rpeLogs)) {
+        state.rpeLogs = data.rpeLogs;
+        saveStorage("rpeLogs", data.rpeLogs);
+        hasChanges = true;
+      }
 
-            localVal.forEach(item => { 
-              if (item && item.id) mergedVal.set(String(item.id), item); 
-            });
-            
-            data.laporanValidasi.forEach(serverItem => {
-              if (serverItem && serverItem.id) {
-                const localItem = mergedVal.get(String(serverItem.id));
-                if (!localItem || localItem.status === 'Menunggu') {
-                  mergedVal.set(String(serverItem.id), serverItem);
-                }
-              }
-            });
+      // 5. Presensi / Absensi
+      if (data.absensi !== undefined && Array.isArray(data.absensi)) {
+        state.absensi = data.absensi;
+        saveStorage("absensi", data.absensi);
+        hasChanges = true;
+      }
 
-            state.laporanValidasi = Array.from(mergedVal.values());
-            saveStorage("laporanValidasi", state.laporanValidasi);
-          }
-			// 3.5 Sinkronisasi Log RPE & ACWR
-          if (data.rpeLogs && Array.isArray(data.rpeLogs) && data.rpeLogs.length > 0) {
-            const localRpe = loadStorage("rpeLogs") || state.rpeLogs || [];
-            const rpeMap = new Map();
+      // 6. Tes Fisik & Teknik
+      if (data.tesFisik !== undefined && Array.isArray(data.tesFisik)) {
+        state.tesFisik = data.tesFisik;
+        saveStorage("tesFisik", data.tesFisik);
+        hasChanges = true;
+      }
+      if (data.tesTeknik !== undefined && Array.isArray(data.tesTeknik)) {
+        state.tesTeknik = data.tesTeknik;
+        saveStorage("tesTeknik", data.tesTeknik);
+        hasChanges = true;
+      }
 
-            [...localRpe, ...data.rpeLogs].forEach(item => {
-              if (item && item.id) {
-                rpeMap.set(String(item.id), item);
-              }
-            });
+      // 7. Preskripsi Gym
+      if (data.gymLogs !== undefined && Array.isArray(data.gymLogs)) {
+        state.gymLogs = data.gymLogs;
+        saveStorage("gymLogs", data.gymLogs);
+        hasChanges = true;
+      }
 
-            state.rpeLogs = Array.from(rpeMap.values());
-            saveStorage("rpeLogs", state.rpeLogs);
-          }
-         // 4. Render Ulang Tampilan Otomatis (Hanya jika TIDAK sedang mengetik)
-          const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-          const isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
-          
-          if (!isTyping && typeof renderContent === 'function') {
-            renderContent();
-          }
-        }
-      } catch (e) {
-        console.log("Sync otomatis pending connection...");
+      // 8. Render Ulang Antarmuka Web (Hanya jika pengguna TIDAK sedang mengetik)
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      const isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
+      
+      if (!isTyping && hasChanges) {
+        if (typeof renderSidebar === 'function') renderSidebar();
+        if (typeof renderContent === 'function') renderContent();
       }
     }
+  } catch (e) {
+    console.log("Sinkronisasi otomatis menunggu koneksi aktif...");
+  }
+}
 		
     </script>
 
