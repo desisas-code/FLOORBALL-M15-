@@ -6050,6 +6050,10 @@ function triggerHUDMuscle(muscleKey) {
                         </div>
                     </div>
                 `;
+			}function setFilterTahapFisik(tahap) {
+    state.filterTahapFisik = tahap;
+    renderContent();
+
             } else if (state.currentMenu === 'menu-3') {
                 pageTitle.innerText = "Tes Kondisi Fisik & Teknik dengan Norma";
                 const today = new Date().toISOString().split('T')[0];
@@ -6187,31 +6191,98 @@ function triggerHUDMuscle(muscleKey) {
                                 14 Parameter Fisik
                             </span>
                         </div>
-                        <div class="overflow-x-auto relative">
-                            <table class="w-full text-left border-collapse min-w-[1200px]">
-                                <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
-                                    <tr>
-                                        <th class="p-4 sticky left-0 bg-slate-950 z-20 border-r border-slate-800 min-w-[160px]">Profil Atlet</th>
-                                        <th class="p-4 border-r border-slate-800 text-center">Tgl Terakhir</th>
-                                        ${listFieldTes.map(f => `<th class="p-3 text-center border-r border-slate-800 min-w-[70px]">${escapeHTML(f.shortLabel)}</th>`).join('')}
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 text-xs font-semibold">
-                                    ${state.atlet.map(at => {
-                                        const records = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
-                                        const lastDate = records.length > 0 ? records[0].tanggal : '-';
-                                        return `
-                                            <tr class="hover:bg-blue-50/40 transition-colors">
-                                                <td class="p-3 font-black text-slate-800 sticky left-0 bg-white border-r z-10">
-                                                    <div class="truncate max-w-[120px]">${escapeHTML(at.nama)}</div>
-                                                    <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block">${escapeHTML(at.posisi)}</span>
-                                                </td>
-                                                <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>${listFieldTes.map(f => {
-                                                    const item = records.filter(t => t.keyTes === f.key)
-                                        .sort((a, b) => {
-                                            const order = { 'Post': 3, 'Mid': 2, 'Pre': 1 };
-                                            return (order[b.tahap || 'Pre'] || 1) - (order[a.tahap || 'Pre'] || 1);
-                                        })[0];
+                        <!-- TOMBOL FILTER TAHAP -->
+<div class="flex items-center gap-1.5 bg-slate-200/60 p-1.5 rounded-2xl border border-slate-300/60 mb-4 w-fit">
+    <button type="button" onclick="setFilterTahapFisik('Pre')" 
+        class="px-3 py-1.5 rounded-xl text-xs font-black transition-all ${(!state.filterTahapFisik || state.filterTahapFisik === 'Pre') ? 'bg-blue-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+        1. Pre-Test
+    </button>
+    <button type="button" onclick="setFilterTahapFisik('Mid')" 
+        class="px-3 py-1.5 rounded-xl text-xs font-black transition-all ${state.filterTahapFisik === 'Mid' ? 'bg-blue-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+        2. Mid-Test
+    </button>
+    <button type="button" onclick="setFilterTahapFisik('Post')" 
+        class="px-3 py-1.5 rounded-xl text-xs font-black transition-all ${state.filterTahapFisik === 'Post' ? 'bg-blue-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+        3. Post-Test
+    </button>
+    <button type="button" onclick="setFilterTahapFisik('Semua')" 
+        class="px-3 py-1.5 rounded-xl text-xs font-black transition-all ${state.filterTahapFisik === 'Semua' ? 'bg-blue-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+        Semua Tahap
+    </button>
+</div>
+
+<div class="overflow-x-auto relative">
+    <table class="w-full text-left border-collapse min-w-[1200px]">
+        <thead class="bg-slate-950 text-slate-300 text-[10px] font-black uppercase tracking-wider">
+            <tr>
+                <th class="p-4 sticky left-0 bg-slate-950 z-20 border-r border-slate-800 min-w-[160px]">Profil Atlet</th>
+                <th class="p-3 border-r border-slate-800 text-center w-20">Tahap</th>
+                <th class="p-4 border-r border-slate-800 text-center">Tgl Tes</th>
+                ${listFieldTes.map(f => `<th class="p-3 text-center border-r border-slate-800 min-w-[70px]">${escapeHTML(f.shortLabel)}</th>`).join('')}
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-xs font-semibold">
+            ${state.atlet.map(at => {
+                const allRecords = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
+                const targetTahap = state.filterTahapFisik || 'Pre';
+                const tahapList = targetTahap === 'Semua' ? ['Pre', 'Mid', 'Post'] : [targetTahap];
+
+                return tahapList.map(tahapAktif => {
+                    const recordsTahap = allRecords.filter(t => (t.tahap || 'Pre') === tahapAktif);
+                    const lastDate = recordsTahap.length > 0 ? recordsTahap[0].tanggal : '-';
+
+                    if (targetTahap === 'Semua' && recordsTahap.length === 0) return '';
+
+                    return `
+                        <tr class="hover:bg-blue-50/40 transition-colors">
+                            <td class="p-3 font-black text-slate-800 sticky left-0 bg-white border-r z-10">
+                                <div class="truncate max-w-[120px]">${escapeHTML(at.nama)}</div>
+                                <span class="text-[9px] bg-blue-50 text-blue-900 border px-2 py-0.5 rounded-md mt-0.5 inline-block">${escapeHTML(at.posisi)}</span>
+                            </td>
+                            <td class="p-2.5 font-bold border-r text-center align-middle">
+                                <span class="px-2 py-1 rounded-lg text-[10px] font-black font-mono ${
+                                    tahapAktif === 'Pre' ? 'bg-sky-100 text-sky-800 border border-sky-200' :
+                                    tahapAktif === 'Mid' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                    'bg-purple-100 text-purple-800 border border-purple-200'
+                                }">
+                                    ${tahapAktif}
+                                </span>
+                            </td>
+                            <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>
+                            ${listFieldTes.map(f => {
+                                const item = recordsTahap.find(t => t.keyTes === f.key);
+
+                                if (!item) return `<td class="p-2 text-center border-r align-middle"><div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div></td>`;
+                                
+                                const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
+                                let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
+                                if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600';
+                                else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600';
+                                else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500';
+                                else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600';
+                                else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600';
+
+                                return `
+                                    <td class="p-2 text-center border-r align-middle">
+                                        <div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full shadow-xs">
+                                            <span class="font-mono font-black text-xs leading-none">${item.skor}</span>
+                                            <div class="flex items-center gap-1 mt-1">
+                                                <span class="text-[8px] font-extrabold uppercase">${kat}</span>
+                                            </div>
+                                        </div>
+                                    </td>`;
+                            }).join('')}
+                        </tr>
+                    `;
+                }).join('');
+            }).join('')}
+        </tbody>
+    </table>
+</div>
+    .sort((a, b) => {
+        const order = { 'Post': 3, 'Mid': 2, 'Pre': 1 };
+        return (order[b.tahap || 'Pre'] || 1) - (order[a.tahap || 'Pre'] || 1);
+    })[0];
 
                     if (!item) return `<td class="p-2 text-center border-r align-middle"><div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div></td>`;
                     const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
