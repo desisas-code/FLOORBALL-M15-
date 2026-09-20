@@ -137,6 +137,10 @@
     }
 } 
 </style>
+	<!-- Leaflet.js CSS & JS untuk Peta Rute ala Strava -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans antialiased text-slate-700">
 
@@ -1054,6 +1058,19 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
 
 		// Variable Global untuk Tracking GPS & Aktivitas
 // VARIABEL TRACKER OFFLINE
+		let map = null;
+        let runPathLine = null;
+        let pathCoordinates = [];
+
+        function initStravaMap(lat, lng) {
+          map = L.map('strava-map').setView([lat, lng], 16);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+          }).addTo(map);
+
+          runPathLine = L.polyline([], { color: '#FC4C02', weight: 4 }).addTo(map);
+        }
+        // -----------------------------------
 let liveTrackingWatchId = null;
 let lastRecordedCoord = null;
 let liveRunMetrics = {
@@ -1096,7 +1113,9 @@ function toggleLiveRunTracker() {
     liveRunMetrics.vehicleDetected = false;
     liveRunMetrics.startTime = Date.now();
     lastRecordedCoord = null;
-
+	pathCoordinates = [];
+    if (runPathLine) runPathLine.setLatLngs([]);
+	
     if (btn) {
         btn.className = "w-full px-4 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 animate-pulse";
         btn.innerHTML = `<i class="fa-solid fa-stop text-white"></i> Hentikan Sesi Lari (Selesai)`;
@@ -1114,15 +1133,24 @@ function toggleLiveRunTracker() {
     // KUNCI SATELIT GPS OFFLINE
     liveTrackingWatchId = navigator.geolocation.watchPosition(
         (position) => {
-            const { latitude, longitude, accuracy, speed } = position.coords;
-            const now = Date.now();
+                const { latitude, longitude, accuracy, speed } = position.coords;
+	            const now = Date.now();
+	            // 1. CEK AKURASI DULUAN (Abaikan jika sinyal lemah/loncat)
+	            if (accuracy > 25) return;
 
-            // Abaikan sinyal GPS yang tidak akurat (> 25 meter)
-            if (accuracy > 25) return;
+	            // 2. JIKA AKURAT, BARU BUKA & GAMBAR PETA
+	            if (!map) {
+	                initStravaMap(latitude, longitude);
+	           }
 
-            let currentSpeedKmh = speed ? (speed * 3.6) : 0;
+	            const currentLatLng = [latitude, longitude];
+	            pathCoordinates.push(currentLatLng);
+	            if (runPathLine) runPathLine.setLatLngs(pathCoordinates);
+	            if (map) map.panTo(currentLatLng);
+	
+	            let currentSpeedKmh = speed ? (speed * 3.6) : 0;
 
-            if (lastRecordedCoord) {
+	            if (lastRecordedCoord) {
                 const dist = calculateHaversineDistance(
                     lastRecordedCoord.lat, lastRecordedCoord.lng,
                     latitude, longitude
@@ -8445,7 +8473,15 @@ const myReports = (state.laporanValidasi || []).filter(l => {
                             <h4 class="text-xl sm:text-2xl font-black text-purple-900 font-display" id="run-kalori-display">-</h4>
                         </div>
                     </div>
-
+					<div class="p-4 rounded-3xl bg-white border border-slate-200/90 shadow-sm space-y-2">
+                 <div class="flex items-center justify-between">
+                     <span class="text-[11px] font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                         <i class="fa-solid fa-map-location-dot text-orange-500"></i> Peta Jalur Lari Live
+                     </span>
+                     <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">GPS Path</span>
+                 </div>
+                 <div id="strava-map" class="w-full h-64 rounded-2xl border border-slate-200 overflow-hidden z-0"></div>
+             </div>
                     <div class="flex justify-end pt-2">
                         <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-800 hover:to-indigo-900 text-white px-8 py-4 rounded-2xl font-black text-xs shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">
                             <i class="fa-solid fa-paper-plane"></i> Kirim Laporan Lari Ke Pelatih
