@@ -7017,7 +7017,7 @@ function triggerHUDMuscle(muscleKey) {
                                 const pct = Math.round(parseFloat(j.zona || '0.75') * 100); 
                                 return `
                                     <tr class="hover:bg-blue-50/40 transition-colors">
-                                        <td class="p-3.5 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : 'Atlet'}</td>
+                                        <td class="p-3.5 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : escapeHTML(j.namaAtlet || j.nama || 'Atlet')}</td>
                                         <td class="p-3.5 font-mono text-slate-500 font-bold">${j.tanggal}</td>
                                         <td class="p-3.5 text-center font-bold"><span class="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-0.5 rounded-md text-[10px] font-black">${pct}% MAS</span></td>
                                         <td class="p-3.5 text-center text-blue-900 font-mono font-black">${j.jarak} km</td>
@@ -7057,7 +7057,7 @@ function triggerHUDMuscle(muscleKey) {
                                 const pObj = state.atlet.find(a => String(a.id) === String(m.atletId)); 
                                 return `
                                     <tr class="hover:bg-purple-50/40 transition-colors">
-                                        <td class="p-3.5 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : 'Atlet'}</td>
+                                        <td class="p-3.5 font-black text-slate-800">${pObj ? escapeHTML(pObj.nama) : escapeHTML(m.namaAtlet || m.nama || 'Atlet')}</td>
                                         <td class="p-3.5 font-mono text-slate-500 font-bold">${m.tanggal}</td>
                                         <td class="p-3.5 text-center font-mono font-black">
                                             <span class="text-rose-600">${m.sprintDist || 0}m</span> / 
