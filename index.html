@@ -6251,43 +6251,41 @@ function triggerHUDMuscle(muscleKey) {
                             </td>
                             <td class="p-3 font-mono border-r text-slate-400 text-[10px] text-center align-middle">${lastDate}</td>
                             ${listFieldTes.map(f => {
-                                const item = recordsTahap.find(t => t.keyTes === f.key);
-
-                                if (!item) return `<td class="p-2 text-center border-r align-middle"><div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div></td>`;
-                                
-                                const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
-                                let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
-                                if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600';
-                                else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600';
-                                else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500';
-                                else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600';
-                                else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600';
-
-                                
-    .sort((a, b) => {
+    let item = null;
+    if (tahapAktif === 'Semua') {
         const order = { 'Post': 3, 'Mid': 2, 'Pre': 1 };
-        return (order[b.tahap || 'Pre'] || 1) - (order[a.tahap || 'Pre'] || 1);
-    })[0];
+        const sorted = allRecords
+            .filter(t => t.keyTes === f.key)
+            .sort((a, b) => (order[b.tahap || 'Pre'] || 1) - (order[a.tahap || 'Pre'] || 1));
+        item = sorted[0] || null;
+    } else {
+        item = recordsTahap.find(t => t.keyTes === f.key) || null;
+    }
 
-                    if (!item) return `<td class="p-2 text-center border-r align-middle"><div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div></td>`;
-                    const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
-                    let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
-                    if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600';
-                    else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600';
-                    else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500';
-                    else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600';
-                    else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600';
+    if (!item) {
+        return `<td class="p-2 text-center border-r align-middle">
+            <div class="py-2 bg-slate-50 border rounded-xl text-slate-300 font-black text-xs">-</div>
+        </td>`;
+    }
 
-                    return `<td class="p-2 text-center border-r align-middle">
-                        <div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full shadow-xs">
-                            <span class="font-mono font-black text-xs leading-none">${item.skor}</span>
-                            <div class="flex items-center gap-1 mt-1">
-                                <span class="text-[8px] font-extrabold uppercase">${kat}</span>
-                                <span class="text-[7px] font-mono px-1 rounded bg-black/25 text-white font-bold">${item.tahap || 'Pre'}</span>
-                            </div>
-                        </div>
-                    </td>`;
-                                                }).join('')}
+    const kat = hitungKategoriNorma(f.key, item.skor, at.gender, at.posisi);
+    let pillColor = 'bg-slate-100 text-slate-400 border-slate-200';
+    if (kat === 'SB') pillColor = 'bg-emerald-500 text-white border-emerald-600';
+    else if (kat === 'B') pillColor = 'bg-blue-500 text-white border-blue-600';
+    else if (kat === 'S') pillColor = 'bg-amber-400 text-amber-950 border-amber-500';
+    else if (kat === 'K') pillColor = 'bg-orange-500 text-white border-orange-600';
+    else if (kat === 'SK') pillColor = 'bg-rose-500 text-white border-rose-600';
+
+    return `<td class="p-2 text-center border-r align-middle">
+        <div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${pillColor} w-full shadow-xs">
+            <span class="font-mono font-black text-xs leading-none">${item.skor}</span>
+            <div class="flex items-center gap-1 mt-1">
+                <span class="text-[8px] font-extrabold uppercase">${kat}</span>
+                <span class="text-[7px] font-mono px-1 rounded bg-black/25 text-white font-bold">${item.tahap || 'Pre'}</span>
+            </div>
+        </div>
+    </td>`;
+}).join('')}
                                             </tr>`;
                                     }).join('')}
                                 </tbody>
