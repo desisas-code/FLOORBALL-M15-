@@ -5053,7 +5053,7 @@ function generateJoggingSkuad(event) {
   const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 30;
   const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
 
-  // 1. Tentukan target: Semua atlet atau 1 atlet tertentu
+  // 1. Tentukan target atlet: Semua atlet atau 1 atlet terpilih
   let targetAthletes = [];
   if (selectedId === 'semua' || !selectedId) {
     targetAthletes = [...state.atlet];
@@ -5067,9 +5067,37 @@ function generateJoggingSkuad(event) {
     return;
   }
 
-  // 2. Generate log untuk SETIAP atlet dengan perhitungan VO2Max & Pace masing-masing
+  // 2. Fungsi pembaca skor tes Yo-Yo / VO2Max spesifik milik atlet
+  const getPersonalVO2Max = (atlet) => {
+    // Cari seluruh catatan tes milik atlet ini
+    const athleteTests = (state.tesFisik || []).filter(t => 
+      String(t.atletId) === String(atlet.id) && t.keyTes === 'yoyo'
+    );
+
+    // Prioritaskan tahap terbaru: Post -> Mid -> Pre
+    const postTest = athleteTests.find(t => t.tahap === 'Post');
+    if (postTest && parseFloat(postTest.skor) > 0) return parseFloat(postTest.skor);
+
+    const midTest = athleteTests.find(t => t.tahap === 'Mid');
+    if (midTest && parseFloat(midTest.skor) > 0) return parseFloat(midTest.skor);
+
+    const preTest = athleteTests.find(t => t.tahap === 'Pre' || !t.tahap);
+    if (preTest && parseFloat(preTest.skor) > 0) return parseFloat(preTest.skor);
+
+    // Jika ada tes terakhir sembarang tahap
+    if (athleteTests.length > 0 && parseFloat(athleteTests[0].skor) > 0) {
+      return parseFloat(athleteTests[0].skor);
+    }
+
+    // Baseline cerdas bila belum ada data tes (berdasarkan posisi & gender)
+    if (atlet.posisi === 'GK') return 42.0;
+    if (atlet.gender === 'Putri') return 45.0;
+    return 48.5; // Baseline standar pemain lapangan putra
+  };
+
+  // 3. Kalkulasi metrik personal per individu
   const newLogs = targetAthletes.map(atlet => {
-    const vo2 = getAtletVO2Max(atlet.id) || 45; // Mengambil VO2Max personal atlet
+    const vo2 = getPersonalVO2Max(atlet);
     const masKmh = vo2 / 3.5;
     const factor = parseFloat(zona) || 0.75;
     const speedKmh = masKmh * factor;
@@ -5084,7 +5112,7 @@ function generateJoggingSkuad(event) {
       atletId: String(atlet.id),
       namaAtlet: atlet.nama,
       tanggal: tanggal,
-      vo2max: String(vo2),
+      vo2max: String(vo2.toFixed(1)),
       zona: zona,
       jarak: jarak,
       waktu: waktu,
@@ -5092,27 +5120,25 @@ function generateJoggingSkuad(event) {
     };
   });
 
-  // 3. Gabungkan seluruh data baru ke riwayat jogging tanpa saling menimpa
+  // 4. Masukkan ke database lokal tanpa menimpa data hari lain
   if (!state.joggingLogs) state.joggingLogs = [];
   
-  // Hapus log pada tanggal yang sama untuk atlet bersangkutan agar tidak dobel
+  // Hapus log lama hanya jika atlet dan tanggalnya sama persis agar tidak dobel
   const targetIds = new Set(targetAthletes.map(a => String(a.id)));
   state.joggingLogs = state.joggingLogs.filter(j => !(targetIds.has(String(j.atletId)) && j.tanggal === tanggal));
   
-  // Masukkan semua entri baru ke paling atas
+  // Gabungkan seluruh target personal baru ke antrean utama
   state.joggingLogs = [...newLogs, ...state.joggingLogs];
-
-  // 4. Simpan ke penyimpanan lokal browser
   saveStorage("joggingLogs", state.joggingLogs);
 
-  // 5. Sinkronisasi otomatis ke Google Spreadsheet agar masuk ke HP atlet
+  // 5. Sinkronkan ke Google Spreadsheet agar masuk ke akun HP masing-masing atlet
   if (typeof syncDataToSpreadsheet === 'function') {
     syncDataToSpreadsheet();
   }
 
-  // 6. Perbarui tampilan
+  // 6. Muat ulang antarmuka
   renderContent();
-  showToast(`Berhasil menugaskan sesi jogging ke ${newLogs.length} atlet!`, "success");
+  showToast(`Preskripsi jogging personal berhasil dibagikan ke ${newLogs.length} atlet!`, "success");
 }
         // =========================================================================
 // DATABASE ANATOMI OTOT & FUNGSI FILTER
