@@ -1906,7 +1906,11 @@ function exportGymLogsCSV() {
 
     menuContainer.innerHTML = listHtml + logoutBtnHtml;
 }
-
+		
+function setFilterTahapFisik(tahap) {
+    state.filterTahapFisik = tahap;
+    renderContent();
+}
         function navigate(menuId) {
     // Hentikan dan bersihkan Three.js jika meninggalkan menu anatomi 3D
     cleanupThreeJS();
@@ -6050,9 +6054,6 @@ function triggerHUDMuscle(muscleKey) {
                         </div>
                     </div>
                 `;
-			}function setFilterTahapFisik(tahap) {
-    state.filterTahapFisik = tahap;
-    renderContent();
 
             } else if (state.currentMenu === 'menu-3') {
                 pageTitle.innerText = "Tes Kondisi Fisik & Teknik dengan Norma";
