@@ -5050,12 +5050,13 @@ function generateJoggingSkuad(event) {
 
   const selectedId = document.getElementById('jogging-atlet-id')?.value;
   const zona = document.getElementById('jogging-zona')?.value || "0.75";
-  const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 25;
+  const waktu = parseFloat(document.getElementById('jogging-waktu')?.value) || 30;
   const tanggal = document.getElementById('jogging-tanggal')?.value || new Date().toISOString().split('T')[0];
 
+  // 1. Tentukan target: Semua atlet atau 1 atlet tertentu
   let targetAthletes = [];
   if (selectedId === 'semua' || !selectedId) {
-    targetAthletes = state.atlet;
+    targetAthletes = [...state.atlet];
   } else {
     const found = state.atlet.find(a => String(a.id) === String(selectedId));
     if (found) targetAthletes = [found];
@@ -5066,20 +5067,20 @@ function generateJoggingSkuad(event) {
     return;
   }
 
-  // Buat log untuk atlet yang dipilih
+  // 2. Generate log untuk SETIAP atlet dengan perhitungan VO2Max & Pace masing-masing
   const newLogs = targetAthletes.map(atlet => {
-    const vo2 = getAtletVO2Max(atlet.id) || 45;
+    const vo2 = getAtletVO2Max(atlet.id) || 45; // Mengambil VO2Max personal atlet
     const masKmh = vo2 / 3.5;
     const factor = parseFloat(zona) || 0.75;
     const speedKmh = masKmh * factor;
     const jarak = parseFloat(((speedKmh * waktu) / 60).toFixed(2));
-    
+
     const paceMin = Math.floor(60 / speedKmh);
     const paceSec = Math.round(((60 / speedKmh) - paceMin) * 60);
     const paceStr = `${paceMin}'${paceSec < 10 ? '0' : ''}${paceSec}" /km`;
 
     return {
-      id: 'j_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      id: 'j_' + Date.now() + '_' + atlet.id,
       atletId: String(atlet.id),
       namaAtlet: atlet.nama,
       tanggal: tanggal,
@@ -5091,34 +5092,27 @@ function generateJoggingSkuad(event) {
     };
   });
 
-  // 1. Ambil tanggal yang sedang dipilih di form (misal: "2026-08-11")
-  const selectedDate = tanggal;
-
-  // 2. Buat Map baru KHUSUS untuk tanggal yang sedang dipilih
-  const dailyLogMap = new Map();
-
-  // 3. Masukkan 41 data baru untuk tanggal hari ini
-  newLogs.forEach(item => {
-    if (item && item.atletId) {
-      // Kunci hanya berdasarkan atletId agar 1 atlet tepat memiliki 1 log di hari tersebut
-      dailyLogMap.set(String(item.atletId), item);
-    }
-  });
-
-  // 4. Set state HANYA berisi 41 log hari ini (riwayat hari lain tidak ditumpuk di tabel ini)
-  state.joggingLogs = Array.from(dailyLogMap.values());
+  // 3. Gabungkan seluruh data baru ke riwayat jogging tanpa saling menimpa
+  if (!state.joggingLogs) state.joggingLogs = [];
   
-  // 5. Simpan ke LocalStorage
+  // Hapus log pada tanggal yang sama untuk atlet bersangkutan agar tidak dobel
+  const targetIds = new Set(targetAthletes.map(a => String(a.id)));
+  state.joggingLogs = state.joggingLogs.filter(j => !(targetIds.has(String(j.atletId)) && j.tanggal === tanggal));
+  
+  // Masukkan semua entri baru ke paling atas
+  state.joggingLogs = [...newLogs, ...state.joggingLogs];
+
+  // 4. Simpan ke penyimpanan lokal browser
   saveStorage("joggingLogs", state.joggingLogs);
 
-  // Sync ke Google Sheets jika fungsi tersedia
+  // 5. Sinkronisasi otomatis ke Google Spreadsheet agar masuk ke HP atlet
   if (typeof syncDataToSpreadsheet === 'function') {
     syncDataToSpreadsheet();
   }
-  
-  // Render ulang UI
+
+  // 6. Perbarui tampilan
   renderContent();
-  showToast(`Berhasil menambahkan ${newLogs.length} log jogging!`, "success");
+  showToast(`Berhasil menugaskan sesi jogging ke ${newLogs.length} atlet!`, "success");
 }
         // =========================================================================
 // DATABASE ANATOMI OTOT & FUNGSI FILTER
