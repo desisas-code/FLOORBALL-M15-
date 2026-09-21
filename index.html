@@ -191,6 +191,12 @@ async function autoFetchFromSpreadsheet() {
         hasChanges = true;
       }
 
+	 if (Array.isArray(data.laporanValidasi) && data.laporanValidasi.length > 0) {
+  		state.laporanValidasi = data.laporanValidasi;
+  		saveStorage("laporanValidasi", data.laporanValidasi);
+ 		hasChanges = true;
+	 }
+
       const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       const isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
       
@@ -1925,34 +1931,6 @@ function cleanupMaps() {
     }
 }
 
-function navigate(menuId) {
-    // 1. Bersihkan 3D Three.js
-    cleanupThreeJS();
-
-    // 2. Bersihkan Peta Leaflet
-    cleanupMaps();
-
-    // Hentikan Dribble Timer jika berjalan
-    if (state.matchLive.dribbleTimer && state.matchLive.dribbleTimer.intervalId) {
-        clearInterval(state.matchLive.dribbleTimer.intervalId);
-        state.matchLive.dribbleTimer.isRunning = false;
-        state.matchLive.dribbleTimer.elapsedSec = 0;
-    }
-
-    // Simpan state timer utama tanpa mematikan elapsed time
-    if (state.matchLive.matchTimer && state.matchLive.matchTimer.intervalId) {
-        clearInterval(state.matchLive.matchTimer.intervalId);
-        state.matchLive.matchTimer.isRunning = false;
-    }
-
-    state.currentMenu = menuId;
-    const menu = document.getElementById('sidebar-menu');
-    if (menu && window.innerWidth < 768) {
-        menu.classList.add('hidden');
-    }
-    renderSidebar();
-    renderContent();
-}
         function navigate(menuId) {
     // Hentikan dan bersihkan Three.js jika meninggalkan menu anatomi 3D
     cleanupThreeJS();
