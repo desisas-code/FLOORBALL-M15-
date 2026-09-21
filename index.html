@@ -158,61 +158,25 @@ async function autoFetchFromSpreadsheet() {
     if (data && data.status === "success") {
       let hasChanges = false;
 
-      // 1. Data Atlet
-      if (data.atlet !== undefined && Array.isArray(data.atlet)) {
+      // HANYA TIMPA JIKA DATA DARI SERVER BENAR-BENAR ADA ISINYA
+      if (Array.isArray(data.atlet) && data.atlet.length > 0) {
         state.atlet = data.atlet;
         saveStorage("atlet", data.atlet);
         hasChanges = true;
       }
 
-      // 2. Log Jogging (Hapus data lokal jika di sheet sudah dihapus)
-      if (data.joggingLogs !== undefined && Array.isArray(data.joggingLogs)) {
+      if (Array.isArray(data.joggingLogs) && data.joggingLogs.length > 0) {
         state.joggingLogs = data.joggingLogs;
         saveStorage("joggingLogs", data.joggingLogs);
         hasChanges = true;
       }
 
-      // 3. Laporan Validasi
-      if (data.laporanValidasi !== undefined && Array.isArray(data.laporanValidasi)) {
-        state.laporanValidasi = data.laporanValidasi;
-        saveStorage("laporanValidasi", data.laporanValidasi);
-        hasChanges = true;
-      }
-
-      // 4. Log RPE & ACWR
-      if (data.rpeLogs !== undefined && Array.isArray(data.rpeLogs)) {
+      if (Array.isArray(data.rpeLogs) && data.rpeLogs.length > 0) {
         state.rpeLogs = data.rpeLogs;
         saveStorage("rpeLogs", data.rpeLogs);
         hasChanges = true;
       }
 
-      // 5. Presensi / Absensi
-      if (data.absensi !== undefined && Array.isArray(data.absensi)) {
-        state.absensi = data.absensi;
-        saveStorage("absensi", data.absensi);
-        hasChanges = true;
-      }
-
-      // 6. Tes Fisik & Teknik
-      if (data.tesFisik !== undefined && Array.isArray(data.tesFisik)) {
-        state.tesFisik = data.tesFisik;
-        saveStorage("tesFisik", data.tesFisik);
-        hasChanges = true;
-      }
-      if (data.tesTeknik !== undefined && Array.isArray(data.tesTeknik)) {
-        state.tesTeknik = data.tesTeknik;
-        saveStorage("tesTeknik", data.tesTeknik);
-        hasChanges = true;
-      }
-
-      // 7. Preskripsi Gym
-      if (data.gymLogs !== undefined && Array.isArray(data.gymLogs)) {
-        state.gymLogs = data.gymLogs;
-        saveStorage("gymLogs", data.gymLogs);
-        hasChanges = true;
-      }
-
-      // 8. Render Ulang Antarmuka Web (Hanya jika pengguna TIDAK sedang mengetik)
       const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       const isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
       
