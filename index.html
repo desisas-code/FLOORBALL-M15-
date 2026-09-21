@@ -1374,30 +1374,7 @@ function restoreDataJSON(event) {
     { id: 'rpe_3', atletId: '3', namaAtlet: 'Fajar Nugraha', tanggal: '2026-08-26', rpeVal: 8, durasi: 75, hrMax: 182, sRPE: 600, status: 'Disetujui' }
 ]),
             uploadedHashes: new Set(loadStorage('uploadedHashes', ['img_dummy_strava_sample_1', 'img_dummy_strava_sample_2'])),
-            laporanValidasi: loadStorage('laporanValidasi', [
-                {
-                    id: 'v1',
-                    atletId: '1',
-                    tanggal: '2026-07-31',
-                    jarak: 3.93,
-                    waktu: 30,
-                    hrAvg: 142,
-                    cadenceSpm: 158,
-                    paceSec: 458,
-                    speedKmh: 7.9,
-                    kalori: 256,
-                    gpsLoc: 'Lokasi Terdeteksi',
-                    stravaLink: 'https://strava.app.link/sample1',
-                    imgStravaHash: 'img_dummy_strava_sample_1',
-                    imgStravaUrl: 'https://images.unsplash.com/photo-1510519138161-584459eb1b37?w=500&q=80',
-                    imgSelfieUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80',
-                    detectedMotor: false,
-                    detectedLowHR: false,
-                    detectedEdit: false,
-                    softwareDetected: 'Asli (Strava Native App)',
-                    status: 'Menunggu'
-                }
-            ]),
+            laporanValidasi: loadStorage('laporanValidasi', []),
             matchLive: loadStorage('matchLive', {
                 scoreTeam: 0,
                 scoreOpponent: 0,
