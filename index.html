@@ -1230,11 +1230,15 @@ function toggleLiveRunTracker() {
     );
 }
 
-// Fungsi Hentikan Tracking Lari
+// Ganti fungsi lama dengan implementasi berikut:
 function stopLiveGpsTracking() {
-    if (gpsWatchId !== null) {
-        navigator.geolocation.clearWatch(gpsWatchId);
-        gpsWatchId = null;
+    if (liveTrackingWatchId !== null) {
+        navigator.geolocation.clearWatch(liveTrackingWatchId);
+        liveTrackingWatchId = null;
+        if (liveRunMetrics.timerInterval) {
+            clearInterval(liveRunMetrics.timerInterval);
+            liveRunMetrics.timerInterval = null;
+        }
         showToast("Live GPS Tracking dihentikan.", "success");
     }
 }
@@ -1844,7 +1848,8 @@ function exportGymLogsCSV() {
         }
 
         function logout() {
-  cleanupThreeJS();
+  			cleanupThreeJS();
+			cleanupMaps();
 
   // Hentikan timer pertandingan jika sedang berjalan
   if (state.matchLive.dribbleTimer && state.matchLive.dribbleTimer.intervalId) {
@@ -1955,6 +1960,30 @@ function setFilterTahapFisik(tahap) {
     state.filterTahapFisik = tahap;
     renderContent();
 }
+		// Tambahkan fungsi ini di atas navigate
+function cleanupMaps() {
+    if (map) {
+        map.off();
+        map.remove();
+        map = null;
+        runPathLine = null;
+    }
+}
+
+function navigate(menuId) {
+    // 1. Bersihkan 3D Three.js
+    cleanupThreeJS();
+
+    // 2. Tambahkan pemanggilan ini untuk membersihkan peta Leaflet
+    cleanupMaps();
+
+    // Hentikan Dribble Timer jika berjalan
+    if (state.matchLive.dribbleTimer && state.matchLive.dribbleTimer.intervalId) {
+        clearInterval(state.matchLive.dribbleTimer.intervalId);
+        state.matchLive.dribbleTimer.isRunning = false;
+        state.matchLive.dribbleTimer.elapsedSec = 0;
+    }
+    // ... kode navigate lainnya ke bawah tetap sama
         function navigate(menuId) {
     // Hentikan dan bersihkan Three.js jika meninggalkan menu anatomi 3D
     cleanupThreeJS();
@@ -2507,10 +2536,12 @@ function initMenu7AutoFill() {
         list.push({
             mingguKe: i,
             rentangTanggal: dateRangeStr,
+			fase: faseBadge,
             faseUtama,
             subFase,
             faseBadge,
             badgeBg,
+			faseCode: (ratio <= 0.30) ? "AA" : (ratio <= 0.65) ? "MxS" : "SAQ",
             volumePct: volPct,
             volumeLabel: volLbl,
             intensitasPct: intPct,
