@@ -158,10 +158,24 @@ async function autoFetchFromSpreadsheet() {
     if (data && data.status === "success") {
       let hasChanges = false;
 
-      // HANYA TIMPA JIKA DATA DARI SERVER BENAR-BENAR ADA ISINYA
+      // 1. Sinkron Data Atlet
       if (Array.isArray(data.atlet) && data.atlet.length > 0) {
         state.atlet = data.atlet;
         saveStorage("atlet", data.atlet);
+        hasChanges = true;
+      }
+
+      // 2. SINKRON DATA TES FISIK (WAJIB DITAMBAHKAN)
+      if (Array.isArray(data.tesFisik) && data.tesFisik.length > 0) {
+        state.tesFisik = data.tesFisik;
+        saveStorage("tesFisik", data.tesFisik);
+        hasChanges = true;
+      }
+
+      // 3. Sinkron Data Presensi
+      if (Array.isArray(data.absensi) && data.absensi.length > 0) {
+        state.absensi = data.absensi;
+        saveStorage("absensi", data.absensi);
         hasChanges = true;
       }
 
