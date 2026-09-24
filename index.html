@@ -200,7 +200,9 @@ async function autoFetchFromSpreadsheet() {
       const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       const isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select';
       
-      if (!isTyping && hasChanges) {
+      const isTrackingActive = (typeof liveTrackingWatchId !== 'undefined' && liveTrackingWatchId !== null);
+
+      if (!isTyping && hasChanges && !isTrackingActive) {
         if (typeof renderSidebar === 'function') renderSidebar();
         if (typeof renderContent === 'function') renderContent();
       }
@@ -1044,27 +1046,35 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
 		let map = null;
         let runPathLine = null;
         let pathCoordinates = [];
-
+		
+// Tambahkan fungsi ini di atas navigate
+function cleanupMaps() {
+    if (map) {
+        try {
+            map.off();
+            map.remove();
+        } catch(e) {}
+        map = null;
+        runPathLine = null;
+    }
+}
+		
         function initStravaMap(lat, lng) {
-  const mapEl = document.getElementById('strava-map');
-  if (!mapEl || typeof L === 'undefined') return;
+    const mapEl = document.getElementById('strava-map');
+    if (!mapEl || typeof L === 'undefined') return;
 
-  if (map) {
-    map.remove();
-    map = null;
-  }
+    cleanupMaps();
 
-  map = L.map('strava-map').setView([lat, lng], 16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
-  }).addTo(map);
+    map = L.map('strava-map').setView([lat, lng], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
 
-  runPathLine = L.polyline([], { color: '#FC4C02', weight: 4 }).addTo(map);
+    runPathLine = L.polyline([], { color: '#FC4C02', weight: 4 }).addTo(map);
 
-  // Tambahkan baris ini agar peta langsung pas dengan kotak tanpa abu-abu
-  setTimeout(() => {
-    if (map) map.invalidateSize();
-  }, 200);
+    setTimeout(() => {
+        if (map) map.invalidateSize();
+    }, 200);
 }
 let liveTrackingWatchId = null;
 let lastRecordedCoord = null;
@@ -1091,11 +1101,20 @@ function toggleLiveRunTracker() {
     if (liveTrackingWatchId !== null) {
         navigator.geolocation.clearWatch(liveTrackingWatchId);
         liveTrackingWatchId = null;
-        if (liveRunMetrics.timerInterval) clearInterval(liveRunMetrics.timerInterval);
+        
+        if (liveRunMetrics.timerInterval) {
+            clearInterval(liveRunMetrics.timerInterval);
+            liveRunMetrics.timerInterval = null;
+        }
 
         if (btn) {
             btn.className = "w-full px-4 py-3.5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2";
             btn.innerHTML = `<i class="fa-solid fa-play text-cyan-400"></i> Mulai Tracking Sesi Lari`;
+        }
+
+        if (badge) {
+            badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-2xl text-xs font-bold text-center";
+            badge.innerHTML = `<i class="fa-solid fa-flag-checkered mr-1.5"></i> Selesai • Total: ${liveRunMetrics.distanceKm.toFixed(2)} km`;
         }
 
         showToast(`Tracking selesai! Total: ${liveRunMetrics.distanceKm.toFixed(2)} km`, "success");
@@ -1108,56 +1127,67 @@ function toggleLiveRunTracker() {
     liveRunMetrics.vehicleDetected = false;
     liveRunMetrics.startTime = Date.now();
     lastRecordedCoord = null;
-	pathCoordinates = [];
+    pathCoordinates = [];
     if (runPathLine) runPathLine.setLatLngs([]);
-	
+
     if (btn) {
         btn.className = "w-full px-4 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 animate-pulse";
         btn.innerHTML = `<i class="fa-solid fa-stop text-white"></i> Hentikan Sesi Lari (Selesai)`;
+    }
+
+    if (badge) {
+        badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-2xl text-xs font-semibold text-center";
+        badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5 text-blue-600"></i> Mengunci koordinat GPS HP...`;
     }
 
     // TIMER DURASI OFFLINE
     liveRunMetrics.timerInterval = setInterval(() => {
         const elapsedMins = Math.floor((Date.now() - liveRunMetrics.startTime) / 60000);
         const durasiInput = document.getElementById('run-durasi');
-        if (durasiInput && elapsedMins > 0) {
-            durasiInput.value = elapsedMins;
+        if (durasiInput) {
+            durasiInput.value = elapsedMins > 0 ? elapsedMins : 1;
         }
     }, 1000);
 
-    // KUNCI SATELIT GPS OFFLINE
+    // KUNCI SATELIT GPS
     liveTrackingWatchId = navigator.geolocation.watchPosition(
         (position) => {
-                const { latitude, longitude, accuracy, speed } = position.coords;
-	            const now = Date.now();
-	            // 1. CEK AKURASI DULUAN (Abaikan jika sinyal lemah/loncat)
-	            if (accuracy > 25) return;
+            const { latitude, longitude, accuracy, speed } = position.coords;
+            const now = Date.now();
 
-	            // 2. JIKA AKURAT, BARU BUKA & GAMBAR PETA
-	            if (!map) {
-	                initStravaMap(latitude, longitude);
-	           }
+            // Beri toleransi akurasi lebih longgar untuk HP (sampai 60 meter)
+            if (accuracy > 60) {
+                if (badge) {
+                    badge.innerHTML = `<i class="fa-solid fa-satellite-dish fa-spin mr-1.5 text-amber-500"></i> Memperkuat sinyal GPS (±${Math.round(accuracy)}m)...`;
+                }
+                return;
+            }
 
-	            const currentLatLng = [latitude, longitude];
-	            pathCoordinates.push(currentLatLng);
-	            if (runPathLine) runPathLine.setLatLngs(pathCoordinates);
-	            if (map) map.panTo(currentLatLng);
-	
-	            let currentSpeedKmh = speed ? (speed * 3.6) : 0;
+            // Inisialisasi peta sekali saja jika belum ada
+            if (!map) {
+                initStravaMap(latitude, longitude);
+            }
 
-	            if (lastRecordedCoord) {
+            const currentLatLng = [latitude, longitude];
+            pathCoordinates.push(currentLatLng);
+            if (runPathLine) runPathLine.setLatLngs(pathCoordinates);
+            if (map) map.panTo(currentLatLng);
+
+            let currentSpeedKmh = speed ? (speed * 3.6) : 0;
+
+            if (lastRecordedCoord) {
                 const dist = calculateHaversineDistance(
                     lastRecordedCoord.lat, lastRecordedCoord.lng,
                     latitude, longitude
                 );
                 const timeDiffHours = (now - lastRecordedCoord.time) / (1000 * 3600);
-                
+
                 if (!speed && timeDiffHours > 0) {
                     currentSpeedKmh = dist / timeDiffHours;
                 }
 
-                // Filter noise GPS (hanya tambah jarak jika bergerak > 3 meter)
-                if (dist > 0.003) {
+                // Tambahkan jarak jika bergerak > 2 meter
+                if (dist > 0.002) {
                     liveRunMetrics.distanceKm += dist;
                     lastRecordedCoord = { lat: latitude, lng: longitude, time: now };
                 }
@@ -1169,37 +1199,32 @@ function toggleLiveRunTracker() {
                 liveRunMetrics.maxSpeedKmh = currentSpeedKmh;
             }
 
-            // DETEKSI AKTIVITAS BERDASARKAN KECEPATAN SENSOR GPS
-            let activity = "Diam / Istirahat";
-            let badgeStyle = "bg-slate-100 text-slate-700 border-slate-300";
-            let iconAct = "fa-person";
+            // STATUS AKTIVITAS
+            let activity = "Jogging (Aerobic)";
+            let badgeStyle = "bg-emerald-100 text-emerald-900 border-emerald-300";
+            let iconAct = "fa-person-running text-emerald-600";
 
             if (currentSpeedKmh > 25) {
-                activity = "TERDETEKSI NAIK KENDARAAN / MOTOR!";
+                activity = "TERDETEKSI KENDARAAN!";
                 badgeStyle = "bg-rose-100 text-rose-800 border-rose-400 animate-bounce";
                 iconAct = "fa-motorcycle text-rose-600";
                 liveRunMetrics.vehicleDetected = true;
             } else if (currentSpeedKmh >= 11) {
-                activity = "Berlari Cepat (Sprint)";
+                activity = "Sprint Cepat";
                 badgeStyle = "bg-blue-100 text-blue-900 border-blue-300";
                 iconAct = "fa-person-running text-blue-600";
-            } else if (currentSpeedKmh >= 5.5) {
-                activity = "Jogging (Aerobic)";
-                badgeStyle = "bg-emerald-100 text-emerald-900 border-emerald-300";
-                iconAct = "fa-person-running text-emerald-600";
-            } else if (currentSpeedKmh >= 1.2) {
-                activity = "Berjalan";
-                badgeStyle = "bg-amber-100 text-amber-900 border-amber-300";
-                iconAct = "fa-person-walking text-amber-600";
+            } else if (currentSpeedKmh < 1.0) {
+                activity = "Diam / Siap";
+                badgeStyle = "bg-slate-100 text-slate-700 border-slate-300";
+                iconAct = "fa-person";
             }
 
             liveRunMetrics.currentActivity = activity;
-
-            state.currentGpsLocation = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} [Status: ${activity}, Speed: ${currentSpeedKmh.toFixed(1)} km/h]`;
+            state.currentGpsLocation = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (${activity})`;
 
             if (badge) {
                 badge.className = `w-full mt-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-center border ${badgeStyle}`;
-                badge.innerHTML = `<i class="fa-solid ${iconAct} mr-1.5"></i> ${activity} • ${liveRunMetrics.distanceKm.toFixed(2)} KM (${currentSpeedKmh.toFixed(1)} km/h)`;
+                badge.innerHTML = `<i class="fa-solid ${iconAct} mr-1.5"></i> ${activity} • ${liveRunMetrics.distanceKm.toFixed(2)} km (${currentSpeedKmh.toFixed(1)} km/h)`;
             }
 
             const distDisplay = document.getElementById('run-jarak-display');
@@ -1208,9 +1233,18 @@ function toggleLiveRunTracker() {
             if (speedDisplay) speedDisplay.innerText = `${currentSpeedKmh.toFixed(1)} km/h`;
         },
         (error) => {
-            console.warn("GPS Watch Error:", error);
+            console.error("GPS Watch Error:", error);
+            let msg = "Gagal membaca lokasi GPS.";
+            if (error.code === 1) msg = "Izin lokasi ditolak! Buka setelan browser dan izinkan GPS.";
+            else if (error.code === 2) msg = "Sinyal GPS lemah / tidak ada.";
+            else if (error.code === 3) msg = "Waktu pencarian GPS habis (Timeout). Coba lagi di luar ruangan.";
+
+            if (badge) {
+                badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-2xl text-xs font-bold text-center";
+                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1.5"></i> ${msg}`;
+            }
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
     );
 }
 
@@ -1921,19 +1955,11 @@ function setFilterTahapFisik(tahap) {
     state.filterTahapFisik = tahap;
     renderContent();
 }
-		// Tambahkan fungsi ini di atas navigate
-function cleanupMaps() {
-    if (map) {
-        map.off();
-        map.remove();
-        map = null;
-        runPathLine = null;
-    }
-}
 
         function navigate(menuId) {
-    // Hentikan dan bersihkan Three.js jika meninggalkan menu anatomi 3D
+    // Hentikan dan bersihkan Three.js & Peta jika meninggalkan menu
     cleanupThreeJS();
+    cleanupMaps();
 
     // Hentikan Dribble Timer jika berjalan
     if (state.matchLive.dribbleTimer && state.matchLive.dribbleTimer.intervalId) {
