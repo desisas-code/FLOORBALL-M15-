@@ -9132,10 +9132,24 @@ const myReports = (state.laporanValidasi || []).filter(l => {
         console.warn("Firebase tidak diaktifkan:", err);
     }
 	  // 1. FUNGSI UNTUK MENGIRIM ULANG SEMUA LAPORAN TANGGAL 21 SEPTEMBER KE ATAS
-async function autoFlushLaporanOfflineAtlet() {
-    // Ambil data lokal yang tersimpan di HP atlet
-    const laporanList = loadStorage('laporanValidasi', []);
-    const rpeList = loadStorage('rpeLogs', []);
+async async function autoFlushLaporanOfflineAtlet() {
+    // Ambil data dengan aman tanpa error scope
+    const getLocalData = (key) => {
+        try {
+            return JSON.parse(localStorage.getItem('cf_' + key) || '[]');
+        } catch(e) {
+            return [];
+        }
+    };
+
+    const setLocalData = (key, val) => {
+        try {
+            localStorage.setItem('cf_' + key, JSON.stringify(val));
+        } catch(e) {}
+    };
+
+    const laporanList = getLocalData('laporanValidasi');
+    const rpeList = getLocalData('rpeLogs');
 
     if ((!laporanList || laporanList.length === 0) && (!rpeList || rpeList.length === 0)) {
         return;
@@ -9157,13 +9171,13 @@ async function autoFlushLaporanOfflineAtlet() {
                             data: report
                         })
                     });
-                    report.isSynced = true; // Tandai agar tidak dikirim ulang terus-menerus
+                    report.isSynced = true;
                 } catch (err) {
                     console.warn("Gagal kirim otomatis:", report.id);
                 }
             }
         }
-        saveStorage('laporanValidasi', laporanList);
+        setLocalData('laporanValidasi', laporanList);
     }
 
     // Kirim laporan RPE
@@ -9186,7 +9200,7 @@ async function autoFlushLaporanOfflineAtlet() {
                 }
             }
         }
-        saveStorage('rpeLogs', rpeList);
+        setLocalData('rpeLogs', rpeList);
     }
 }
 
