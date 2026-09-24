@@ -2054,22 +2054,35 @@ function deleteRiwayatValidasi(id) {
     showToast("Riwayat validasi berhasil dihapus!", "success");
 }
 		function deleteRpeLog(id) {
-  if (!confirm("Apakah Anda yakin ingin menghapus catatan laporan RPE ini?")) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus catatan laporan RPE ini?")) return;
 
-  // 1. Hapus dari state
-  state.rpeLogs = (state.rpeLogs || []).filter(r => String(r.id) !== String(id));
+    state.rpeLogs = (state.rpeLogs || []).filter(r => String(r.id) !== String(id));
+    saveStorage('rpeLogs', state.rpeLogs);
 
-  // 2. Simpan ke LocalStorage
-  saveStorage('rpeLogs', state.rpeLogs);
+    // Wajib kirim balik data kosong/terbaru ke Google Spreadsheet
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
+    }
 
-  // 3. Timpa/sinkronkan data terbaru ke Google Spreadsheet
-  if (typeof syncDataToSpreadsheet === 'function') {
-    syncDataToSpreadsheet();
-  }
+    renderSidebar();
+    renderContent();
+    showToast("Laporan RPE berhasil dihapus!", "success");
+}
 
-  // 4. Perbarui tampilan
-  renderContent();
-  showToast("Laporan RPE berhasil dihapus!", "success");
+function deleteRiwayatValidasi(id) {
+    if (!confirm("Apakah Anda yakin ingin menghapus riwayat validasi ini?")) return;
+
+    state.laporanValidasi = (state.laporanValidasi || []).filter(item => String(item.id) !== String(id));
+    saveStorage('laporanValidasi', state.laporanValidasi);
+
+    // Wajib kirim balik data terbaru ke Google Spreadsheet
+    if (typeof syncDataToSpreadsheet === 'function') {
+        syncDataToSpreadsheet();
+    }
+
+    renderSidebar();
+    renderContent();
+    showToast("Riwayat validasi berhasil dihapus!", "success");
 }
         function closeModalAtlet() {
             const modal = document.getElementById('modal-atlet');
@@ -4606,14 +4619,14 @@ function loadExistingTesFisikForm(atletId) {
     }
 
     saveStorage('atlet', state.atlet);
-    closeModalAtlet();
-    initMatchPlayerStats();
-    renderContent();
-    
-    // Kirim langsung data terbaru ke Google Spreadsheet
-    if (typeof syncDataToSpreadsheet === 'function') {
-        syncDataToSpreadsheet();
-    }
+closeModalAtlet();
+initMatchPlayerStats();
+renderContent();
+
+// Pastikan baris ini ada:
+if (typeof syncDataToSpreadsheet === 'function') {
+    syncDataToSpreadsheet();
+}
     
     showToast('Data atlet berhasil disimpan ke sistem & Spreadsheet!', 'success');
 }
