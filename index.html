@@ -1312,12 +1312,26 @@ function stopLiveGpsTracking() {
         }
 
         function saveStorage(key, value) {
+    try {
+        localStorage.setItem('cf_' + key, JSON.stringify(value));
+    } catch (err) {
+        // Jika memori penuh, hapus antrean offline dan pangkas riwayat lama
+        console.warn("Storage penuh, membersihkan data non-kritis...");
+        localStorage.removeItem('cf_pendingSyncQueue');
+        
+        if (key === 'laporanValidasi' && Array.isArray(value)) {
+            // Pangkas hanya simpan 5 laporan terakhir tanpa URL foto berat
+            const slim = value.slice(0, 5).map(item => ({
+                ...item,
+                imgSelfieUrl: '',
+                imgStravaUrl: ''
+            }));
             try {
-                localStorage.setItem('cf_' + key, JSON.stringify(value));
-            } catch (err) {
-                showToast("Memori browser penuh! Hapus riwayat lama.", "error");
-            }
+                localStorage.setItem('cf_' + key, JSON.stringify(slim));
+            } catch(e) {}
         }
+    }
+}
 
         function exportToCSV(filename, headers, rows) {
             const csvContent = "data:text/csv;charset=utf-8," 
@@ -9004,6 +9018,72 @@ const myReports = (state.laporanValidasi || []).filter(l => {
     } catch (err) {
         console.warn("Firebase tidak diaktifkan:", err);
     }
+	  // 1. FUNGSI UNTUK MENGIRIM ULANG SEMUA LAPORAN TANGGAL 21 SEPTEMBER KE ATAS
+async function autoFlushLaporanOfflineAtlet() {
+    // Ambil data lokal yang tersimpan di HP atlet
+    const laporanList = loadStorage('laporanValidasi', []);
+    const rpeList = loadStorage('rpeLogs', []);
+
+    if ((!laporanList || laporanList.length === 0) && (!rpeList || rpeList.length === 0)) {
+        return;
+    }
+
+    console.log("Memeriksa laporan offline untuk dikirim ke Spreadsheet...");
+
+    // Kirim laporan Jogging
+    if (Array.isArray(laporanList)) {
+        for (const report of laporanList) {
+            if (!report.isSynced) {
+                try {
+                    await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "APPEND_LAPORAN_VALIDASI",
+                            data: report
+                        })
+                    });
+                    report.isSynced = true; // Tandai agar tidak dikirim ulang terus-menerus
+                } catch (err) {
+                    console.warn("Gagal kirim otomatis:", report.id);
+                }
+            }
+        }
+        saveStorage('laporanValidasi', laporanList);
+    }
+
+    // Kirim laporan RPE
+    if (Array.isArray(rpeList)) {
+        for (const rpe of rpeList) {
+            if (!rpe.isSynced) {
+                try {
+                    await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "APPEND_RPE",
+                            data: rpe
+                        })
+                    });
+                    rpe.isSynced = true;
+                } catch (err) {
+                    console.warn("Gagal kirim otomatis RPE:", rpe.id);
+                }
+            }
+        }
+        saveStorage('rpeLogs', rpeList);
+    }
+}
+
+// 2. JALANKAN OTOMATIS BEGITU APLIKASI TERBUKA
+window.addEventListener('DOMContentLoaded', () => {
+    // Beri jeda 2 detik setelah aplikasi load agar tidak memberatkan browser
+    setTimeout(() => {
+        autoFlushLaporanOfflineAtlet();
+    }, 2000);
+});
 </script>
 </body>
 </html>
