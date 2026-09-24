@@ -2054,22 +2054,22 @@ function deleteRiwayatValidasi(id) {
     showToast("Riwayat validasi berhasil dihapus!", "success");
 }
 		function deleteRpeLog(id) {
-    if (!confirm("Apakah Anda yakin ingin menghapus catatan laporan RPE ini?")) return;
+  if (!confirm("Apakah Anda yakin ingin menghapus catatan laporan RPE ini?")) return;
 
-    // 1. Hapus dari state
-    state.rpeLogs = (state.rpeLogs || []).filter(r => String(r.id) !== String(id));
+  // 1. Hapus dari state
+  state.rpeLogs = (state.rpeLogs || []).filter(r => String(r.id) !== String(id));
 
-    // 2. Simpan ke LocalStorage
-    saveStorage('rpeLogs', state.rpeLogs);
+  // 2. Simpan ke LocalStorage
+  saveStorage('rpeLogs', state.rpeLogs);
 
-    // 3. Sinkronkan pembaruan ke Google Spreadsheet jika aktif
-    if (typeof syncDataToSpreadsheet === 'function') {
-        syncDataToSpreadsheet();
-    }
+  // 3. Timpa/sinkronkan data terbaru ke Google Spreadsheet
+  if (typeof syncDataToSpreadsheet === 'function') {
+    syncDataToSpreadsheet();
+  }
 
-    // 4. Perbarui tampilan & grafik
-    renderContent();
-    showToast("Laporan RPE berhasil dihapus!", "success");
+  // 4. Perbarui tampilan
+  renderContent();
+  showToast("Laporan RPE berhasil dihapus!", "success");
 }
         function closeModalAtlet() {
             const modal = document.getElementById('modal-atlet');
