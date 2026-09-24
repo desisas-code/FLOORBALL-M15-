@@ -1110,28 +1110,47 @@ function initStravaMap(lat, lng) {
 }
 
 // =========================================================================
-// TRACKER LARI GPS UNIVERSAL (KOMPATIBEL SEMUA HP)
+// ANTI-FREEZE GPS TRACKER (AUTO-RECONNECT & SCREEN WAKE LOCK)
 // =========================================================================
+let wakeLock = null;
+
+// Fungsi menjaga layar HP tetap hidup saat lari
+async function acquireWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => {
+        // Jika sistem operasi melepas paksa wake lock saat lari, minta kembali
+        if (liveTrackingWatchId !== null) acquireWakeLock();
+      });
+    }
+  } catch (err) {
+    console.log("Wake Lock tidak diizinkan oleh sistem:", err);
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock !== null) {
+    try {
+      wakeLock.release();
+    } catch(e) {}
+    wakeLock = null;
+  }
+}
+
+// Handler mulai & stop tracking
 function toggleLiveRunTracker() {
   const btn = document.getElementById('btn-toggle-run-tracker');
   const badge = document.getElementById('gps-status-badge');
 
   if (!navigator.geolocation) {
-    showToast("Perangkat/Browser ini tidak mendukung Geolocation GPS!", "error");
+    showToast("HP tidak mendukung fitur Geolocation GPS!", "error");
     return;
   }
 
-  // JIKA SEDANG BERJALAN -> BERHENTIKAN TRACKING
+  // 1. JIKA SEDANG BERJALAN -> BERHENTIKAN TRACKING
   if (liveTrackingWatchId !== null) {
-    navigator.geolocation.clearWatch(liveTrackingWatchId);
-    liveTrackingWatchId = null;
-
-    if (liveRunMetrics.timerInterval) {
-      clearInterval(liveRunMetrics.timerInterval);
-      liveRunMetrics.timerInterval = null;
-    }
-
-    releaseWakeLock();
+    stopLiveGpsInternal();
 
     if (btn) {
       btn.className = "w-full px-4 py-3.5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2";
@@ -1140,14 +1159,14 @@ function toggleLiveRunTracker() {
 
     if (badge) {
       badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-2xl text-xs font-bold text-center";
-      badge.innerHTML = `<i class="fa-solid fa-flag-checkered mr-1.5"></i> Selesai • Total: ${liveRunMetrics.distanceKm.toFixed(2)} km`;
+      badge.innerHTML = `<i class="fa-solid fa-flag-checkered mr-1.5"></i> Selesai • Total Jarak: ${liveRunMetrics.distanceKm.toFixed(2)} km`;
     }
 
-    showToast(`Tracking selesai! Total: ${liveRunMetrics.distanceKm.toFixed(2)} km`, "success");
+    showToast(`Sesi lari selesai! Total: ${liveRunMetrics.distanceKm.toFixed(2)} km`, "success");
     return;
   }
 
-  // RESET METRIK AWAL
+  // 2. RESET METRIK AWAL
   liveRunMetrics.distanceKm = 0;
   liveRunMetrics.maxSpeedKmh = 0;
   liveRunMetrics.vehicleDetected = false;
@@ -1156,7 +1175,7 @@ function toggleLiveRunTracker() {
   pathCoordinates = [];
   if (runPathLine) runPathLine.setLatLngs([]);
 
-  requestWakeLock();
+  acquireWakeLock(); // Aktifkan penahan layar agar tidak sleep
 
   if (btn) {
     btn.className = "w-full px-4 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 animate-pulse";
@@ -1165,9 +1184,11 @@ function toggleLiveRunTracker() {
 
   if (badge) {
     badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-2xl text-xs font-semibold text-center";
-    badge.innerHTML = `<i class="fa-solid fa-satellite-dish fa-spin mr-1.5 text-blue-600"></i> Mengunci sinyal satelit GPS...`;
+    badge.innerHTML = `<i class="fa-solid fa-satellite-dish fa-spin mr-1.5 text-blue-600"></i> Menghubungkan ke satelit GPS...`;
   }
 
+  // Timer Menit
+  if (liveRunMetrics.timerInterval) clearInterval(liveRunMetrics.timerInterval);
   liveRunMetrics.timerInterval = setInterval(() => {
     const elapsedMins = Math.floor((Date.now() - liveRunMetrics.startTime) / 60000);
     const durasiInput = document.getElementById('run-durasi');
@@ -1176,14 +1197,39 @@ function toggleLiveRunTracker() {
     }
   }, 1000);
 
+  // Jalankan pelacak dengan sistem Auto-Reconnect
+  startGpsWatchLoop();
+}
+
+function stopLiveGpsInternal() {
+  if (liveTrackingWatchId !== null) {
+    navigator.geolocation.clearWatch(liveTrackingWatchId);
+    liveTrackingWatchId = null;
+  }
+  if (liveRunMetrics.timerInterval) {
+    clearInterval(liveRunMetrics.timerInterval);
+    liveRunMetrics.timerInterval = null;
+  }
+  releaseWakeLock();
+}
+
+// Loop Pelacak yang tahan banting (Auto-Reconnect bila timeout)
+function startGpsWatchLoop() {
+  if (liveTrackingWatchId !== null) {
+    navigator.geolocation.clearWatch(liveTrackingWatchId);
+  }
+
+  const badge = document.getElementById('gps-status-badge');
+
   liveTrackingWatchId = navigator.geolocation.watchPosition(
     (position) => {
       const { latitude, longitude, accuracy, speed } = position.coords;
       const now = Date.now();
 
-      if (accuracy > 80) {
+      // Toleransi akurasi hingga 100m saat awal lari
+      if (accuracy > 100) {
         if (badge) {
-          badge.innerHTML = `<i class="fa-solid fa-satellite fa-spin mr-1.5 text-amber-500"></i> Menstabilkan akurasi (±${Math.round(accuracy)}m)...`;
+          badge.innerHTML = `<i class="fa-solid fa-satellite fa-spin mr-1.5 text-amber-500"></i> Mengunci sinyal presisi (Akurasi: ±${Math.round(accuracy)}m)...`;
         }
         return;
       }
@@ -1210,6 +1256,7 @@ function toggleLiveRunTracker() {
           currentSpeedKmh = dist / timeDiffHours;
         }
 
+        // Catat jarak jika berpindah lebih dari 2 meter
         if (dist > 0.002) {
           liveRunMetrics.distanceKm += dist;
           lastRecordedCoord = { lat: latitude, lng: longitude, time: now };
@@ -1255,22 +1302,29 @@ function toggleLiveRunTracker() {
       if (speedDisplay) speedDisplay.innerText = `${currentSpeedKmh.toFixed(1)} km/h`;
     },
     (error) => {
-      console.error("GPS Watch Error:", error);
-      let msg = "Gagal membaca satelit GPS.";
-      if (error.code === 1) msg = "Izin lokasi ditolak! Buka Pengaturan Browser dan izinkan Lokasi/GPS.";
-      else if (error.code === 2) msg = "Sinyal satelit tidak terdeteksi. Pastikan berada di luar ruangan.";
-      else if (error.code === 3) msg = "Pencarian GPS timeout. Coba aktifkan toggle GPS HP Anda.";
+      console.warn("GPS Warning:", error.message);
 
-      if (badge) {
-        badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-2xl text-xs font-bold text-center";
-        badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-500"></i> ${msg}`;
+      // KUNCI PERBAIKAN: Jika sinyal timeout/lemah, JANGAN STOP, tapi sambungkan ulang!
+      if (error.code === 3 || error.code === 2) {
+        if (badge) {
+          badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-amber-50 text-amber-800 border border-amber-300 rounded-2xl text-xs font-semibold text-center";
+          badge.innerHTML = `<i class="fa-solid fa-satellite-dish fa-spin mr-1.5"></i> Sinyal terhalang, menyambungkan ulang satelit...`;
+        }
+        // Restart loop setelah jeda 2 detik
+        setTimeout(() => {
+          if (liveTrackingWatchId !== null) startGpsWatchLoop();
+        }, 2000);
+      } else if (error.code === 1) {
+        if (badge) {
+          badge.className = "w-full mt-2.5 px-3.5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-2xl text-xs font-bold text-center";
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-500"></i> Izin lokasi ditolak di browser HP Anda!`;
+        }
       }
-      showToast(msg, "error");
     },
     {
       enableHighAccuracy: true,
-      timeout: 30000,
-      maximumAge: 3000
+      timeout: 15000,
+      maximumAge: 2000
     }
   );
 }
