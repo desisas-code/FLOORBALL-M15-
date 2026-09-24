@@ -1315,24 +1315,22 @@ function stopLiveGpsTracking() {
     try {
         localStorage.setItem('cf_' + key, JSON.stringify(value));
     } catch (err) {
-        // Jika memori penuh, hapus antrean offline dan pangkas riwayat lama
-        console.warn("Storage penuh, membersihkan data non-kritis...");
-        localStorage.removeItem('cf_pendingSyncQueue');
-        
+        console.warn("Storage kuota tercapai, memangkas payload gambar...");
         if (key === 'laporanValidasi' && Array.isArray(value)) {
-            // Pangkas hanya simpan 5 laporan terakhir tanpa URL foto berat
-            const slim = value.slice(0, 5).map(item => ({
+            // Hapus string gambar berat dari local storage untuk menyelamatkan data numerik
+            const stripped = value.map(item => ({
                 ...item,
-                imgSelfieUrl: '',
-                imgStravaUrl: ''
+                imgSelfieUrl: item.imgSelfieUrl?.startsWith('data:') ? '[Local Image Saved]' : item.imgSelfieUrl,
+                imgStravaUrl: item.imgStravaUrl?.startsWith('data:') ? '[Local Image Saved]' : item.imgStravaUrl
             }));
             try {
-                localStorage.setItem('cf_' + key, JSON.stringify(slim));
-            } catch(e) {}
+                localStorage.setItem('cf_' + key, JSON.stringify(stripped));
+            } catch (e) {
+                console.error("Gagal menyimpan meski sudah dipangkas:", e);
+            }
         }
     }
 }
-
         function exportToCSV(filename, headers, rows) {
             const csvContent = "data:text/csv;charset=utf-8," 
                 + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
@@ -8855,9 +8853,30 @@ const myReports = (state.laporanValidasi || []).filter(l => {
       await autoFetchFromSpreadsheet();
     }
 
-    // 4. Polling data latar belakang setiap 30 detik
-    setInterval(autoFetchFromSpreadsheet, 30000);
+    // 4. Polling data latar belakang adaptif
+    setupAdaptivePolling();
   });
+
+  let pollInterval = null;
+
+  function setupAdaptivePolling() {
+    const runPoll = () => {
+      if (!document.hidden && navigator.onLine) {
+        autoFetchFromSpreadsheet();
+      }
+    };
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        clearInterval(pollInterval);
+      } else {
+        runPoll();
+        pollInterval = setInterval(runPoll, 30000);
+      }
+    });
+
+    pollInterval = setInterval(runPoll, 30000);
+  }
 
  function openAtletRadarModal(atletId) {
   const atlet = state.atlet.find(a => String(a.id) === String(atletId));
