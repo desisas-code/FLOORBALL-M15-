@@ -6390,7 +6390,7 @@ function triggerHUDMuscle(muscleKey) {
         </thead>
         <tbody class="divide-y divide-slate-100 text-xs font-semibold">
     ${state.atlet.map(at => {
-    const allRecords = state.tesFisik.filter(t => String(t.atletId) === String(at.id));
+    const allRecords = state.tesFisik.filter(t => String(t.atletId || '').trim().toLowerCase() === String(at.id || '').trim().toLowerCase());
     const targetTahap = state.filterTahapFisik || 'Pre';
     const tahapList = targetTahap === 'Semua' ? ['Pre', 'Mid', 'Post'] : [targetTahap];
 
