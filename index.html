@@ -1043,8 +1043,7 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
     		currentActivity: 'Diam / Siap',
     		timerInterval: null
 };
-		}
-		
+				
 // Tambahkan fungsi ini di atas navigate
 function cleanupMaps() {
     if (map) {
@@ -1114,19 +1113,6 @@ function releaseWakeLock() {
     } catch(e) {}
     wakeLock = null;
   }
-}
-
-		// Tambahkan deklarasi variabel ini sebelum fungsi toggleLiveRunTracker()
-let liveTrackingWatchId = null;
-let lastRecordedCoord = null;
-let liveRunMetrics = {
-    distanceKm: 0,
-    maxSpeedKmh: 0,
-    vehicleDetected: false,
-    startTime: null,
-    currentActivity: 'Diam / Siap',
-    timerInterval: null
-};
 }
 
 // Handler mulai & stop tracking
