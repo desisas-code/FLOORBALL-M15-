@@ -145,7 +145,7 @@
 
     <script>
       // Auto Sync di Background
-      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYtnxFuZKmCmeNFYYBsa8-jAIkRTwT5L4oGUG6zzLuwVoGHXWEOwhEIURjKgfPFU1C/exec";
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyU2bou4hQI38ocyxV2VCuq9jt9Hmxac4dZRaiPTdeo2HQHJ-5KFgrPDpfjCiWRGUC0EQ/exec";
 
       // =========================================================================
 // AUTO SYNC & EXACT MIRRORING DARI GOOGLE SPREADSHEET KE WEB
@@ -2120,7 +2120,6 @@ function deleteRiwayatValidasi(id) {
     state.rpeLogs = (state.rpeLogs || []).filter(r => String(r.id) !== String(id));
     saveStorage('rpeLogs', state.rpeLogs);
 
-    // Wajib kirim balik data kosong/terbaru ke Google Spreadsheet
     if (typeof syncDataToSpreadsheet === 'function') {
         syncDataToSpreadsheet();
     }
@@ -2136,7 +2135,6 @@ function deleteRiwayatValidasi(id) {
     state.laporanValidasi = (state.laporanValidasi || []).filter(item => String(item.id) !== String(id));
     saveStorage('laporanValidasi', state.laporanValidasi);
 
-    // Wajib kirim balik data terbaru ke Google Spreadsheet
     if (typeof syncDataToSpreadsheet === 'function') {
         syncDataToSpreadsheet();
     }
@@ -2145,6 +2143,8 @@ function deleteRiwayatValidasi(id) {
     renderContent();
     showToast("Riwayat validasi berhasil dihapus!", "success");
 }
+// Hapus fungsi deleteRiwayatValidasi kedua yang menempel di bawahnya
+
         function closeModalAtlet() {
             const modal = document.getElementById('modal-atlet');
             if(modal) modal.classList.add('hidden');
@@ -9111,9 +9111,8 @@ const myReports = (state.laporanValidasi || []).filter(l => {
     } catch (err) {
         console.warn("Firebase tidak diaktifkan:", err);
     }
-	  // 1. FUNGSI UNTUK MENGIRIM ULANG SEMUA LAPORAN TANGGAL 21 SEPTEMBER KE ATAS
-async async function autoFlushLaporanOfflineAtlet() {
-    // Ambil data dengan aman tanpa error scope
+	  // 1. FUNGSI UNTUK MENGIRIM ULANG SEMUA LAPORAN OFFLINE
+async function autoFlushLaporanOfflineAtlet() {
     const getLocalData = (key) => {
         try {
             return JSON.parse(localStorage.getItem('cf_' + key) || '[]');
@@ -9134,8 +9133,6 @@ async async function autoFlushLaporanOfflineAtlet() {
     if ((!laporanList || laporanList.length === 0) && (!rpeList || rpeList.length === 0)) {
         return;
     }
-
-    console.log("Memeriksa laporan offline untuk dikirim ke Spreadsheet...");
 
     // Kirim laporan Jogging
     if (Array.isArray(laporanList)) {
@@ -9159,6 +9156,30 @@ async async function autoFlushLaporanOfflineAtlet() {
         }
         setLocalData('laporanValidasi', laporanList);
     }
+
+    // Kirim laporan RPE
+    if (Array.isArray(rpeList)) {
+        for (const rpe of rpeList) {
+            if (!report.isSynced) {
+                try {
+                    await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "APPEND_RPE",
+                            data: rpe
+                        })
+                    });
+                    rpe.isSynced = true;
+                } catch (err) {
+                    console.warn("Gagal kirim otomatis RPE:", rpe.id);
+                }
+            }
+        }
+        setLocalData('rpeLogs', rpeList);
+    }
+}
 
     // Kirim laporan RPE
     if (Array.isArray(rpeList)) {
