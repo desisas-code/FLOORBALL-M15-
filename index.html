@@ -1033,6 +1033,16 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
 		let map = null;
         let runPathLine = null;
         let pathCoordinates = [];
+		let liveTrackingWatchId = null;
+		let lastRecordedCoord = null;
+		let liveRunMetrics = {
+    		distanceKm: 0,
+    		maxSpeedKmh: 0,
+    		vehicleDetected: false,
+    		startTime: null,
+    		currentActivity: 'Diam / Siap',
+    		timerInterval: null
+};
 		
 // Tambahkan fungsi ini di atas navigate
 function cleanupMaps() {
@@ -1103,6 +1113,19 @@ function releaseWakeLock() {
     } catch(e) {}
     wakeLock = null;
   }
+}
+
+		// Tambahkan deklarasi variabel ini sebelum fungsi toggleLiveRunTracker()
+let liveTrackingWatchId = null;
+let lastRecordedCoord = null;
+let liveRunMetrics = {
+    distanceKm: 0,
+    maxSpeedKmh: 0,
+    vehicleDetected: false,
+    startTime: null,
+    currentActivity: 'Diam / Siap',
+    timerInterval: null
+};
 }
 
 // Handler mulai & stop tracking
@@ -9143,30 +9166,6 @@ async function autoFlushLaporanOfflineAtlet() {
         }
         setLocalData('laporanValidasi', laporanList);
     }
-
-    // Kirim laporan RPE
-    if (Array.isArray(rpeList)) {
-        for (const rpe of rpeList) {
-            if (!report.isSynced) {
-                try {
-                    await fetch(GOOGLE_SHEET_WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({
-                            action: "APPEND_RPE",
-                            data: rpe
-                        })
-                    });
-                    rpe.isSynced = true;
-                } catch (err) {
-                    console.warn("Gagal kirim otomatis RPE:", rpe.id);
-                }
-            }
-        }
-        setLocalData('rpeLogs', rpeList);
-    }
-}
 
     // Kirim laporan RPE
     if (Array.isArray(rpeList)) {
