@@ -970,55 +970,42 @@ const timeoutId = setTimeout(() => controller.abort(), 20000);
 }
 
         async function syncDataToSpreadsheet() {
-    const toast = showToast("Menyinkronkan SELURUH data ke Google Spreadsheet...", "loading");
+  const toast = showToast("Menyinkronkan seluruh menu ke Spreadsheet...", "loading");
 
-    // 1. Buat daftar tabel rincian periodisasi mingguan
-    const dynamicPeriodisasiList = (typeof generateDynamicPeriodisasi === 'function' && state.periodisasiConfig) 
-        ? generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks) 
-        : [];
+  const dynamicPeriodisasiList = (typeof generateDynamicPeriodisasi === 'function' && state.periodisasiConfig) 
+      ? generateDynamicPeriodisasi(state.periodisasiConfig.startDate, state.periodisasiConfig.totalWeeks) 
+      : [];
 
-    // Kirim seluruh objek state dari semua menu ke Apps Script Backend
-    const payload = {
-        atlet: state.atlet || [],
-        absensi: state.absensi || [],
-        tesFisik: state.tesFisik || [],
-        tesTeknik: state.tesTeknik || [],
-        periodisasiConfig: state.periodisasiConfig || null,
-        periodisasiList: dynamicPeriodisasiList, // <-- Rincian 34 Minggu masuk ke sini
-        programLatihan: (state.programLatihan && state.programLatihan.length > 0) ? state.programLatihan : (state.joggingLogs || []),
-        matchLive: state.matchLive || {},
-        joggingLogs: state.joggingLogs || [],
-        masLogs: state.masLogs || [],
-        laporanValidasi: state.laporanValidasi || [],
-        rpeLogs: state.rpeLogs || [],
-        gymLogs: state.gymLogs || [], // <-- Log Gym
-        lastSynced: new Date().toISOString()
-    };
+  const payload = {
+      atlet: state.atlet || [],
+      absensi: state.absensi || [],
+      tesFisik: state.tesFisik || [],
+      tesTeknik: state.tesTeknik || [],
+      periodisasiConfig: state.periodisasiConfig || null,
+      periodisasiList: dynamicPeriodisasiList,
+      programLatihan: state.programLatihan || [],
+      matchLive: state.matchLive || {},
+      joggingLogs: state.joggingLogs || [],
+      masLogs: state.masLogs || [],
+      laporanValidasi: state.laporanValidasi || [],
+      rpeLogs: state.rpeLogs || [],
+      gymLogs: state.gymLogs || [],
+      lastSynced: new Date().toISOString()
+  };
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout 15 detik untuk batch data besar
-
-    try {
-        await fetch(GOOGLE_SHEET_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload),
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-        if (toast) toast.remove();
-        showToast("Seluruh histori dari semua menu berhasil ter-backup ke Spreadsheet!", "success");
-        
-        processPendingSyncQueue();
-    } catch (err) {
-        clearTimeout(timeoutId);
-        if (toast) toast.remove();
-        
-        queueFailedSync(payload);
-        showToast("Koneksi terganggu. Data disimpan lokal & dikirim saat online.", "error");
-    }
+  try {
+      await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+      });
+      if (toast) toast.remove();
+      showToast("Seluruh 11 Menu berhasil di-backup ke Spreadsheet!", "success");
+  } catch (err) {
+      if (toast) toast.remove();
+      showToast("Gagal menyinkronkan. Tersimpan di cache lokal.", "error");
+  }
 }
 
         let autoSyncIntervalId = null;
