@@ -4661,6 +4661,9 @@ function loadExistingTesFisikForm(atletId) {
     }
 
     saveStorage('atlet', state.atlet);
+	if (typeof window.pushToFirebaseRT === 'function') {
+    window.pushToFirebaseRT('atlet', state.atlet);
+}
 closeModalAtlet();
 initMatchPlayerStats();
 renderContent();
@@ -4951,7 +4954,9 @@ if (typeof syncDataToSpreadsheet === 'function') {
     if (!state.rpeLogs) state.rpeLogs = [];
     state.rpeLogs.unshift(newRpe);
     saveStorage('rpeLogs', state.rpeLogs);
-
+	if (typeof window.pushToFirebaseRT === 'function') {
+    window.pushToFirebaseRT('rpeLogs', state.rpeLogs);
+}
     const toast = showToast('Mengirim laporan RPE ke Google Sheet...', 'loading');
 
     // 2. Kirim dengan format yang cocok persis dengan Apps Script kamu
@@ -9058,117 +9063,81 @@ const myReports = (state.laporanValidasi || []).filter(l => {
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Masukkan kredensial Firebase asli Anda di sini
     const firebaseConfig = {
-    apiKey: "AIzaSyD6VNv0Sh60G0ys0IpR1_xPISFCQKo8LwM",
-    authDomain: "floorball-6559c.firebaseapp.com",
-    databaseURL: "https://floorball-6559c-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "floorball-6559c",
-    storageBucket: "floorball-6559c.appspot.com",
-    messagingSenderId: "1098308865312",
-    appId: "1:1098308865312:web:fa497aa067d60bc0d05b45"
-};
+        apiKey: "AIzaSyD6VNv0Sh60G0ys0IpR1_xPISFCQKo8LwM",
+        authDomain: "floorball-6559c.firebaseapp.com",
+        databaseURL: "https://floorball-6559c-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "floorball-6559c",
+        storageBucket: "floorball-6559c.appspot.com",
+        messagingSenderId: "1098308865312",
+        appId: "1:1098308865312:web:fa497aa067d60bc0d05b45"
+    };
 
     try {
-        if (firebaseConfig.apiKey !== "API_KEY_ANDA") {
-            const app = initializeApp(firebaseConfig);
-            const db = getDatabase(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        window.firebaseDB = db;
 
-            window.db = db;
-            window.dbRef = ref;
-            window.dbSet = set;
-            window.dbOnValue = onValue;
+        // DENGARKAN PERUBAHAN DUA ARAH DARI FIREBASE
+        const rootRef = ref(db, 'floorball_data');
+        onValue(rootRef, (snapshot) => {
+            const cloudData = snapshot.val();
+            if (cloudData && window.state) {
+                let hasUpdate = false;
+                const syncedKeys = ['atlet', 'absensi', 'tesFisik', 'tesTeknik', 'joggingLogs', 'rpeLogs', 'laporanValidasi', 'gymLogs'];
+                
+                syncedKeys.forEach(k => {
+                    if (Array.isArray(cloudData[k])) {
+                        window.state[k] = cloudData[k];
+                        window.saveStorage(k, cloudData[k]);
+                        hasUpdate = true;
+                    }
+                });
 
-            onValue(ref(db, 'atletData'), (snapshot) => {
-                const data = snapshot.val();
-                if (data && Array.isArray(data) && window.state) {
-                    window.state.atlet = data;
-                    if (typeof saveStorage === 'function') saveStorage("atlet", data);
-                    if (typeof renderSidebar === 'function') renderSidebar();
-                    if (typeof renderContent === 'function') renderContent();
+                if (cloudData.matchLive && typeof cloudData.matchLive === 'object') {
+                    window.state.matchLive = cloudData.matchLive;
+                    window.saveStorage('matchLive', cloudData.matchLive);
+                    hasUpdate = true;
                 }
-            });
-        }
-    } catch (err) {
-        console.warn("Firebase tidak diaktifkan:", err);
-    }
-	  // 1. FUNGSI UNTUK MENGIRIM ULANG SEMUA LAPORAN OFFLINE
-async function autoFlushLaporanOfflineAtlet() {
-    const getLocalData = (key) => {
-        try {
-            return JSON.parse(localStorage.getItem('cf_' + key) || '[]');
-        } catch(e) {
-            return [];
-        }
-    };
 
-    const setLocalData = (key, val) => {
-        try {
-            localStorage.setItem('cf_' + key, JSON.stringify(val));
-        } catch(e) {}
-    };
-
-    const laporanList = getLocalData('laporanValidasi');
-    const rpeList = getLocalData('rpeLogs');
-
-    if ((!laporanList || laporanList.length === 0) && (!rpeList || rpeList.length === 0)) {
-        return;
-    }
-
-    // Kirim laporan Jogging
-    if (Array.isArray(laporanList)) {
-        for (const report of laporanList) {
-            if (!report.isSynced) {
-                try {
-                    await fetch(GOOGLE_SHEET_WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({
-                            action: "APPEND_LAPORAN_VALIDASI",
-                            data: report
-                        })
-                    });
-                    report.isSynced = true;
-                } catch (err) {
-                    console.warn("Gagal kirim otomatis:", report.id);
+                if (hasUpdate) {
+                    const statusBadge = document.getElementById('user-status');
+                    if (statusBadge) statusBadge.innerHTML = `<i class="fa-solid fa-bolt text-[9px]"></i> Firebase Live Active`;
+                    if (typeof window.renderSidebar === 'function') window.renderSidebar();
+                    if (typeof window.renderContent === 'function') window.renderContent();
                 }
             }
-        }
-        setLocalData('laporanValidasi', laporanList);
-    }
+        });
 
-    // Kirim laporan RPE
-    if (Array.isArray(rpeList)) {
-        for (const rpe of rpeList) {
-            if (!rpe.isSynced) {
-                try {
-                    await fetch(GOOGLE_SHEET_WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({
-                            action: "APPEND_RPE",
-                            data: rpe
-                        })
-                    });
-                    rpe.isSynced = true;
-                } catch (err) {
-                    console.warn("Gagal kirim otomatis RPE:", rpe.id);
+        // FUNGSI GLOBAL PUSH DATA REALTIME
+        window.pushToFirebaseRT = async function(nodeKey = null, value = null) {
+            try {
+                if (nodeKey && value !== null) {
+                    await set(ref(db, `floorball_data/${nodeKey}`), value);
+                } else {
+                    const payload = {
+                        atlet: window.state.atlet || [],
+                        absensi: window.state.absensi || [],
+                        tesFisik: window.state.tesFisik || [],
+                        tesTeknik: window.state.tesTeknik || [],
+                        joggingLogs: window.state.joggingLogs || [],
+                        rpeLogs: window.state.rpeLogs || [],
+                        laporanValidasi: window.state.laporanValidasi || [],
+                        gymLogs: window.state.gymLogs || [],
+                        matchLive: window.state.matchLive || {},
+                        updatedAt: new Date().toISOString()
+                    };
+                    await set(ref(db, 'floorball_data'), payload);
                 }
+                return true;
+            } catch(e) {
+                console.warn("Gagal update ke Firebase:", e);
+                return false;
             }
-        }
-        setLocalData('rpeLogs', rpeList);
+        };
+    } catch(err) {
+        console.error("Firebase init error:", err);
     }
-}
-
-// 2. JALANKAN OTOMATIS BEGITU APLIKASI TERBUKA
-window.addEventListener('DOMContentLoaded', () => {
-    // Beri jeda 2 detik setelah aplikasi load agar tidak memberatkan browser
-    setTimeout(() => {
-        autoFlushLaporanOfflineAtlet();
-    }, 2000);
-});
 </script>
 </body>
 </html>
