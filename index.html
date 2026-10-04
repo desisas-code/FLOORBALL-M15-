@@ -1867,7 +1867,7 @@ function exportGymLogsCSV() {
             const passInputElem = document.getElementById('auth-input-password');
             const passInput = passInputElem ? passInputElem.value : '';
             
-            // Cek kecocokan hash sandi
+            // Cek kecocokan hash sandi pelatih
             const hashedInput = await sha256(passInput);
             if (hashedInput !== COACH_PASSWORD_HASH) {
                 showToast('Kata sandi Pelatih salah!', 'error');
@@ -1892,59 +1892,40 @@ function exportGymLogsCSV() {
             renderContent();
             showToast('Berhasil masuk Mode Pelatih!', 'success');
         } else {
-                    state.currentRole = 'Pelatih';
-                    state.currentMenu = 'menu-1';
-                    state.activeAtlet = null;
+            // Mode login Atlet
+            const selectAtletElem = document.getElementById('auth-select-atlet');
+            const inputPinElem = document.getElementById('auth-input-pin');
+            const selectedId = selectAtletElem ? selectAtletElem.value : '';
+            const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
 
-                    // TAMBAHKAN BARIS INI: Simpan sesi Pelatih ke localStorage
-                    saveStorage('authSession', { role: 'Pelatih', activeAtlet: null });
-                    
-                    if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = 'PK';
-                    if (document.getElementById('user-name')) document.getElementById('user-name').innerText = 'Pelatih Kepala';
-                    if (document.getElementById('user-status')) document.getElementById('user-status').innerText = 'Head Coach';
-                    if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Pelatih Kepala';
+            const targetAtlet = state.atlet.find(a => String(a.id).trim().toLowerCase() === String(selectedId).trim().toLowerCase());
 
-                    if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-                    if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
-                    
-                    renderSidebar();
-                    renderContent();
-                    showToast('Berhasil masuk Mode Pelatih!', 'success');
-                } else {
-                    const selectAtletElem = document.getElementById('auth-select-atlet');
-                    const inputPinElem = document.getElementById('auth-input-pin');
-                    const selectedId = selectAtletElem ? selectAtletElem.value : '';
-                    const inputPin = inputPinElem ? inputPinElem.value.trim() : '';
+            if (!targetAtlet || targetAtlet.pin !== inputPin) {
+                showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
+                return;
+            }
 
-                    const targetAtlet = state.atlet.find(a => String(a.id) === String(selectedId));
+            state.activeAtlet = targetAtlet;
+            state.currentRole = 'Atlet';
+            state.currentMenu = 'menu-atlet-1';
 
-                    if (!targetAtlet || targetAtlet.pin !== inputPin) {
-                        showToast('PIN yang Anda masukkan salah untuk atlet ini!', 'error');
-                        return;
-                    }
+            saveStorage('authSession', { role: 'Atlet', activeAtlet: targetAtlet });
 
-                    state.activeAtlet = targetAtlet;
-                    state.currentRole = 'Atlet';
-                    state.currentMenu = 'menu-atlet-1';
+            const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
+            if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
+            if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
+            if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
 
-                    // TAMBAHKAN BARIS INI: Simpan sesi Atlet ke localStorage
-                    saveStorage('authSession', { role: 'Atlet', activeAtlet: targetAtlet });
-
-                    const initials = targetAtlet.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                    if (document.getElementById('user-avatar')) document.getElementById('user-avatar').innerText = initials;
-                    if (document.getElementById('user-name')) document.getElementById('user-name').innerText = escapeHTML(targetAtlet.nama);
-                    if (document.getElementById('user-status')) document.getElementById('user-status').innerText = `Atlet - ${escapeHTML(targetAtlet.posisi)}`;
-                    if (document.getElementById('current-role-badge')) document.getElementById('current-role-badge').innerText = 'Atlet Skuad';
-
-                    if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
-                    if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
-                    
-                    renderSidebar();
-                    renderContent();
-                    showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
-                }
-            }, 500);
+            if (document.getElementById('login-screen')) document.getElementById('login-screen').classList.add('hidden');
+            if (document.getElementById('app-screen')) document.getElementById('app-screen').classList.remove('hidden');
+            
+            renderSidebar();
+            renderContent();
+            showToast(`Selamat datang, ${escapeHTML(targetAtlet.nama)}!`, 'success');
         }
+    }, 500);
+}
 
         function logout() {
   			cleanupThreeJS();
@@ -2235,9 +2216,37 @@ function deleteRiwayatValidasi(id) {
         }
 
         function getAtletVO2Max(atletId) {
-            const records = state.tesFisik.filter(t => String(t.atletId) === String(atletId) && t.keyTes === 'yoyo');
-            return records.length > 0 ? parseFloat(records[0].skor) : null; 
-        }
+    if (!atletId || atletId === 'semua') return null;
+    const targetId = String(atletId).trim().toLowerCase();
+
+    // 1. Cari objek atlet agar pencocokan bisa via ID maupun Nama
+    const atletObj = state.atlet.find(a => String(a.id).trim().toLowerCase() === targetId);
+    const targetNama = atletObj ? atletObj.nama.trim().toLowerCase() : '';
+
+    // 2. Ambil seluruh riwayat tes Yo-Yo milik atlet ini
+    const records = (state.tesFisik || []).filter(t => {
+        const tId = String(t.atletId || '').trim().toLowerCase();
+        const isMatch = (tId === targetId) || (targetNama && tId === targetNama);
+        return isMatch && t.keyTes === 'yoyo' && parseFloat(t.skor) > 0;
+    });
+
+    if (records.length === 0) return null;
+
+    // 3. Urutkan berdasarkan tanggal tes terbaru (DESC), lalu tahap (Post -> Mid -> Pre)
+    const bobotTahap = { 'Post': 3, 'Mid': 2, 'Pre': 1 };
+    records.sort((a, b) => {
+        const timeA = a.tanggal ? new Date(a.tanggal).getTime() : 0;
+        const timeB = b.tanggal ? new Date(b.tanggal).getTime() : 0;
+        if (timeB !== timeA) return timeB - timeA; // Tanggal paling baru di posisi pertama
+
+        const rankA = bobotTahap[a.tahap] || 0;
+        const rankB = bobotTahap[b.tahap] || 0;
+        return rankB - rankA; // Jika tanggal sama, pilih Post > Mid > Pre
+    });
+
+    // 4. Kembalikan skor tes terakhir
+    return parseFloat(records[0].skor) || null;
+}
 
         function calculateAtletACWR(atletId, customLogs = null) {
     const logs = customLogs || (state.rpeLogs ? state.rpeLogs.filter(r => String(r.atletId) === String(atletId)) : []);
