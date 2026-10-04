@@ -1606,7 +1606,6 @@ function restoreDataJSON(event) {
     if (!state.gymLogs) state.gymLogs = [];
     state.gymLogs = [...newLogs, ...state.gymLogs];
     saveStorage('gymLogs', state.gymLogs);
-
     if (typeof syncDataToSpreadsheet === 'function') {
         syncDataToSpreadsheet();
     }
@@ -1618,6 +1617,9 @@ function deleteGymLog(id) {
     if (!confirm('Hapus log latihan gym ini?')) return;
     state.gymLogs = state.gymLogs.filter(g => String(g.id) !== String(id));
     saveStorage('gymLogs', state.gymLogs);
+	if (typeof window.pushToFirebaseRT === 'function') {
+        window.pushToFirebaseRT('gymLogs', state.gymLogs);
+    }
     renderContent();
     showToast('Log Gym berhasil dihapus', 'success');
 }
@@ -2183,6 +2185,9 @@ function deleteRiwayatValidasi(id) {
 
             state.absensi = [...newEntries, ...state.absensi];
             saveStorage('absensi', state.absensi);
+			if (typeof window.pushToFirebaseRT === 'function') {
+                window.pushToFirebaseRT('absensi', state.absensi);
+            }
             renderContent();
             showToast(`Presensi massal (${newEntries.length} atlet) berhasil disimpan!`, 'success');
         }
@@ -2190,6 +2195,9 @@ function deleteRiwayatValidasi(id) {
         function deleteAbsensiLog(id) {
             state.absensi = state.absensi.filter(a => a.id !== id);
             saveStorage('absensi', state.absensi);
+			if (typeof window.pushToFirebaseRT === 'function') {
+                window.pushToFirebaseRT('absensi', state.absensi);
+            }
             renderContent();
             showToast('Catatan presensi berhasil dihapus', 'success');
         }
@@ -4512,7 +4520,9 @@ function loadExistingTesFisikForm(atletId) {
 
     state.tesFisik = [...newEntries, ...state.tesFisik];
     saveStorage('tesFisik', state.tesFisik);
-    
+    if (typeof window.pushToFirebaseRT === 'function') {
+        window.pushToFirebaseRT('tesFisik', state.tesFisik);
+    }
     if (typeof syncDataToSpreadsheet === 'function') {
         syncDataToSpreadsheet();
     }
@@ -4580,6 +4590,9 @@ function loadExistingTesFisikForm(atletId) {
 
             state.tesTeknik.unshift(newTeknikData);
         saveStorage('tesTeknik', state.tesTeknik);
+		if (typeof window.pushToFirebaseRT === 'function') {
+                window.pushToFirebaseRT('tesTeknik', state.tesTeknik);
+            }
         if (typeof syncDataToSpreadsheet === 'function') {
             syncDataToSpreadsheet();
         }
@@ -4598,6 +4611,9 @@ function loadExistingTesFisikForm(atletId) {
             const newAbsensi = { id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4), atletId, tanggal, jenis, status };
             state.absensi.unshift(newAbsensi);
             saveStorage('absensi', state.absensi);
+			if (typeof window.pushToFirebaseRT === 'function') {
+                window.pushToFirebaseRT('absensi', state.absensi);
+            }
             renderContent();
             showToast('Presensi berhasil disimpan!', 'success');
         }
@@ -4705,11 +4721,10 @@ if (typeof syncDataToSpreadsheet === 'function') {
 
             // Filter hapus data berdasarkan id
             state.tesTeknik = state.tesTeknik.filter(item => String(item.id) !== String(id));
-
-            // Simpan ke LocalStorage
             saveStorage('tesTeknik', state.tesTeknik);
-
-            // Re-render tampilan halaman
+			if (typeof window.pushToFirebaseRT === 'function') {
+                window.pushToFirebaseRT('tesTeknik', state.tesTeknik);
+            }
             renderContent();
             showToast("Riwayat tes teknik berhasil dihapus!", "success");
         }
@@ -4727,6 +4742,9 @@ if (typeof syncDataToSpreadsheet === 'function') {
             const newLog = { id: 'j' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), atletId, tanggal, vo2max, zona, jarak, waktu, pace };
             state.joggingLogs.unshift(newLog);
             saveStorage('joggingLogs', state.joggingLogs);
+			if (typeof window.pushToFirebaseRT === 'function') {
+                window.pushToFirebaseRT('joggingLogs', state.joggingLogs);
+            }
 
             const speedKmh = waktu > 0 ? parseFloat((jarak / (waktu / 60)).toFixed(1)) : 0;
             const estKalori = Math.round((speedKmh * 1.05) * 65 * (waktu / 60));
@@ -4901,11 +4919,11 @@ if (typeof syncDataToSpreadsheet === 'function') {
     if (idx !== -1) {
         // 1. Update status di memori lokal
         state.laporanValidasi[idx].status = statusTarget;
-        
-        // 2. Simpan permanen di LocalStorage
         saveStorage('laporanValidasi', state.laporanValidasi);
-
-        // 3. Render ulang tampilan seketika
+		if (typeof window.pushToFirebaseRT === 'function') {
+            window.pushToFirebaseRT('laporanValidasi', state.laporanValidasi);
+        }
+  
         renderSidebar();
         renderContent();
         showToast(`Laporan berhasil diubah ke status: ${statusTarget}`, 'success');
@@ -5218,6 +5236,9 @@ function generateJoggingSkuad(event) {
   // Gabungkan seluruh target personal baru ke antrean utama
   state.joggingLogs = [...newLogs, ...state.joggingLogs];
   saveStorage("joggingLogs", state.joggingLogs);
+  if (typeof window.pushToFirebaseRT === 'function') {
+    window.pushToFirebaseRT('joggingLogs', state.joggingLogs);
+  }
 
   // 5. Sinkronkan ke Google Spreadsheet agar masuk ke akun HP masing-masing atlet
   if (typeof syncDataToSpreadsheet === 'function') {
