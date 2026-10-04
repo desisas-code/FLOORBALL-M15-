@@ -150,10 +150,12 @@
     console.log("Firebase sedang menghubungkan, data aman di penyimpanan lokal...");
     return true;
 };
+		let isSavingData = false;
       // =========================================================================
 // AUTO SYNC & EXACT MIRRORING DARI GOOGLE SPREADSHEET KE WEB
 // =========================================================================
 async function autoFetchFromSpreadsheet() {
+  if (isSavingData) return;
   try {
     const res = await fetch(`${SCRIPT_URL}?_t=${new Date().getTime()}`);
     const data = await res.json();
@@ -4661,6 +4663,7 @@ function loadExistingTesFisikForm(atletId) {
 
         async function submitFormAtletOptimistic(e) {
     e.preventDefault();
+	isSavingData = true;
     const id = document.getElementById('input-id')?.value;
     const nama = document.getElementById('input-nama')?.value?.trim() || '';
     const panggilan = document.getElementById('input-panggilan')?.value?.trim().toLowerCase().replace(/\s+/g, '') || '';
